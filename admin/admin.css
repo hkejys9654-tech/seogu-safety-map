@@ -1,0 +1,93 @@
+.admin-body {
+  --green: #284e68;
+  --green-dark: #17364a;
+  --green-soft: #e9f1f6;
+  --primary: #284e68;
+  --primary-dark: #17364a;
+  --primary-soft: #e9f1f6;
+}
+
+.admin-header {
+  background: linear-gradient(135deg, #17364a, #315f7b);
+}
+
+.admin-header .brand strong,
+.admin-header .brand span:last-child { color: #fff; }
+
+.admin-header .brand-mark { color: #17364a; background: #fff; }
+
+.admin-header .app-kind { color: #fff; background: rgba(255, 255, 255, .16); }
+
+.admin-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.header-button {
+  border: 1px solid rgba(255, 255, 255, .45);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.auth-gate {
+  min-height: calc(100vh - 92px);
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.auth-card {
+  width: min(480px, 100%);
+  padding: 38px;
+  border: 1px solid #dbe5ea;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(24, 54, 74, .13);
+  text-align: center;
+}
+
+.auth-card h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(1.55rem, 5vw, 2.2rem);
+}
+
+.auth-card > p:not(.eyebrow) {
+  margin: 0 auto 24px;
+  color: #5e6d73;
+  line-height: 1.65;
+}
+
+.auth-symbol {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 18px;
+  border-radius: 20px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.setup-info {
+  margin-top: 22px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff5df;
+  color: #725015;
+  font-size: .9rem;
+  line-height: 1.55;
+  text-align: left;
+  word-break: break-all;
+}
+
+@media (max-width: 680px) {
+  .admin-account #admin-email { display: none; }
+  .auth-card { padding: 28px 20px; }
+}

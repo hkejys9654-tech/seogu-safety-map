@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#284e68">
+  <meta name="description" content="광주 서구 마을안전지도 시민참여단 의견 관리자 웹앱">
+  <title>서구 마을안전지도 관리자</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+  <script src="../map-data.js" defer></script>
+  <script src="../firebase-config.js" defer></script>
+  <script src="../firebase-service.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body class="admin-body">
+  <header class="app-header admin-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">관리</span>
+      <div>
+        <strong>서구 마을안전지도</strong>
+        <span>시민참여단 의견 관리</span>
+      </div>
+    </div>
+    <div class="admin-account">
+      <span id="admin-email" hidden></span>
+      <button type="button" id="sign-out" class="header-button" hidden>로그아웃</button>
+      <span class="app-kind">관리자용</span>
+    </div>
+  </header>
+
+  <main>
+    <section id="auth-gate" class="auth-gate" aria-labelledby="auth-title">
+      <div class="auth-card">
+        <span class="auth-symbol" aria-hidden="true">✓</span>
+        <p class="eyebrow">관리자 전용</p>
+        <h1 id="auth-title">관리자 로그인이 필요합니다</h1>
+        <p id="auth-message">지정된 관리자 Google 계정으로 로그인해주세요.</p>
+        <button type="button" id="sign-in" class="primary-button">Google 계정으로 로그인</button>
+        <div id="admin-setup-info" class="setup-info" hidden></div>
+      </div>
+    </section>
+
+    <section id="admin-app" class="view" aria-labelledby="admin-title" hidden>
+      <div class="view-heading admin-heading">
+        <div>
+          <p class="eyebrow">관리자 종합 화면</p>
+          <h1 id="admin-title">시민참여단 현장 의견 관리</h1>
+        </div>
+        <div class="admin-actions">
+          <button type="button" id="export-csv" class="secondary-button">CSV 내려받기</button>
+          <button type="button" id="print-admin" class="secondary-button">지도 인쇄</button>
+        </div>
+      </div>
+
+      <div id="admin-connection-notice" class="notice" role="status">
+        <strong>자료 불러오는 중</strong>
+        <span>시민참여단 의견을 확인하고 있습니다.</span>
+      </div>
+
+      <div class="admin-filters">
+        <label class="select-label" for="admin-dong">
+          <span>행정동</span>
+          <select id="admin-dong"><option value="all">18개 동 전체</option></select>
+        </label>
+        <label class="select-label" for="admin-status">
+          <span>처리 상태</span>
+          <select id="admin-status">
+            <option value="all">전체 상태</option>
+            <option value="received">접수</option>
+            <option value="reviewing">검토 중</option>
+            <option value="reflected">지도 반영</option>
+            <option value="hold">보류</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="stats" aria-label="의견 처리 현황">
+        <article><span>전체 의견</span><strong id="stat-total">0</strong></article>
+        <article><span>검토 중</span><strong id="stat-reviewing">0</strong></article>
+        <article><span>지도 반영</span><strong id="stat-reflected">0</strong></article>
+      </div>
+
+      <div class="admin-grid">
+        <div class="map-shell admin-map-shell">
+          <div id="admin-map" class="map" aria-label="관리자 종합 안전지도"></div>
+          <div class="map-legend compact" aria-label="관리자 지도 범례">
+            <span class="legend-item return">□ 안심귀갓길</span>
+            <span class="legend-item alley">○ 안전골목</span>
+            <span class="legend-item report">● 참여단 의견</span>
+          </div>
+        </div>
+        <section class="admin-list-panel" aria-labelledby="admin-list-title">
+          <div class="section-title-row">
+            <h2 id="admin-list-title">등록 의견</h2>
+            <span id="admin-report-count" class="count-badge">0건</span>
+          </div>
+          <div id="admin-report-list" class="admin-report-list"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript>이 관리자 앱은 자바스크립트가 필요합니다.</noscript>
+</body>
+</html>
