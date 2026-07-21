@@ -268,7 +268,7 @@
     reportLayer.clearLayers();
     const visibleDongs = state.dong === "all" ? DATA.dongs : [getDong(state.dong)];
     const boundaries = visibleDongs.map((dong) => drawDong(dong));
-    if (state.dong !== "all" && visibleDongs[0]) drawLandmarks(visibleDongs[0]);
+    visibleDongs.forEach((dong) => drawLandmarks(dong, state.dong === "all"));
 
     reports.forEach((report) => {
       const marker = createReportMarker(report).addTo(reportLayer);
@@ -317,7 +317,7 @@
     return boundary;
   }
 
-  function drawLandmarks(dong) {
+  function drawLandmarks(dong, compact) {
     const categorySymbols = { school: "학", park: "공", apartment: "아", public: "관", transit: "역" };
     const items = LANDMARKS.dongs && Array.isArray(LANDMARKS.dongs[dong.name]) ? LANDMARKS.dongs[dong.name] : [];
     items.forEach((item) => {
@@ -328,9 +328,9 @@
         zIndexOffset: -500,
         icon: L.divIcon({
           className: "leaflet-div-icon landmark-icon",
-          html: `<div class="landmark-marker ${escapeHtml(item.category)}"><span class="landmark-dot">${symbol}</span><span class="landmark-label">${escapeHtml(item.name)}</span></div>`,
-          iconSize: [27, 27],
-          iconAnchor: [13, 13]
+          html: `<div class="landmark-marker ${escapeHtml(item.category)}${compact ? " compact" : ""}"><span class="landmark-dot">${symbol}</span><span class="landmark-label">${escapeHtml(item.name)}</span></div>`,
+          iconSize: compact ? [15, 15] : [27, 27],
+          iconAnchor: compact ? [7, 7] : [13, 13]
         })
       }).addTo(landmarkLayer);
     });
@@ -354,9 +354,12 @@
     });
     dong.safetyAlleys.forEach((item, index) => {
       const isLine = item.kind === "line";
+      const savedPoint = item.point || item;
       const segment = isLine
         ? (normalizeSegments(item.segments)[0] || [])
-        : (Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon)) ? [{ lat: item.lat, lon: item.lon }] : []);
+        : (Number.isFinite(Number(savedPoint.lat)) && Number.isFinite(Number(savedPoint.lon))
+          ? [{ lat: savedPoint.lat, lon: savedPoint.lon }]
+          : []);
       base.push({
         id: baseFeatureId(isLine ? "alley" : "alleypoint", dong.name, index),
         type: "alley",

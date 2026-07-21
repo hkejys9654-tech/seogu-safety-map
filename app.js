@@ -187,9 +187,12 @@
     });
     dong.safetyAlleys.forEach((item, index) => {
       const isLine = item.kind === "line";
+      const savedPoint = item.point || item;
       const points = isLine
         ? (normalizeSegments(item.segments)[0] || [])
-        : (Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon)) ? [{ lat: item.lat, lon: item.lon }] : []);
+        : (Number.isFinite(Number(savedPoint.lat)) && Number.isFinite(Number(savedPoint.lon))
+          ? [{ lat: savedPoint.lat, lon: savedPoint.lon }]
+          : []);
       base.push({
         id: baseFeatureId(isLine ? "alley" : "alleypoint", dong.name, index),
         type: "alley",

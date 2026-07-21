@@ -203,6 +203,14 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
 
 .map.show-landmark-labels .landmark-label { display: block; }
 .landmark-icon { overflow: visible !important; }
+.landmark-marker.compact .landmark-dot {
+  width: 15px;
+  height: 15px;
+  border-width: 2px;
+  border-radius: 50%;
+  font-size: 0;
+}
+.landmark-marker.compact .landmark-label { display: none; }
 
 @media (max-width: 680px) {
   .landmark-label { max-width: 130px; font-size: 10px; }
