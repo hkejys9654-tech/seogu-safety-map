@@ -305,20 +305,6 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
   background: repeating-linear-gradient(90deg, currentColor 0 8px, transparent 8px 12px);
 }
 
-.legend-item.alley .legend-line-swatch::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 2px;
-  width: 7px;
-  height: 7px;
-  transform: translateY(-50%);
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 0 1px currentColor;
-}
-
 .legend-point-swatch {
   width: 22px;
   height: 22px;
@@ -336,13 +322,24 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
 .legend-item.report .legend-point-swatch { border-radius: 50%; }
 
 .legend-alley-point-swatch {
-  width: 15px;
-  height: 15px;
-  flex: 0 0 15px;
-  border: 4px solid currentColor;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+  border: 3px solid currentColor;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor;
+  box-shadow: 0 2px 5px rgba(25, 35, 32, .16);
+}
+
+.legend-alley-point-swatch::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: #fff;
 }
 
 .legend-item.parcel .legend-point-swatch,
@@ -453,7 +450,15 @@ legend, .text-label > span { display: block; margin-bottom: 9px; font-size: 14px
 .official-marker.parcel { color: var(--parcel); }
 .official-marker.vending { color: var(--vending); }
 .official-marker.return { color: var(--blue); }
-.official-marker.alley { color: var(--alley); }
+.official-marker.alley { color: var(--alley); font-size: 0; }
+.official-marker.alley::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: #fff;
+}
 .official-marker.selected { outline: 4px solid rgba(223,107,63,.55); outline-offset: 3px; }
 .official-marker.parcel,
 .official-marker.vending {
@@ -726,7 +731,8 @@ main { width: min(1500px, 100%); padding: clamp(20px, 3vw, 40px); }
   .legend-item { min-height: 27px; padding: 3px 6px; gap: 5px; font-size: 10px; }
   .legend-line-swatch { width: 28px; flex-basis: 28px; }
   .legend-point-swatch { width: 19px; height: 19px; flex-basis: 19px; font-size: 11px; }
-  .legend-alley-point-swatch { width: 12px; height: 12px; flex-basis: 12px; border-width: 3px; }
+  .legend-alley-point-swatch { width: 19px; height: 19px; flex-basis: 19px; }
+  .legend-alley-point-swatch::after { width: 7px; height: 7px; }
   .legend-item.parcel .legend-point-swatch, .legend-item.vending .legend-point-swatch { font-size: 20px; }
   .action-bar { align-items: stretch; flex-direction: column; padding: 18px; border-radius: 18px; }
   .action-bar strong { font-size: 18px; }
