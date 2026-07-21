@@ -322,13 +322,23 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
 .legend-item.report .legend-point-swatch { border-radius: 50%; }
 
 .legend-alley-point-swatch {
-  width: 15px;
-  height: 15px;
-  flex: 0 0 15px;
-  border: 4px solid currentColor;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 20px;
+  border: 2px solid currentColor;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor;
+}
+
+.legend-alley-point-swatch::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  background: #fff;
 }
 
 .legend-item.parcel .legend-point-swatch,
@@ -443,15 +453,23 @@ legend, .text-label > span { display: block; margin-bottom: 9px; font-size: 14px
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 18px;
-  height: 18px;
+  width: 30px;
+  height: 30px;
   transform: translate(-50%, -50%);
-  border: 5px solid currentColor;
+  border: 2px solid currentColor;
   border-radius: 50%;
   color: var(--alley);
   background: #fff;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor, 0 3px 7px rgba(25, 35, 32, .2);
+  box-shadow: none;
   font-size: 0;
+}
+.official-marker.alley::after {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border: 5px solid currentColor;
+  border-radius: 50%;
+  background: #fff;
 }
 .official-marker.selected { outline: 4px solid rgba(223,107,63,.55); outline-offset: 3px; }
 .official-marker.parcel,
@@ -725,7 +743,8 @@ main { width: min(1500px, 100%); padding: clamp(20px, 3vw, 40px); }
   .legend-item { min-height: 27px; padding: 3px 6px; gap: 5px; font-size: 10px; }
   .legend-line-swatch { width: 28px; flex-basis: 28px; }
   .legend-point-swatch { width: 19px; height: 19px; flex-basis: 19px; font-size: 11px; }
-  .legend-alley-point-swatch { width: 12px; height: 12px; flex-basis: 12px; border-width: 3px; }
+  .legend-alley-point-swatch { width: 18px; height: 18px; flex-basis: 18px; }
+  .legend-alley-point-swatch::after { width: 11px; height: 11px; border-width: 3px; }
   .legend-item.parcel .legend-point-swatch, .legend-item.vending .legend-point-swatch { font-size: 20px; }
   .action-bar { align-items: stretch; flex-direction: column; padding: 18px; border-radius: 18px; }
   .action-bar strong { font-size: 18px; }
