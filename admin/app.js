@@ -364,17 +364,19 @@
   function getLineFeatures(dong) {
     const base = [];
     dong.returnRoutes.forEach((item, index) => {
-      const segment = normalizeSegments(item.segments)[0] || [];
-      base.push({
-        id: baseFeatureId("return", dong.name, index),
-        type: "return",
-        geometry: "line",
-        dong: dong.name,
-        name: item.name,
-        location: item.location || "",
-        points: segment.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })),
-        active: true,
-        baseFeature: true
+      const segments = normalizeSegments(item.segments);
+      segments.forEach((segment, segmentIndex) => {
+        base.push({
+          id: baseSegmentFeatureId("return", dong.name, index, segmentIndex),
+          type: "return",
+          geometry: "line",
+          dong: dong.name,
+          name: item.name,
+          location: item.location || "",
+          points: segment.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })),
+          active: true,
+          baseFeature: true
+        });
       });
     });
     dong.safetyAlleys.forEach((item, index) => {
@@ -428,6 +430,11 @@
 
   function baseFeatureId(type, dong, index) {
     return `${type}__${dong}__${index}`;
+  }
+
+  function baseSegmentFeatureId(type, dong, index, segmentIndex) {
+    const routeId = baseFeatureId(type, dong, index);
+    return segmentIndex === 0 ? routeId : `${routeId}__${segmentIndex}`;
   }
 
   function drawEditableFeature(feature) {
