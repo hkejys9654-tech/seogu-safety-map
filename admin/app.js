@@ -36,7 +36,12 @@
     dong: "all",
     status: "all",
     user: null,
-    unsubscribeReports: null
+    unsubscribeReports: null,
+    unsubscribeFeatures: null,
+    featureOverrides: [],
+    selectedFeature: null,
+    featureBefore: null,
+    editMode: null
   };
 
   const authGate = document.getElementById("auth-gate");
@@ -45,7 +50,9 @@
   const statusSelect = document.getElementById("admin-status");
   let map = null;
   let officialLayer = null;
+  let featureLayer = null;
   let reportLayer = null;
+  let editLayer = null;
 
   populateDongSelect();
   bindEvents();
@@ -61,6 +68,7 @@
     document.getElementById("export-csv").addEventListener("click", exportCsv);
     document.getElementById("print-admin").addEventListener("click", () => window.print());
     dongSelect.addEventListener("change", () => {
+      cancelLineEdit();
       state.dong = dongSelect.value;
       renderAdmin();
     });
@@ -68,6 +76,12 @@
       state.status = statusSelect.value;
       renderAdmin();
     });
+    document.getElementById("start-add-line").addEventListener("click", startAddLine);
+    document.getElementById("redraw-line").addEventListener("click", redrawSelectedLine);
+    document.getElementById("undo-point").addEventListener("click", undoLastPoint);
+    document.getElementById("cancel-line-edit").addEventListener("click", cancelLineEdit);
+    document.getElementById("delete-line").addEventListener("click", deleteSelectedLine);
+    document.getElementById("save-line").addEventListener("click", saveSelectedLine);
   }
 
   async function startAuthentication() {
@@ -146,7 +160,7 @@
 
     if (!map) createMap();
     setTimeout(() => map.invalidateSize(), 0);
-    await subscribeReports();
+    await Promise.all([subscribeReports(), subscribeFeatures()]);
   }
 
   function createMap() {
@@ -156,7 +170,10 @@
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
     officialLayer = L.layerGroup().addTo(map);
+    featureLayer = L.layerGroup().addTo(map);
     reportLayer = L.layerGroup().addTo(map);
+    editLayer = L.layerGroup().addTo(map);
+    map.on("click", handleLineMapClick);
   }
 
   async function subscribeReports() {
@@ -178,6 +195,18 @@
     }
   }
 
+  async function subscribeFeatures() {
+    if (state.unsubscribeFeatures) state.unsubscribeFeatures();
+    try {
+      state.unsubscribeFeatures = await SERVICE.listenMapFeatures((features) => {
+        state.featureOverrides = features;
+        renderAdmin();
+      }, () => showToast("최신 안전시설 선을 불러오지 못했습니다."));
+    } catch (_) {
+      showToast("최신 안전시설 선을 불러오지 못했습니다.");
+    }
+  }
+
   function filteredReports() {
     return state.reports.filter((report) => {
       const dongMatch = state.dong === "all" || report.dong === state.dong;
@@ -190,6 +219,7 @@
     if (!map) return;
     const reports = filteredReports();
     officialLayer.clearLayers();
+    featureLayer.clearLayers();
     reportLayer.clearLayers();
     const visibleDongs = state.dong === "all" ? DATA.dongs : [getDong(state.dong)];
     const boundaries = visibleDongs.map((dong) => drawDong(dong));
@@ -199,10 +229,10 @@
       marker.on("click", () => highlightCard(report.id));
     });
 
-    if (state.dong === "all") {
+    if (!state.editMode && state.dong === "all") {
       const bounds = L.latLngBounds(DATA.dongs.flatMap((dong) => toLatLngs(dong.boundary)));
       map.fitBounds(bounds, { padding: [20, 20] });
-    } else if (boundaries[0]) {
+    } else if (!state.editMode && boundaries[0]) {
       map.fitBounds(boundaries[0].getBounds(), { padding: [22, 22] });
     }
 
@@ -236,23 +266,256 @@
       lineJoin: "round"
     }).bindTooltip(dong.name, { sticky: true }).addTo(officialLayer);
 
-    dong.returnRoutes.forEach((item) => {
-      normalizeSegments(item.segments).forEach((segment) => {
-        L.polyline(toLatLngs(segment), { color: "#596caf", weight: 4, opacity: .85 })
-          .bindPopup(`<strong>□ ${escapeHtml(item.name)}</strong><br>${escapeHtml(item.location || "")}`)
-          .addTo(officialLayer);
+    getLineFeatures(dong).forEach(drawEditableFeature);
+    return boundary;
+  }
+
+  function getLineFeatures(dong) {
+    const base = [];
+    dong.returnRoutes.forEach((item, index) => {
+      const segment = normalizeSegments(item.segments)[0] || [];
+      base.push({
+        id: baseFeatureId("return", dong.name, index),
+        type: "return",
+        dong: dong.name,
+        name: item.name,
+        location: item.location || "",
+        points: segment.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })),
+        active: true,
+        baseFeature: true
       });
     });
-    dong.safetyAlleys.forEach((item) => {
-      if (item.kind === "line") {
-        normalizeSegments(item.segments).forEach((segment) => {
-          L.polyline(toLatLngs(segment), { color: "#2e8b62", weight: 4, opacity: .85 })
-            .bindPopup(`<strong>○ ${escapeHtml(item.name)}</strong>`)
-            .addTo(officialLayer);
-        });
-      }
+    dong.safetyAlleys.forEach((item, index) => {
+      if (item.kind !== "line") return;
+      const segment = normalizeSegments(item.segments)[0] || [];
+      base.push({
+        id: baseFeatureId("alley", dong.name, index),
+        type: "alley",
+        dong: dong.name,
+        name: item.name,
+        location: item.location || "",
+        points: segment.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })),
+        active: true,
+        baseFeature: true
+      });
     });
-    return boundary;
+
+    const merged = new Map(base.map((feature) => [feature.id, feature]));
+    state.featureOverrides.filter((feature) => feature.dong === dong.name).forEach((feature) => merged.set(feature.id, feature));
+    return [...merged.values()].filter((feature) => feature.active !== false && feature.points.length >= 2);
+  }
+
+  function baseFeatureId(type, dong, index) {
+    return `${type}__${dong}__${index}`;
+  }
+
+  function drawEditableFeature(feature) {
+    const selected = state.selectedFeature && state.selectedFeature.id === feature.id;
+    const color = feature.type === "return" ? "#596caf" : "#2e8b62";
+    const symbol = feature.type === "return" ? "□" : "○";
+    const line = L.polyline(feature.points.map((point) => [point.lat, point.lon]), {
+      color,
+      weight: selected ? 8 : 5,
+      opacity: selected ? 1 : .88
+    }).bindTooltip(`${symbol} ${feature.name}`, { sticky: true }).addTo(featureLayer);
+    line.on("click", (event) => {
+      L.DomEvent.stopPropagation(event.originalEvent);
+      selectFeature(feature);
+    });
+  }
+
+  function cloneFeature(feature) {
+    return {
+      ...feature,
+      points: feature.points.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) }))
+    };
+  }
+
+  function selectFeature(feature) {
+    if (state.editMode === "drawing") {
+      showToast("현재 그리기를 저장하거나 취소한 뒤 다른 선을 선택해주세요.");
+      return;
+    }
+    state.selectedFeature = cloneFeature(feature);
+    state.featureBefore = cloneFeature(feature);
+    state.editMode = "editing";
+    openLineEditor(false);
+    renderEditLayer();
+    renderAdmin();
+  }
+
+  function startAddLine() {
+    if (state.dong === "all") {
+      showToast("먼저 행정동을 하나 선택해주세요.");
+      dongSelect.focus();
+      return;
+    }
+    const type = document.getElementById("feature-type").value === "alley" ? "alley" : "return";
+    state.selectedFeature = {
+      id: `custom__${state.dong}__${Date.now()}`,
+      type,
+      dong: state.dong,
+      name: "",
+      location: "",
+      points: [],
+      active: true,
+      baseFeature: false
+    };
+    state.featureBefore = null;
+    state.editMode = "drawing";
+    openLineEditor(true);
+    renderEditLayer();
+  }
+
+  function openLineEditor(isNew) {
+    const feature = state.selectedFeature;
+    const typeLabel = feature.type === "return" ? "안심귀갓길" : "안전골목";
+    document.getElementById("line-editor-panel").hidden = false;
+    document.getElementById("selected-feature-label").textContent = isNew ? `새 ${typeLabel}` : `${feature.dong} · ${feature.name}`;
+    document.getElementById("feature-name").value = feature.name || "";
+    document.getElementById("feature-location").value = feature.location || "";
+    document.getElementById("delete-line").hidden = isNew;
+    document.getElementById("line-edit-help").textContent = isNew
+      ? "지도를 확대하고 이동 경로를 따라 점을 차례로 눌러주세요."
+      : "주황색 점을 손가락이나 마우스로 끌어 위치를 조정하거나, 다시 그리기를 선택하세요.";
+    document.getElementById("line-edit-instruction").hidden = state.editMode !== "drawing";
+    document.querySelector(".admin-map-shell").classList.add("is-editing");
+    setTimeout(() => map.invalidateSize(), 0);
+  }
+
+  function redrawSelectedLine() {
+    if (!state.selectedFeature) return;
+    state.selectedFeature.points = [];
+    state.editMode = "drawing";
+    document.getElementById("line-edit-instruction").hidden = false;
+    document.getElementById("line-edit-help").textContent = "지도에서 이동 경로를 따라 점을 차례로 눌러주세요.";
+    renderEditLayer();
+  }
+
+  function handleLineMapClick(event) {
+    if (state.editMode !== "drawing" || !state.selectedFeature) return;
+    state.selectedFeature.points.push({
+      lat: Number(event.latlng.lat.toFixed(7)),
+      lon: Number(event.latlng.lng.toFixed(7))
+    });
+    renderEditLayer();
+  }
+
+  function undoLastPoint() {
+    if (state.editMode !== "drawing" || !state.selectedFeature || !state.selectedFeature.points.length) return;
+    state.selectedFeature.points.pop();
+    renderEditLayer();
+  }
+
+  function renderEditLayer() {
+    editLayer.clearLayers();
+    const feature = state.selectedFeature;
+    if (!feature) return;
+    const points = feature.points;
+    if (points.length >= 2) {
+      L.polyline(points.map((point) => [point.lat, point.lon]), {
+        color: "#df6b3f",
+        weight: 7,
+        opacity: .95,
+        dashArray: state.editMode === "drawing" ? "10 7" : null
+      }).addTo(editLayer);
+    }
+    points.forEach((point, index) => {
+      const marker = L.marker([point.lat, point.lon], {
+        draggable: state.editMode === "editing",
+        keyboard: false,
+        icon: L.divIcon({
+          className: "leaflet-div-icon",
+          html: '<div class="edit-vertex"></div>',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        })
+      }).addTo(editLayer);
+      marker.on("dragend", () => {
+        const latlng = marker.getLatLng();
+        feature.points[index] = {
+          lat: Number(latlng.lat.toFixed(7)),
+          lon: Number(latlng.lng.toFixed(7))
+        };
+        renderEditLayer();
+      });
+    });
+    document.getElementById("point-count").textContent = `${points.length}개 점`;
+    document.getElementById("undo-point").disabled = state.editMode !== "drawing" || points.length === 0;
+  }
+
+  async function saveSelectedLine() {
+    const feature = state.selectedFeature;
+    if (!feature) return;
+    const name = document.getElementById("feature-name").value.trim();
+    const location = document.getElementById("feature-location").value.trim();
+    if (!name) {
+      showToast("선 이름을 입력해주세요.");
+      document.getElementById("feature-name").focus();
+      return;
+    }
+    if (feature.points.length < 2) {
+      showToast("지도에 점을 두 개 이상 찍어주세요.");
+      return;
+    }
+    feature.name = name;
+    feature.location = location;
+    feature.active = true;
+    const typeLabel = feature.type === "return" ? "안심귀갓길" : "안전골목";
+    if (!window.confirm(`${feature.dong} ${typeLabel} '${name}' 선을 저장할까요?\n저장하면 시민참여단 지도에 자동 반영됩니다.`)) return;
+
+    const button = document.getElementById("save-line");
+    button.disabled = true;
+    button.textContent = "저장 중…";
+    try {
+      await SERVICE.saveMapFeature(feature, state.featureBefore, state.user.email || "");
+      upsertFeatureOverride(feature);
+      cancelLineEdit();
+      showToast("안전시설 선을 저장했습니다.");
+    } catch (_) {
+      showToast("선을 저장하지 못했습니다. 관리자 권한과 보안 규칙을 확인해주세요.");
+    } finally {
+      button.disabled = false;
+      button.textContent = "확인 후 저장";
+    }
+  }
+
+  async function deleteSelectedLine() {
+    const feature = state.selectedFeature;
+    if (!feature) return;
+    if (!state.featureBefore) {
+      cancelLineEdit();
+      return;
+    }
+    if (!window.confirm(`'${feature.name}' 선을 지도에서 삭제할까요?\n삭제 내용도 시민참여단 지도에 자동 반영됩니다.`)) return;
+    const deleted = { ...cloneFeature(feature), active: false };
+    try {
+      await SERVICE.saveMapFeature(deleted, state.featureBefore, state.user.email || "");
+      upsertFeatureOverride(deleted);
+      cancelLineEdit();
+      showToast("안전시설 선을 삭제했습니다.");
+    } catch (_) {
+      showToast("선을 삭제하지 못했습니다. 관리자 권한과 보안 규칙을 확인해주세요.");
+    }
+  }
+
+  function upsertFeatureOverride(feature) {
+    const saved = cloneFeature(feature);
+    const index = state.featureOverrides.findIndex((item) => item.id === saved.id);
+    if (index >= 0) state.featureOverrides[index] = saved;
+    else state.featureOverrides.push(saved);
+  }
+
+  function cancelLineEdit() {
+    state.selectedFeature = null;
+    state.featureBefore = null;
+    state.editMode = null;
+    document.getElementById("line-editor-panel").hidden = true;
+    document.getElementById("line-edit-instruction").hidden = true;
+    const shell = document.querySelector(".admin-map-shell");
+    if (shell) shell.classList.remove("is-editing");
+    if (editLayer) editLayer.clearLayers();
+    if (map) renderAdmin();
   }
 
   function createReportMarker(report) {

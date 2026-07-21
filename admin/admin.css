@@ -87,7 +87,74 @@
   word-break: break-all;
 }
 
+.line-editor {
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid #cddae1;
+  border-radius: 16px;
+  background: #f8fbfc;
+}
+
+.line-editor-heading,
+.line-create-controls,
+.selected-feature-title,
+.line-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.line-create-controls { justify-content: flex-end; }
+.line-create-controls .select-label { min-width: 170px; }
+.line-editor-guide,
+.line-edit-help { margin: 10px 0 0; color: #60717a; font-size: 13px; line-height: 1.55; }
+
+.line-editor-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #d6e0e5;
+}
+
+.selected-feature-title span { color: #60717a; font-size: 13px; font-weight: 800; }
+.feature-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.text-label input { width: 100%; min-height: 46px; padding: 0 12px; border: 1px solid #c9c6bc; border-radius: 12px; }
+.line-editor-actions { justify-content: flex-end; margin-top: 14px; }
+.line-editor-actions button { min-height: 44px; }
+
+.danger-button {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid #b74545;
+  border-radius: 12px;
+  background: #fff;
+  color: #a23333;
+  font-weight: 900;
+}
+
+.edit-vertex {
+  width: 22px;
+  height: 22px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: #df6b3f;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .28);
+}
+
+.admin-map-shell.is-editing { outline: 4px solid rgba(223, 107, 63, .38); }
+
 @media (max-width: 680px) {
   .admin-account #admin-email { display: none; }
   .auth-card { padding: 28px 20px; }
+  .line-editor-heading { align-items: stretch; }
+  .line-create-controls { display: grid; grid-template-columns: 1fr; width: 100%; }
+  .line-create-controls .select-label { min-width: 0; }
+  .feature-fields { grid-template-columns: 1fr; }
+  .line-editor-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .line-editor-actions #save-line { grid-column: 1 / -1; }
+}
+
+@media print {
+  .line-editor { display: none !important; }
 }

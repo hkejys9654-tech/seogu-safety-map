@@ -3,6 +3,7 @@
 
   const SDK_VERSION = "12.16.0";
   const LOCAL_REPORTS_KEY = "seogu-safety-map-demo-reports-v2";
+  const LOCAL_FEATURES_KEY = "seogu-safety-map-demo-features-v1";
   let modulesPromise = null;
   let contextPromise = null;
 
@@ -101,6 +102,56 @@
     });
   }
 
+  async function listenMapFeatures(onData, onError) {
+    const context = await getContext();
+    if (!context) {
+      onData(readLocalFeatures());
+      const listener = (event) => {
+        if (!event.key || event.key === LOCAL_FEATURES_KEY) onData(readLocalFeatures());
+      };
+      window.addEventListener("storage", listener);
+      return () => window.removeEventListener("storage", listener);
+    }
+    const { db, firestore } = context;
+    return firestore.onSnapshot(firestore.collection(db, "mapFeatures"), (snapshot) => {
+      onData(snapshot.docs.map((item) => normalizeMapFeature(item.id, item.data())));
+    }, onError);
+  }
+
+  async function saveMapFeature(feature, previous, editorEmail) {
+    const clean = normalizeMapFeature(feature.id, feature);
+    const context = await getContext();
+    if (!context) {
+      const features = readLocalFeatures();
+      const index = features.findIndex((item) => item.id === clean.id);
+      clean.updatedAt = new Date().toISOString();
+      clean.updatedBy = editorEmail || "시범 관리자";
+      if (index >= 0) features[index] = clean;
+      else features.push(clean);
+      writeLocalFeatures(features);
+      return clean;
+    }
+
+    const { db, firestore } = context;
+    const batch = firestore.writeBatch(db);
+    const featureRef = firestore.doc(db, "mapFeatures", clean.id);
+    const historyRef = firestore.doc(firestore.collection(db, "mapFeatureHistory"));
+    batch.set(historyRef, {
+      featureId: clean.id,
+      previous: previous ? normalizeMapFeature(clean.id, previous) : null,
+      changedTo: clean,
+      editedAt: firestore.serverTimestamp(),
+      editedBy: editorEmail || ""
+    });
+    batch.set(featureRef, {
+      ...clean,
+      updatedAt: firestore.serverTimestamp(),
+      updatedBy: editorEmail || ""
+    });
+    await batch.commit();
+    return clean;
+  }
+
   async function onAuthChanged(callback) {
     const context = await getContext();
     if (!context) {
@@ -146,6 +197,24 @@
     };
   }
 
+  function normalizeMapFeature(id, data) {
+    return {
+      id: String(id || data.id || ""),
+      type: data.type === "alley" ? "alley" : "return",
+      dong: String(data.dong || ""),
+      name: String(data.name || "이름 없는 안전시설"),
+      location: String(data.location || ""),
+      points: Array.isArray(data.points)
+        ? data.points.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) }))
+            .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lon))
+        : [],
+      active: data.active !== false,
+      baseFeature: data.baseFeature === true,
+      updatedAt: timestampToIso(data.updatedAt),
+      updatedBy: String(data.updatedBy || "")
+    };
+  }
+
   function timestampToIso(value) {
     if (value && typeof value.toDate === "function") return value.toDate().toISOString();
     if (typeof value === "string") return value;
@@ -178,11 +247,26 @@
     localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(reports));
   }
 
+  function readLocalFeatures() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(LOCAL_FEATURES_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function writeLocalFeatures(features) {
+    localStorage.setItem(LOCAL_FEATURES_KEY, JSON.stringify(features));
+  }
+
   window.SafetyMapFirebase = {
     isConfigured,
     addReport,
     listenReports,
     updateReportStatus,
+    listenMapFeatures,
+    saveMapFeature,
     onAuthChanged,
     signInAdmin,
     signOutAdmin,

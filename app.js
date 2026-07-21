@@ -36,7 +36,8 @@
     dong: DATA.dongs[0].name,
     placing: false,
     pendingLatLng: null,
-    receipts: readReceipts()
+    receipts: readReceipts(),
+    featureOverrides: []
   };
 
   const dongSelect = document.getElementById("citizen-dong");
@@ -54,6 +55,7 @@
   bindEvents();
   renderDong();
   renderConnectionNotice();
+  subscribeMapFeatures();
 
   function createMap(id) {
     const instance = L.map(id, { zoomControl: true, minZoom: 12, maxZoom: 19 });
@@ -122,22 +124,16 @@
   }
 
   function drawOfficialData(dong) {
-    dong.returnRoutes.forEach((item) => {
-      normalizeSegments(item.segments).forEach((segment) => {
-        L.polyline(toLatLngs(segment), { color: "#596caf", weight: 5, opacity: .9 })
-          .bindPopup(`<strong>□ ${escapeHtml(item.name)}</strong><br>${escapeHtml(item.location || "")}`)
-          .addTo(officialLayer);
-      });
+    getLineFeatures(dong).forEach((feature) => {
+      const symbol = feature.type === "return" ? "□" : "○";
+      const color = feature.type === "return" ? "#596caf" : "#2e8b62";
+      L.polyline(feature.points.map((point) => [point.lat, point.lon]), { color, weight: 5, opacity: .9 })
+        .bindPopup(`<strong>${symbol} ${escapeHtml(feature.name)}</strong><br>${escapeHtml(feature.location || "")}`)
+        .addTo(officialLayer);
     });
 
     dong.safetyAlleys.forEach((item) => {
-      if (item.kind === "line") {
-        normalizeSegments(item.segments).forEach((segment) => {
-          L.polyline(toLatLngs(segment), { color: "#2e8b62", weight: 5, opacity: .9 })
-            .bindPopup(`<strong>○ ${escapeHtml(item.name)}</strong><br>${escapeHtml(item.location || "")}`)
-            .addTo(officialLayer);
-        });
-      } else if (Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon))) {
+      if (item.kind !== "line" && Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon))) {
         L.circleMarker([item.lat, item.lon], { radius: 8, color: "#2e8b62", weight: 4, fillColor: "#fff", fillOpacity: .9 })
           .bindPopup(`<strong>○ ${escapeHtml(item.name)}</strong>`)
           .addTo(officialLayer);
@@ -146,6 +142,56 @@
 
     dong.parcelLockers.forEach((item) => createOfficialMarker(item, "parcel", "☆", `☆ ${item.name}`).addTo(officialLayer));
     dong.vendingMachines.forEach((item) => createOfficialMarker(item, "vending", "△", `△ ${item.name}`).addTo(officialLayer));
+  }
+
+  function getLineFeatures(dong) {
+    const base = [];
+    dong.returnRoutes.forEach((item, index) => {
+      const points = normalizeSegments(item.segments)[0] || [];
+      base.push({
+        id: baseFeatureId("return", dong.name, index),
+        type: "return",
+        dong: dong.name,
+        name: item.name,
+        location: item.location || "",
+        points: points.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })),
+        active: true,
+        baseFeature: true
+      });
+    });
+    dong.safetyAlleys.forEach((item, index) => {
+      if (item.kind !== "line") return;
+      const points = normalizeSegments(item.segments)[0] || [];
+      base.push({
+        id: baseFeatureId("alley", dong.name, index),
+        type: "alley",
+        dong: dong.name,
+        name: item.name,
+        location: item.location || "",
+        points: points.map((point) => ({ lat: Number(point.lat), lon: Number(point.lon) })),
+        active: true,
+        baseFeature: true
+      });
+    });
+
+    const merged = new Map(base.map((feature) => [feature.id, feature]));
+    state.featureOverrides.filter((feature) => feature.dong === dong.name).forEach((feature) => merged.set(feature.id, feature));
+    return [...merged.values()].filter((feature) => feature.active !== false && feature.points.length >= 2);
+  }
+
+  function baseFeatureId(type, dong, index) {
+    return `${type}__${dong}__${index}`;
+  }
+
+  async function subscribeMapFeatures() {
+    try {
+      await SERVICE.listenMapFeatures((features) => {
+        state.featureOverrides = features;
+        renderDong();
+      }, () => showToast("최신 안전시설 선을 불러오지 못했습니다."));
+    } catch (_) {
+      showToast("최신 안전시설 선을 불러오지 못했습니다.");
+    }
   }
 
   function createOfficialMarker(item, type, symbol, label) {

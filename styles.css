@@ -318,7 +318,7 @@ legend, .text-label > span { display: block; margin-bottom: 9px; font-size: 14px
   .app-header, #citizen-view, .notice, .admin-filters, .admin-actions, .admin-list-panel { display: none !important; }
   body, main { background: #fff; }
   main { width: 100%; padding: 0; }
-  #admin-view { display: block !important; }
+  #admin-app { display: block !important; }
   .view-heading { margin: 0 0 12px; }
   .stats { margin-bottom: 10px; }
   .admin-grid { display: block; }

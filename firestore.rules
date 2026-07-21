@@ -61,6 +61,34 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /mapFeatures/{featureId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.id == featureId
+        && request.resource.data.type in ['return', 'alley']
+        && validDong(request.resource.data.dong)
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.location is string
+        && request.resource.data.location.size() <= 150
+        && request.resource.data.points is list
+        && request.resource.data.points.size() >= 2
+        && request.resource.data.points.size() <= 500
+        && request.resource.data.active is bool
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.token.email;
+      allow delete: if false;
+    }
+
+    match /mapFeatureHistory/{historyId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.editedAt == request.time
+        && request.resource.data.editedBy == request.auth.token.email;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
