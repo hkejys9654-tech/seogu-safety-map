@@ -274,6 +274,9 @@ legend, .text-label > span { display: block; margin-bottom: 9px; font-size: 14px
 }
 .official-marker.parcel { color: var(--parcel); }
 .official-marker.vending { color: var(--vending); }
+.official-marker.return { color: var(--blue); }
+.official-marker.alley { color: var(--alley); }
+.official-marker.selected { outline: 4px solid rgba(223,107,63,.55); outline-offset: 3px; }
 .citizen-marker { width: 27px; height: 27px; color: #fff; background: var(--report); border-color: #fff; font-size: 0; }
 .citizen-marker::after { content: "!"; font-size: 15px; }
 .leaflet-div-icon { background: transparent; border: 0; }

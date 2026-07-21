@@ -125,23 +125,19 @@
 
   function drawOfficialData(dong) {
     getLineFeatures(dong).forEach((feature) => {
-      const symbol = feature.type === "return" ? "□" : "○";
-      const color = feature.type === "return" ? "#596caf" : "#2e8b62";
-      L.polyline(feature.points.map((point) => [point.lat, point.lon]), { color, weight: 5, opacity: .9 })
-        .bindPopup(`<strong>${symbol} ${escapeHtml(feature.name)}</strong><br>${escapeHtml(feature.location || "")}`)
-        .addTo(officialLayer);
-    });
-
-    dong.safetyAlleys.forEach((item) => {
-      if (item.kind !== "line" && Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon))) {
-        L.circleMarker([item.lat, item.lon], { radius: 8, color: "#2e8b62", weight: 4, fillColor: "#fff", fillOpacity: .9 })
-          .bindPopup(`<strong>○ ${escapeHtml(item.name)}</strong>`)
+      const symbols = { return: "□", alley: "○", parcel: "☆", vending: "△" };
+      const colors = { return: "#596caf", alley: "#2e8b62", parcel: "#7c62a6", vending: "#cb574a" };
+      const symbol = symbols[feature.type] || "□";
+      const color = colors[feature.type] || colors.return;
+      if (feature.geometry === "point") {
+        const point = feature.points[0];
+        createOfficialMarker(point, feature.type, symbol, `${symbol} ${feature.name}`, feature.location).addTo(officialLayer);
+      } else {
+        L.polyline(feature.points.map((point) => [point.lat, point.lon]), { color, weight: 5, opacity: .9 })
+          .bindPopup(`<strong>${symbol} ${escapeHtml(feature.name)}</strong><br>${escapeHtml(feature.location || "")}`)
           .addTo(officialLayer);
       }
     });
-
-    dong.parcelLockers.forEach((item) => createOfficialMarker(item, "parcel", "☆", `☆ ${item.name}`).addTo(officialLayer));
-    dong.vendingMachines.forEach((item) => createOfficialMarker(item, "vending", "△", `△ ${item.name}`).addTo(officialLayer));
   }
 
   function getLineFeatures(dong) {
@@ -151,6 +147,7 @@
       base.push({
         id: baseFeatureId("return", dong.name, index),
         type: "return",
+        geometry: "line",
         dong: dong.name,
         name: item.name,
         location: item.location || "",
@@ -160,11 +157,14 @@
       });
     });
     dong.safetyAlleys.forEach((item, index) => {
-      if (item.kind !== "line") return;
-      const points = normalizeSegments(item.segments)[0] || [];
+      const isLine = item.kind === "line";
+      const points = isLine
+        ? (normalizeSegments(item.segments)[0] || [])
+        : (Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon)) ? [{ lat: item.lat, lon: item.lon }] : []);
       base.push({
-        id: baseFeatureId("alley", dong.name, index),
+        id: baseFeatureId(isLine ? "alley" : "alleypoint", dong.name, index),
         type: "alley",
+        geometry: isLine ? "line" : "point",
         dong: dong.name,
         name: item.name,
         location: item.location || "",
@@ -173,10 +173,33 @@
         baseFeature: true
       });
     });
+    dong.parcelLockers.forEach((item, index) => base.push({
+      id: baseFeatureId("parcel", dong.name, index),
+      type: "parcel",
+      geometry: "point",
+      dong: dong.name,
+      name: item.name,
+      location: item.address || "",
+      points: [{ lat: Number(item.lat), lon: Number(item.lon) }],
+      active: true,
+      baseFeature: true
+    }));
+    dong.vendingMachines.forEach((item, index) => base.push({
+      id: baseFeatureId("vending", dong.name, index),
+      type: "vending",
+      geometry: "point",
+      dong: dong.name,
+      name: item.name,
+      location: item.detail || "",
+      points: [{ lat: Number(item.lat), lon: Number(item.lon) }],
+      active: true,
+      baseFeature: true
+    }));
 
     const merged = new Map(base.map((feature) => [feature.id, feature]));
     state.featureOverrides.filter((feature) => feature.dong === dong.name).forEach((feature) => merged.set(feature.id, feature));
-    return [...merged.values()].filter((feature) => feature.active !== false && feature.points.length >= 2);
+    return [...merged.values()].filter((feature) => feature.active !== false
+      && feature.points.length >= (feature.geometry === "point" ? 1 : 2));
   }
 
   function baseFeatureId(type, dong, index) {
@@ -194,7 +217,7 @@
     }
   }
 
-  function createOfficialMarker(item, type, symbol, label) {
+  function createOfficialMarker(item, type, symbol, label, location) {
     return L.marker([Number(item.lat), Number(item.lon)], {
       icon: L.divIcon({
         className: "leaflet-div-icon",
@@ -202,7 +225,7 @@
         iconSize: [30, 30],
         iconAnchor: [15, 15]
       })
-    }).bindPopup(`<strong>${escapeHtml(label)}</strong>`);
+    }).bindPopup(`<strong>${escapeHtml(label)}</strong>${location ? `<br>${escapeHtml(location)}` : ""}`);
   }
 
   function createReceiptMarker(report) {

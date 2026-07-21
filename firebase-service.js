@@ -102,6 +102,59 @@
     });
   }
 
+  async function updateReport(id, changes, reviewerEmail) {
+    const clean = {
+      dong: String(changes.dong || ""),
+      type: String(changes.type || "other"),
+      note: String(changes.note || ""),
+      lat: Number(changes.lat),
+      lon: Number(changes.lon),
+      status: String(changes.status || "received")
+    };
+    const context = await getContext();
+    if (!context) {
+      const reports = readLocalReports();
+      const report = reports.find((item) => item.id === id);
+      if (report) Object.assign(report, clean, {
+        reviewerEmail: reviewerEmail || "시범 관리자",
+        updatedAt: new Date().toISOString()
+      });
+      writeLocalReports(reports);
+      return;
+    }
+    const { db, firestore } = context;
+    await firestore.updateDoc(firestore.doc(db, "reports", id), {
+      ...clean,
+      reviewerEmail: reviewerEmail || "",
+      updatedAt: firestore.serverTimestamp()
+    });
+  }
+
+  async function setReportDeleted(id, deleted, reviewerEmail) {
+    const context = await getContext();
+    if (!context) {
+      const reports = readLocalReports();
+      const report = reports.find((item) => item.id === id);
+      if (report) Object.assign(report, {
+        deleted: Boolean(deleted),
+        deletedAt: deleted ? new Date().toISOString() : "",
+        deletedBy: deleted ? (reviewerEmail || "시범 관리자") : "",
+        reviewerEmail: reviewerEmail || "시범 관리자",
+        updatedAt: new Date().toISOString()
+      });
+      writeLocalReports(reports);
+      return;
+    }
+    const { db, firestore } = context;
+    await firestore.updateDoc(firestore.doc(db, "reports", id), {
+      deleted: Boolean(deleted),
+      deletedAt: deleted ? firestore.serverTimestamp() : null,
+      deletedBy: deleted ? (reviewerEmail || "") : "",
+      reviewerEmail: reviewerEmail || "",
+      updatedAt: firestore.serverTimestamp()
+    });
+  }
+
   async function listenMapFeatures(onData, onError) {
     const context = await getContext();
     if (!context) {
@@ -193,14 +246,18 @@
       status: String(data.status || "received"),
       createdAt: timestampToIso(data.createdAt),
       updatedAt: timestampToIso(data.updatedAt),
-      reviewerEmail: String(data.reviewerEmail || "")
+      reviewerEmail: String(data.reviewerEmail || ""),
+      deleted: data.deleted === true,
+      deletedAt: timestampToIso(data.deletedAt, ""),
+      deletedBy: String(data.deletedBy || "")
     };
   }
 
   function normalizeMapFeature(id, data) {
     return {
       id: String(id || data.id || ""),
-      type: data.type === "alley" ? "alley" : "return",
+      type: ["return", "alley", "parcel", "vending"].includes(data.type) ? data.type : "return",
+      geometry: data.geometry === "point" || ["parcel", "vending"].includes(data.type) ? "point" : "line",
       dong: String(data.dong || ""),
       name: String(data.name || "이름 없는 안전시설"),
       location: String(data.location || ""),
@@ -215,10 +272,10 @@
     };
   }
 
-  function timestampToIso(value) {
+  function timestampToIso(value, fallback) {
     if (value && typeof value.toDate === "function") return value.toDate().toISOString();
     if (typeof value === "string") return value;
-    return new Date().toISOString();
+    return fallback === undefined ? new Date().toISOString() : fallback;
   }
 
   function addLocalReport(report) {
@@ -265,6 +322,8 @@
     addReport,
     listenReports,
     updateReportStatus,
+    updateReport,
+    setReportDeleted,
     listenMapFeatures,
     saveMapFeature,
     onAuthChanged,

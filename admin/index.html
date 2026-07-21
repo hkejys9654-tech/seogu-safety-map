@@ -8,13 +8,13 @@
   <title>서구 마을안전지도 관리자</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="../styles.css?v=20260721-3">
-  <link rel="stylesheet" href="admin.css?v=20260721-3">
+  <link rel="stylesheet" href="../styles.css?v=20260721-4">
+  <link rel="stylesheet" href="admin.css?v=20260721-4">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="../map-data.js?v=20260721-2" defer></script>
-  <script src="../firebase-config.js?v=20260721-2" defer></script>
-  <script src="../firebase-service.js?v=20260721-2" defer></script>
-  <script src="app.js?v=20260721-2" defer></script>
+  <script src="../map-data.js?v=20260721-4" defer></script>
+  <script src="../firebase-config.js?v=20260721-4" defer></script>
+  <script src="../firebase-service.js?v=20260721-4" defer></script>
+  <script src="app.js?v=20260721-4" defer></script>
 </head>
 <body class="admin-body">
   <header class="app-header admin-header">
@@ -74,6 +74,7 @@
             <option value="reviewing">검토 중</option>
             <option value="reflected">지도 반영</option>
             <option value="hold">보류</option>
+            <option value="deleted">삭제된 의견</option>
           </select>
         </label>
       </div>
@@ -81,43 +82,45 @@
       <section class="line-editor" aria-labelledby="line-editor-title">
         <div class="line-editor-heading">
           <div>
-            <p class="eyebrow">안전시설 선 편집</p>
-            <h2 id="line-editor-title">안심귀갓길·안전골목 관리</h2>
+            <p class="eyebrow">안전시설 편집</p>
+            <h2 id="line-editor-title">4종 안전시설 관리</h2>
           </div>
           <div class="line-create-controls">
             <label class="select-label" for="feature-type">
-              <span>추가할 선 종류</span>
+              <span>추가할 시설 종류</span>
               <select id="feature-type">
                 <option value="return">안심귀갓길</option>
                 <option value="alley">안전골목</option>
+                <option value="parcel">안심택배보관함</option>
+                <option value="vending">비상생리대 자판기</option>
               </select>
             </label>
-            <button type="button" id="start-add-line" class="primary-button">＋ 새 선 추가</button>
+            <button type="button" id="start-add-line" class="primary-button">＋ 안전시설 추가</button>
           </div>
         </div>
-        <p class="line-editor-guide">먼저 행정동을 하나 선택하세요. 기존 선을 누르면 수정할 수 있고, 새 선은 지도에 이동 경로를 차례로 눌러 그립니다.</p>
+        <p class="line-editor-guide">먼저 행정동을 하나 선택하세요. 귀갓길·골목은 경로를 그리고, 택배보관함·자판기는 위치 한 곳을 누릅니다. 기존 시설을 누르면 수정할 수 있습니다.</p>
 
         <div id="line-editor-panel" class="line-editor-panel" hidden>
           <div class="selected-feature-title">
-            <strong id="selected-feature-label">새 선</strong>
+            <strong id="selected-feature-label">새 안전시설</strong>
             <span id="point-count">0개 점</span>
           </div>
           <div class="feature-fields">
             <label class="text-label" for="feature-name">
-              <span>선 이름</span>
-              <input id="feature-name" type="text" maxlength="80" placeholder="예: 안심귀갓길" required>
+              <span>시설 이름</span>
+              <input id="feature-name" type="text" maxlength="80" placeholder="예: 상무금호건강생활지원센터" required>
             </label>
             <label class="text-label" for="feature-location">
               <span>위치 설명</span>
               <input id="feature-location" type="text" maxlength="150" placeholder="예: ○○초교 주변 원룸촌">
             </label>
           </div>
-          <p id="line-edit-help" class="line-edit-help">지도에서 선을 확인한 뒤 수정 또는 저장하세요.</p>
+          <p id="line-edit-help" class="line-edit-help">지도에서 위치를 확인한 뒤 수정 또는 저장하세요.</p>
           <div class="line-editor-actions">
-            <button type="button" id="redraw-line" class="secondary-button">다시 그리기</button>
+            <button type="button" id="redraw-line" class="secondary-button">위치 다시 지정</button>
             <button type="button" id="undo-point" class="secondary-button" disabled>마지막 점 취소</button>
             <button type="button" id="cancel-line-edit" class="secondary-button">편집 취소</button>
-            <button type="button" id="delete-line" class="danger-button">선 삭제</button>
+            <button type="button" id="delete-line" class="danger-button">시설 삭제</button>
             <button type="button" id="save-line" class="primary-button">확인 후 저장</button>
           </div>
         </div>
@@ -133,9 +136,12 @@
         <div class="map-shell admin-map-shell">
           <div id="admin-map" class="map" aria-label="관리자 종합 안전지도"></div>
           <div id="line-edit-instruction" class="map-instruction" hidden>지도에서 경로를 따라 점을 차례로 눌러주세요.</div>
+          <button type="button" id="cancel-report-relocation" class="map-action-cancel" hidden>위치 변경 취소</button>
           <div class="map-legend compact" aria-label="관리자 지도 범례">
             <span class="legend-item return">□ 안심귀갓길</span>
             <span class="legend-item alley">○ 안전골목</span>
+            <span class="legend-item parcel">☆ 택배보관함</span>
+            <span class="legend-item vending">△ 생리대 자판기</span>
             <span class="legend-item report">● 참여단 의견</span>
           </div>
         </div>
@@ -149,6 +155,56 @@
       </div>
     </section>
   </main>
+
+  <dialog id="admin-report-dialog" class="report-dialog">
+    <form id="admin-report-form">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">시민참여단 의견 관리</p>
+          <h2>등록 의견 수정</h2>
+        </div>
+        <button type="button" id="close-report-edit" class="icon-button" aria-label="닫기">×</button>
+      </div>
+      <div class="admin-report-fields">
+        <label class="select-label" for="edit-report-dong">
+          <span>행정동</span>
+          <select id="edit-report-dong" required></select>
+        </label>
+        <label class="select-label" for="edit-report-type">
+          <span>취약 유형</span>
+          <select id="edit-report-type" required>
+            <option value="dark">어두워요</option>
+            <option value="surveillance">CCTV·비상벨 부족</option>
+            <option value="visibility">시야가 가려져요</option>
+            <option value="walking">보행하기 위험해요</option>
+            <option value="anxiety">혼자 걷기 불안해요</option>
+            <option value="other">기타</option>
+          </select>
+        </label>
+        <label class="select-label" for="edit-report-status">
+          <span>처리 상태</span>
+          <select id="edit-report-status" required>
+            <option value="received">접수</option>
+            <option value="reviewing">검토 중</option>
+            <option value="reflected">지도 반영</option>
+            <option value="hold">보류</option>
+          </select>
+        </label>
+      </div>
+      <label class="text-label" for="edit-report-note">
+        <span>의견 내용</span>
+        <textarea id="edit-report-note" maxlength="120" rows="4" required></textarea>
+      </label>
+      <div class="report-location-editor">
+        <div><strong>등록 위치</strong><span id="edit-report-coordinates"></span></div>
+        <button type="button" id="relocate-report" class="secondary-button">지도에서 위치 다시 지정</button>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" id="cancel-report-edit" class="secondary-button">취소</button>
+        <button type="submit" class="primary-button">수정 내용 저장</button>
+      </div>
+    </form>
+  </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <noscript>이 관리자 앱은 자바스크립트가 필요합니다.</noscript>
