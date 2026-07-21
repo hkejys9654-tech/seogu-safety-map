@@ -39,6 +39,11 @@
     vending: "#cb574a"
   };
   const FEATURE_SYMBOLS = { return: "□", alley: "○", parcel: "☆", vending: "△" };
+  const DONG_COLORS = [
+    "#1f8a70", "#2f78a8", "#7b68b3", "#cf6b55", "#d3973f", "#4f8f5b",
+    "#348b91", "#8b6d52", "#a85f87", "#5476b8", "#6d8b3d", "#b76a42",
+    "#3d8a68", "#6d72a8", "#ad7448", "#4d899a", "#8a6a9b", "#73854c"
+  ];
 
   if (!DATA || !Array.isArray(DATA.dongs) || typeof L === "undefined" || !SERVICE) {
     document.body.innerHTML = "<p style='padding:24px'>관리자 앱을 불러오지 못했습니다. 인터넷 연결과 파일 구성을 확인해주세요.</p>";
@@ -294,6 +299,11 @@
     return DATA.dongs.find((dong) => dong.name === name);
   }
 
+  function getDongColor(name) {
+    const index = DATA.dongs.findIndex((dong) => dong.name === name);
+    return DONG_COLORS[Math.max(0, index) % DONG_COLORS.length];
+  }
+
   function toLatLngs(points) {
     return points.map((point) => [Number(point.lat), Number(point.lon)]);
   }
@@ -305,13 +315,29 @@
   }
 
   function drawDong(dong) {
+    const color = getDongColor(dong.name);
     const boundary = L.polygon(toLatLngs(dong.boundary), {
-      color: "#405b66",
-      weight: state.dong === "all" ? 2 : 4,
-      dashArray: "10 7",
-      fill: false,
+      color,
+      weight: state.dong === "all" ? 2.5 : 5,
+      opacity: .9,
+      fill: true,
+      fillColor: color,
+      fillOpacity: state.dong === "all" ? .09 : .17,
       lineJoin: "round"
-    }).bindTooltip(dong.name, { sticky: true }).addTo(officialLayer);
+    }).bindTooltip(dong.name, {
+      sticky: state.dong !== "all",
+      permanent: state.dong === "all",
+      direction: "center",
+      className: "dong-map-label"
+    }).addTo(officialLayer);
+
+    boundary.on("click", (event) => {
+      if (state.dong !== "all" || state.editMode) return;
+      L.DomEvent.stopPropagation(event.originalEvent);
+      dongSelect.value = dong.name;
+      state.dong = dong.name;
+      renderAdmin();
+    });
 
     getLineFeatures(dong).forEach(drawEditableFeature);
     return boundary;

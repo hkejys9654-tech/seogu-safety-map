@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#176b59">
-  <meta name="description" content="광주 서구 시민참여단 마을 안전지도 현장 의견 등록 웹앱">
+  <meta name="description" content="광주 서구 시민참여단 마을 안전지도 웹앱">
   <title>서구 마을안전지도 시민참여단</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=20260721-6">
+  <link rel="stylesheet" href="styles.css?v=20260721-7">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
   <script src="map-data.js?v=20260721-5" defer></script>
-  <script src="landmarks-data.js?v=20260721-5" defer></script>
+  <script src="landmarks-data.js?v=20260721-7" defer></script>
   <script src="firebase-config.js?v=20260721-4" defer></script>
   <script src="firebase-service.js?v=20260721-4" defer></script>
-  <script src="app.js?v=20260721-6" defer></script>
+  <script src="app.js?v=20260721-7" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -30,13 +30,14 @@
 
   <main>
     <section id="citizen-view" class="view" aria-labelledby="citizen-title">
-      <div class="view-heading">
-        <div>
-          <p class="eyebrow">현장 의견 등록</p>
-          <h1 id="citizen-title">우리 동네에서 불안한 곳을 알려주세요</h1>
+      <div class="citizen-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">마을 안전지도</p>
+          <h1 id="citizen-title"><span id="selected-dong-name">양동</span> 안전정보</h1>
+          <p>동을 선택하면 안전시설과 주요장소를 한눈에 확인할 수 있습니다.</p>
         </div>
-        <label class="select-label" for="citizen-dong">
-          <span>확인할 동</span>
+        <label class="select-label dong-picker" for="citizen-dong">
+          <span>행정동 선택</span>
           <select id="citizen-dong"></select>
         </label>
       </div>
@@ -65,9 +66,9 @@
       <div class="action-bar">
         <div>
           <strong id="citizen-dong-title">양동 지도</strong>
-          <span>기존 시설은 확인만 가능하며, 참여단 의견은 별도로 표시됩니다.</span>
+          <span>현장에서 확인한 위치를 지도에 간단히 기록할 수 있습니다.</span>
         </div>
-        <button type="button" id="start-report" class="primary-button">＋ 취약 위치 등록</button>
+        <button type="button" id="start-report" class="primary-button">＋ 지도에 의견 남기기</button>
       </div>
 
       <section class="my-reports" aria-labelledby="my-reports-title">
@@ -84,7 +85,7 @@
     <form id="report-form" method="dialog">
       <div class="dialog-heading">
         <div>
-          <p class="eyebrow">현장 의견</p>
+          <p class="eyebrow">지도 의견</p>
           <h2>어떤 점이 취약한가요?</h2>
         </div>
         <button type="button" id="close-dialog" class="icon-button" aria-label="닫기">×</button>

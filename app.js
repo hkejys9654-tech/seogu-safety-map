@@ -27,6 +27,11 @@
     anxiety: "#c94f7c",
     other: "#65726e"
   };
+  const DONG_COLORS = [
+    "#1f8a70", "#2f78a8", "#7b68b3", "#cf6b55", "#d3973f", "#4f8f5b",
+    "#348b91", "#8b6d52", "#a85f87", "#5476b8", "#6d8b3d", "#b76a42",
+    "#3d8a68", "#6d72a8", "#ad7448", "#4d899a", "#8a6a9b", "#73854c"
+  ];
 
   if (!DATA || !Array.isArray(DATA.dongs) || typeof L === "undefined" || !SERVICE) {
     document.body.innerHTML = "<p style='padding:24px'>지도를 불러오지 못했습니다. 인터넷 연결과 파일 구성을 확인해주세요.</p>";
@@ -112,6 +117,11 @@
     return DATA.dongs.find((dong) => dong.name === name);
   }
 
+  function getDongColor(name) {
+    const index = DATA.dongs.findIndex((dong) => dong.name === name);
+    return DONG_COLORS[Math.max(0, index) % DONG_COLORS.length];
+  }
+
   function toLatLngs(points) {
     return points.map((point) => [Number(point.lat), Number(point.lon)]);
   }
@@ -123,11 +133,14 @@
   }
 
   function drawBoundary(dong) {
+    const color = getDongColor(dong.name);
     const line = L.polygon(toLatLngs(dong.boundary), {
-      color: "#405b66",
-      weight: 4,
-      dashArray: "10 7",
-      fill: false,
+      color,
+      weight: 5,
+      opacity: .95,
+      fill: true,
+      fillColor: color,
+      fillOpacity: .16,
       lineJoin: "round"
     }).addTo(officialLayer);
     map.fitBounds(line.getBounds(), { padding: [22, 22] });
@@ -282,6 +295,7 @@
     drawOfficialData(dong);
     state.receipts.filter((report) => report.dong === dong.name).forEach((report) => createReceiptMarker(report).addTo(receiptLayer));
     document.getElementById("citizen-dong-title").textContent = `${dong.name} 지도`;
+    document.getElementById("selected-dong-name").textContent = dong.name;
     renderReceipts();
   }
 
@@ -299,7 +313,7 @@
     state.pendingLatLng = null;
     mapInstruction.hidden = true;
     const button = document.getElementById("start-report");
-    button.textContent = "＋ 취약 위치 등록";
+    button.textContent = "＋ 지도에 의견 남기기";
     button.disabled = false;
     map.getContainer().style.cursor = "";
     if (pendingMarker) {

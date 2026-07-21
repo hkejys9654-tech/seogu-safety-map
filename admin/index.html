@@ -8,14 +8,14 @@
   <title>서구 마을안전지도 관리자</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="../styles.css?v=20260721-6">
-  <link rel="stylesheet" href="admin.css?v=20260721-6">
+  <link rel="stylesheet" href="../styles.css?v=20260721-7">
+  <link rel="stylesheet" href="admin.css?v=20260721-7">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
   <script src="../map-data.js?v=20260721-5" defer></script>
-  <script src="../landmarks-data.js?v=20260721-5" defer></script>
+  <script src="../landmarks-data.js?v=20260721-7" defer></script>
   <script src="../firebase-config.js?v=20260721-4" defer></script>
   <script src="../firebase-service.js?v=20260721-4" defer></script>
-  <script src="app.js?v=20260721-6" defer></script>
+  <script src="app.js?v=20260721-7" defer></script>
 </head>
 <body class="admin-body">
   <header class="app-header admin-header">
@@ -46,10 +46,11 @@
     </section>
 
     <section id="admin-app" class="view" aria-labelledby="admin-title" hidden>
-      <div class="view-heading admin-heading">
+      <div class="view-heading admin-heading admin-hero">
         <div>
-          <p class="eyebrow">관리자 종합 화면</p>
-          <h1 id="admin-title">시민참여단 현장 의견 관리</h1>
+          <p class="eyebrow">운영 대시보드</p>
+          <h1 id="admin-title">마을안전지도 통합 관리</h1>
+          <p class="heading-description">18개 동의 안전시설과 시민참여단 의견을 한곳에서 관리합니다.</p>
         </div>
         <div class="admin-actions">
           <button type="button" id="export-csv" class="secondary-button">CSV 내려받기</button>
@@ -62,23 +63,29 @@
         <span>시민참여단 의견을 확인하고 있습니다.</span>
       </div>
 
-      <div class="admin-filters">
-        <label class="select-label" for="admin-dong">
-          <span>행정동</span>
-          <select id="admin-dong"><option value="all">18개 동 전체</option></select>
-        </label>
-        <label class="select-label" for="admin-status">
-          <span>처리 상태</span>
-          <select id="admin-status">
-            <option value="all">전체 상태</option>
-            <option value="received">접수</option>
-            <option value="reviewing">검토 중</option>
-            <option value="reflected">지도 반영</option>
-            <option value="hold">보류</option>
-            <option value="deleted">삭제된 의견</option>
-          </select>
-        </label>
-      </div>
+      <section class="admin-control-panel" aria-label="지도 조회 조건">
+        <div class="control-panel-title">
+          <strong>지도 조회</strong>
+          <span>행정동과 의견 처리상태를 선택하세요.</span>
+        </div>
+        <div class="admin-filters">
+          <label class="select-label" for="admin-dong">
+            <span>행정동</span>
+            <select id="admin-dong"><option value="all">18개 동 전체</option></select>
+          </label>
+          <label class="select-label" for="admin-status">
+            <span>처리 상태</span>
+            <select id="admin-status">
+              <option value="all">전체 상태</option>
+              <option value="received">접수</option>
+              <option value="reviewing">검토 중</option>
+              <option value="reflected">지도 반영</option>
+              <option value="hold">보류</option>
+              <option value="deleted">삭제된 의견</option>
+            </select>
+          </label>
+        </div>
+      </section>
 
       <section class="line-editor" aria-labelledby="line-editor-title">
         <div class="line-editor-heading">
