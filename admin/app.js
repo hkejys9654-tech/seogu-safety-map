@@ -27,16 +27,10 @@
     other: "#65726e"
   };
   const FEATURE_LABELS = {
-    return: "안심귀갓길",
-    alley: "안전골목",
+    return: "여성안심귀갓길",
+    alley: "여성안전골목",
     parcel: "안심택배보관함",
     vending: "비상생리대 자판기"
-  };
-  const FEATURE_COLORS = {
-    return: "#596caf",
-    alley: "#2e8b62",
-    parcel: "#7c62a6",
-    vending: "#cb574a"
   };
   const FEATURE_SYMBOLS = { return: "□", alley: "○", parcel: "☆", vending: "△" };
   const DONG_COLORS = [
@@ -439,7 +433,6 @@
 
   function drawEditableFeature(feature) {
     const selected = state.selectedFeature && state.selectedFeature.id === feature.id;
-    const color = FEATURE_COLORS[feature.type] || FEATURE_COLORS.return;
     const symbol = FEATURE_SYMBOLS[feature.type] || "□";
     if (feature.geometry === "point") {
       const point = feature.points[0];
@@ -457,15 +450,30 @@
       });
       return;
     }
-    const line = L.polyline(feature.points.map((point) => [point.lat, point.lon]), {
-      color,
-      weight: selected ? 8 : 5,
-      opacity: selected ? 1 : .88
-    }).bindTooltip(`${symbol} ${feature.name}`, { sticky: true }).addTo(featureLayer);
+    const latLngs = feature.points.map((point) => [point.lat, point.lon]);
+    const style = officialLineStyle(feature.type, selected);
+    L.polyline(latLngs, {
+      color: selected ? "#fff3cf" : "#fff",
+      weight: style.weight + (selected ? 6 : 4),
+      opacity: selected ? 1 : .9,
+      lineCap: "round",
+      lineJoin: "round",
+      interactive: false
+    }).addTo(featureLayer);
+    const line = L.polyline(latLngs, style)
+      .bindTooltip(`${symbol} ${feature.name}`, { sticky: true })
+      .addTo(featureLayer);
     line.on("click", (event) => {
       L.DomEvent.stopPropagation(event.originalEvent);
       selectFeature(feature);
     });
+  }
+
+  function officialLineStyle(type, selected = false) {
+    if (type === "alley") {
+      return { color: "#16855d", weight: selected ? 9 : 7, opacity: 1, dashArray: "13 9", lineCap: "round", lineJoin: "round" };
+    }
+    return { color: "#4865bd", weight: selected ? 9 : 7, opacity: 1, lineCap: "round", lineJoin: "round" };
   }
 
   function cloneFeature(feature) {

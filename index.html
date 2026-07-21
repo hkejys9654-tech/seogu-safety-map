@@ -14,13 +14,13 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260721-1">
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=20260721-8">
+  <link rel="stylesheet" href="styles.css?v=20260721-9">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
   <script src="map-data.js?v=20260721-5" defer></script>
   <script src="landmarks-data.js?v=20260721-8" defer></script>
   <script src="firebase-config.js?v=20260721-4" defer></script>
   <script src="firebase-service.js?v=20260721-4" defer></script>
-  <script src="app.js?v=20260721-9" defer></script>
+  <script src="app.js?v=20260721-10" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -61,11 +61,11 @@
         </label>
         <div id="map-instruction" class="map-instruction" hidden>지도에서 취약한 위치를 한 번 눌러주세요.</div>
         <div class="map-legend" aria-label="기존 안전시설 범례">
-          <span class="legend-item return">□ 안심귀갓길</span>
-          <span class="legend-item alley">○ 안전골목</span>
-          <span class="legend-item parcel">☆ 택배보관함</span>
-          <span class="legend-item vending">△ 생리대 자판기</span>
-          <span class="legend-item report">● 참여단 의견</span>
+          <span class="legend-item return"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안심귀갓길</span></span>
+          <span class="legend-item alley"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안전골목</span></span>
+          <span class="legend-item parcel"><i class="legend-point-swatch" aria-hidden="true">☆</i><span>안심택배함</span></span>
+          <span class="legend-item vending"><i class="legend-point-swatch" aria-hidden="true">△</i><span>생리대 자판기</span></span>
+          <span class="legend-item report"><i class="legend-point-swatch" aria-hidden="true">●</i><span>참여단 의견</span></span>
         </div>
       </div>
 

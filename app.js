@@ -148,18 +148,33 @@
   function drawOfficialData(dong) {
     getLineFeatures(dong).forEach((feature) => {
       const symbols = { return: "□", alley: "○", parcel: "☆", vending: "△" };
-      const colors = { return: "#596caf", alley: "#2e8b62", parcel: "#7c62a6", vending: "#cb574a" };
       const symbol = symbols[feature.type] || "□";
-      const color = colors[feature.type] || colors.return;
       if (feature.geometry === "point") {
         const point = feature.points[0];
         createOfficialMarker(point, feature.type, symbol, `${symbol} ${feature.name}`, feature.location).addTo(officialLayer);
       } else {
-        L.polyline(feature.points.map((point) => [point.lat, point.lon]), { color, weight: 5, opacity: .9 })
+        const latLngs = feature.points.map((point) => [point.lat, point.lon]);
+        const style = officialLineStyle(feature.type);
+        L.polyline(latLngs, {
+          color: "#fff",
+          weight: style.weight + 4,
+          opacity: .9,
+          lineCap: "round",
+          lineJoin: "round",
+          interactive: false
+        }).addTo(officialLayer);
+        L.polyline(latLngs, style)
           .bindPopup(`<strong>${symbol} ${escapeHtml(feature.name)}</strong><br>${escapeHtml(feature.location || "")}`)
           .addTo(officialLayer);
       }
     });
+  }
+
+  function officialLineStyle(type) {
+    if (type === "alley") {
+      return { color: "#16855d", weight: 7, opacity: .97, dashArray: "13 9", lineCap: "round", lineJoin: "round" };
+    }
+    return { color: "#4865bd", weight: 7, opacity: .97, lineCap: "round", lineJoin: "round" };
   }
 
   function drawLandmarks(dong) {
