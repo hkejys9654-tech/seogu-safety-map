@@ -2,6 +2,7 @@
   "use strict";
 
   const DATA = window.SAFETY_MAP_DATA;
+  const LANDMARKS = window.SAFETY_MAP_LANDMARKS || { dongs: {} };
   const SERVICE = window.SafetyMapFirebase;
   const RECEIPT_KEY = "seogu-safety-map-device-receipts-v2";
   const STATUS_LABELS = {
@@ -48,6 +49,7 @@
   const submitButton = reportForm.querySelector('button[type="submit"]');
   const map = createMap("citizen-map");
   const officialLayer = L.layerGroup().addTo(map);
+  const landmarkLayer = L.layerGroup().addTo(map);
   const receiptLayer = L.layerGroup().addTo(map);
   let pendingMarker = null;
 
@@ -59,10 +61,14 @@
 
   function createMap(id) {
     const instance = L.map(id, { zoomControl: true, minZoom: 12, maxZoom: 19 });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd",
       maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors"
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
     }).addTo(instance);
+    const updateLabels = () => instance.getContainer().classList.toggle("show-landmark-labels", instance.getZoom() >= 15);
+    instance.on("zoomend", updateLabels);
+    updateLabels();
     return instance;
   }
 
@@ -78,6 +84,10 @@
       renderDong();
     });
     document.getElementById("start-report").addEventListener("click", startPlacement);
+    document.getElementById("citizen-landmark-toggle").addEventListener("change", (event) => {
+      if (event.target.checked) landmarkLayer.addTo(map);
+      else map.removeLayer(landmarkLayer);
+    });
     map.on("click", onMapClick);
     document.getElementById("close-dialog").addEventListener("click", closeReportDialog);
     document.getElementById("cancel-report").addEventListener("click", closeReportDialog);
@@ -137,6 +147,25 @@
           .bindPopup(`<strong>${symbol} ${escapeHtml(feature.name)}</strong><br>${escapeHtml(feature.location || "")}`)
           .addTo(officialLayer);
       }
+    });
+  }
+
+  function drawLandmarks(dong) {
+    const categorySymbols = { school: "학", park: "공", apartment: "아", public: "관", transit: "역" };
+    const items = LANDMARKS.dongs && Array.isArray(LANDMARKS.dongs[dong.name]) ? LANDMARKS.dongs[dong.name] : [];
+    items.forEach((item) => {
+      const symbol = categorySymbols[item.category] || "점";
+      L.marker([Number(item.lat), Number(item.lon)], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: -500,
+        icon: L.divIcon({
+          className: "leaflet-div-icon landmark-icon",
+          html: `<div class="landmark-marker ${escapeHtml(item.category)}"><span class="landmark-dot">${symbol}</span><span class="landmark-label">${escapeHtml(item.name)}</span></div>`,
+          iconSize: [27, 27],
+          iconAnchor: [13, 13]
+        })
+      }).addTo(landmarkLayer);
     });
   }
 
@@ -243,8 +272,10 @@
   function renderDong() {
     const dong = getDong(state.dong);
     officialLayer.clearLayers();
+    landmarkLayer.clearLayers();
     receiptLayer.clearLayers();
     drawBoundary(dong);
+    drawLandmarks(dong);
     drawOfficialData(dong);
     state.receipts.filter((report) => report.dong === dong.name).forEach((report) => createReceiptMarker(report).addTo(receiptLayer));
     document.getElementById("citizen-dong-title").textContent = `${dong.name} 지도`;

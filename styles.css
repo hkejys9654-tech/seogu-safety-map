@@ -133,6 +133,82 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
   box-shadow: var(--shadow);
 }
 
+.map-landmark-toggle {
+  position: absolute;
+  z-index: 1000;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 11px;
+  border: 1px solid rgba(50, 66, 70, .2);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .94);
+  color: #29424b;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 3px 12px rgba(24, 45, 48, .13);
+}
+
+.map-landmark-toggle input { width: 18px; height: 18px; accent-color: var(--green); }
+
+.landmark-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  pointer-events: none;
+}
+
+.landmark-dot {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 9px;
+  color: #fff;
+  background: #50656d;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 2px 8px rgba(25, 38, 42, .3);
+}
+
+.landmark-marker.school .landmark-dot { background: #2f6fa5; }
+.landmark-marker.park .landmark-dot { background: #3b8656; border-radius: 50%; }
+.landmark-marker.apartment .landmark-dot { background: #765c9d; }
+.landmark-marker.public .landmark-dot { background: #956129; }
+.landmark-marker.transit .landmark-dot { background: #b24b43; border-radius: 50%; }
+
+.landmark-label {
+  display: none;
+  max-width: 170px;
+  margin-left: 4px;
+  padding: 4px 7px;
+  border: 1px solid rgba(34, 51, 57, .14);
+  border-radius: 6px;
+  color: #26363c;
+  background: rgba(255, 255, 255, .94);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 7px rgba(25, 38, 42, .13);
+}
+
+.map.show-landmark-labels .landmark-label { display: block; }
+.landmark-icon { overflow: visible !important; }
+
+@media (max-width: 680px) {
+  .landmark-label { max-width: 130px; font-size: 10px; }
+  .map-landmark-toggle { min-height: 38px; padding: 7px 9px; }
+}
+
 .map { position: absolute; inset: 0; }
 
 .map-instruction {

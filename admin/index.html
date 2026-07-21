@@ -8,13 +8,14 @@
   <title>서구 마을안전지도 관리자</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="../styles.css?v=20260721-4">
-  <link rel="stylesheet" href="admin.css?v=20260721-4">
+  <link rel="stylesheet" href="../styles.css?v=20260721-5">
+  <link rel="stylesheet" href="admin.css?v=20260721-5">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="../map-data.js?v=20260721-4" defer></script>
+  <script src="../map-data.js?v=20260721-5" defer></script>
+  <script src="../landmarks-data.js?v=20260721-5" defer></script>
   <script src="../firebase-config.js?v=20260721-4" defer></script>
   <script src="../firebase-service.js?v=20260721-4" defer></script>
-  <script src="app.js?v=20260721-4" defer></script>
+  <script src="app.js?v=20260721-5" defer></script>
 </head>
 <body class="admin-body">
   <header class="app-header admin-header">
@@ -135,6 +136,10 @@
       <div class="admin-grid">
         <div class="map-shell admin-map-shell">
           <div id="admin-map" class="map" aria-label="관리자 종합 안전지도"></div>
+          <label class="map-landmark-toggle">
+            <input type="checkbox" id="admin-landmark-toggle" checked>
+            <span>주요장소 표시</span>
+          </label>
           <div id="line-edit-instruction" class="map-instruction" hidden>지도에서 경로를 따라 점을 차례로 눌러주세요.</div>
           <button type="button" id="cancel-report-relocation" class="map-action-cancel" hidden>위치 변경 취소</button>
           <div class="map-legend compact" aria-label="관리자 지도 범례">

@@ -8,12 +8,13 @@
   <title>서구 마을안전지도 시민참여단</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=20260721-4">
+  <link rel="stylesheet" href="styles.css?v=20260721-5">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="map-data.js?v=20260721-4" defer></script>
+  <script src="map-data.js?v=20260721-5" defer></script>
+  <script src="landmarks-data.js?v=20260721-5" defer></script>
   <script src="firebase-config.js?v=20260721-4" defer></script>
   <script src="firebase-service.js?v=20260721-4" defer></script>
-  <script src="app.js?v=20260721-4" defer></script>
+  <script src="app.js?v=20260721-5" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -47,6 +48,10 @@
 
       <div class="map-shell">
         <div id="citizen-map" class="map" aria-label="시민참여단 안전지도"></div>
+        <label class="map-landmark-toggle">
+          <input type="checkbox" id="citizen-landmark-toggle" checked>
+          <span>주요장소 표시</span>
+        </label>
         <div id="map-instruction" class="map-instruction" hidden>지도에서 취약한 위치를 한 번 눌러주세요.</div>
         <div class="map-legend" aria-label="기존 안전시설 범례">
           <span class="legend-item return">□ 안심귀갓길</span>

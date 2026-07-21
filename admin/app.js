@@ -2,6 +2,7 @@
   "use strict";
 
   const DATA = window.SAFETY_MAP_DATA;
+  const LANDMARKS = window.SAFETY_MAP_LANDMARKS || { dongs: {} };
   const SERVICE = window.SafetyMapFirebase;
   const STATUS_LABELS = {
     received: "접수",
@@ -67,6 +68,7 @@
   const reportForm = document.getElementById("admin-report-form");
   let map = null;
   let officialLayer = null;
+  let landmarkLayer = null;
   let featureLayer = null;
   let reportLayer = null;
   let editLayer = null;
@@ -98,6 +100,11 @@
       renderAdmin();
     });
     document.getElementById("start-add-line").addEventListener("click", startAddLine);
+    document.getElementById("admin-landmark-toggle").addEventListener("change", (event) => {
+      if (!map || !landmarkLayer) return;
+      if (event.target.checked) landmarkLayer.addTo(map);
+      else map.removeLayer(landmarkLayer);
+    });
     document.getElementById("redraw-line").addEventListener("click", redrawSelectedLine);
     document.getElementById("undo-point").addEventListener("click", undoLastPoint);
     document.getElementById("cancel-line-edit").addEventListener("click", cancelLineEdit);
@@ -195,15 +202,20 @@
 
   function createMap() {
     map = L.map("admin-map", { zoomControl: true, minZoom: 11, maxZoom: 19 });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd",
       maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors"
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
     }).addTo(map);
     officialLayer = L.layerGroup().addTo(map);
+    landmarkLayer = L.layerGroup().addTo(map);
     featureLayer = L.layerGroup().addTo(map);
     reportLayer = L.layerGroup().addTo(map);
     editLayer = L.layerGroup().addTo(map);
     map.on("click", handleAdminMapClick);
+    const updateLabels = () => map.getContainer().classList.toggle("show-landmark-labels", map.getZoom() >= 15);
+    map.on("zoomend", updateLabels);
+    updateLabels();
   }
 
   async function subscribeReports() {
@@ -251,10 +263,12 @@
     if (!map) return;
     const reports = filteredReports();
     officialLayer.clearLayers();
+    landmarkLayer.clearLayers();
     featureLayer.clearLayers();
     reportLayer.clearLayers();
     const visibleDongs = state.dong === "all" ? DATA.dongs : [getDong(state.dong)];
     const boundaries = visibleDongs.map((dong) => drawDong(dong));
+    if (state.dong !== "all" && visibleDongs[0]) drawLandmarks(visibleDongs[0]);
 
     reports.forEach((report) => {
       const marker = createReportMarker(report).addTo(reportLayer);
@@ -301,6 +315,25 @@
 
     getLineFeatures(dong).forEach(drawEditableFeature);
     return boundary;
+  }
+
+  function drawLandmarks(dong) {
+    const categorySymbols = { school: "학", park: "공", apartment: "아", public: "관", transit: "역" };
+    const items = LANDMARKS.dongs && Array.isArray(LANDMARKS.dongs[dong.name]) ? LANDMARKS.dongs[dong.name] : [];
+    items.forEach((item) => {
+      const symbol = categorySymbols[item.category] || "점";
+      L.marker([Number(item.lat), Number(item.lon)], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: -500,
+        icon: L.divIcon({
+          className: "leaflet-div-icon landmark-icon",
+          html: `<div class="landmark-marker ${escapeHtml(item.category)}"><span class="landmark-dot">${symbol}</span><span class="landmark-label">${escapeHtml(item.name)}</span></div>`,
+          iconSize: [27, 27],
+          iconAnchor: [13, 13]
+        })
+      }).addTo(landmarkLayer);
+    });
   }
 
   function getLineFeatures(dong) {

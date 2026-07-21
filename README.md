@@ -13,6 +13,7 @@
 
 - 18개 행정동 선택
 - 여성안심귀갓길·여성안전골목·택배보관함·비상생리대 자판기 확인
+- 간결한 배경지도와 학교·공원·아파트·공공기관·역 주요장소 표시
 - 지도에서 취약 위치 선택
 - 취약 유형과 간단한 의견 등록
 - 사진 촬영 및 개인정보 입력 없음
@@ -39,4 +40,4 @@
 
 ## 지도 저작권
 
-Map data © OpenStreetMap contributors (ODbL)
+Map data © OpenStreetMap contributors (ODbL), basemap © CARTO
