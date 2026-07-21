@@ -1,0 +1,25 @@
+{
+  "name": "서구 마을안전지도 관리자",
+  "short_name": "안전지도 관리",
+  "description": "광주 서구 마을안전지도 관리자 웹앱",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f9fb",
+  "theme_color": "#284e68",
+  "icons": [
+    {
+      "src": "../assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "../assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

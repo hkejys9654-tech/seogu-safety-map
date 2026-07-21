@@ -15,6 +15,7 @@
 .admin-header .brand span:last-child { color: #fff; }
 
 .admin-header .brand-mark { color: #17364a; background: #fff; }
+.admin-header .brand-icon { border-color: rgba(255, 255, 255, .88); }
 
 .admin-header .app-kind { color: #fff; background: rgba(255, 255, 255, .16); }
 
@@ -229,7 +230,8 @@
   background: rgba(23, 54, 74, .96);
   box-shadow: 0 8px 28px rgba(16, 43, 59, .17);
 }
-.admin-header .brand-mark { border-radius: 15px; box-shadow: 0 8px 18px rgba(8, 30, 43, .22); }
+.admin-header .brand-mark,
+.admin-header .brand-icon { border-radius: 15px; box-shadow: 0 8px 18px rgba(8, 30, 43, .22); }
 .admin-account { gap: 9px; }
 .header-button { min-height: 38px; padding: 0 13px; border-radius: 11px; font-weight: 800; }
 

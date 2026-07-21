@@ -1,0 +1,25 @@
+{
+  "name": "서구 마을안전지도 시민참여단",
+  "short_name": "서구 안전지도",
+  "description": "광주 서구 여성친화도시 시민참여단 마을 안전지도",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffdf7",
+  "theme_color": "#176b59",
+  "icons": [
+    {
+      "src": "assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
