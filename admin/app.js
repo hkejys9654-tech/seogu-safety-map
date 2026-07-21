@@ -207,10 +207,9 @@
 
   function createMap() {
     map = L.map("admin-map", { zoomControl: true, minZoom: 11, maxZoom: 19 });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      subdomains: "abcd",
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+      attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
     officialLayer = L.layerGroup().addTo(map);
     landmarkLayer = L.layerGroup().addTo(map);

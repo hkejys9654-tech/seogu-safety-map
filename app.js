@@ -66,10 +66,9 @@
 
   function createMap(id) {
     const instance = L.map(id, { zoomControl: true, minZoom: 12, maxZoom: 19 });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      subdomains: "abcd",
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+      attribution: "&copy; OpenStreetMap contributors"
     }).addTo(instance);
     const updateLabels = () => instance.getContainer().classList.toggle("show-landmark-labels", instance.getZoom() >= 15);
     instance.on("zoomend", updateLabels);
