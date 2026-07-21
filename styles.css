@@ -324,21 +324,10 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
 .legend-alley-point-swatch {
   width: 20px;
   height: 20px;
-  display: grid;
-  place-items: center;
   flex: 0 0 20px;
   border: 2px solid currentColor;
   border-radius: 50%;
-  background: #fff;
-}
-
-.legend-alley-point-swatch::after {
-  content: "";
-  width: 12px;
-  height: 12px;
-  border: 3px solid currentColor;
-  border-radius: 50%;
-  background: #fff;
+  background: radial-gradient(circle at center, #fff 0 29%, currentColor 30% 68%, #fff 69% 100%);
 }
 
 .legend-item.parcel .legend-point-swatch,
@@ -459,17 +448,9 @@ legend, .text-label > span { display: block; margin-bottom: 9px; font-size: 14px
   border: 2px solid currentColor;
   border-radius: 50%;
   color: var(--alley);
-  background: #fff;
+  background: radial-gradient(circle at center, #fff 0 29%, currentColor 30% 68%, #fff 69% 100%);
   box-shadow: none;
   font-size: 0;
-}
-.official-marker.alley::after {
-  content: "";
-  width: 18px;
-  height: 18px;
-  border: 5px solid currentColor;
-  border-radius: 50%;
-  background: #fff;
 }
 .official-marker.selected { outline: 4px solid rgba(223,107,63,.55); outline-offset: 3px; }
 .official-marker.parcel,
@@ -744,7 +725,6 @@ main { width: min(1500px, 100%); padding: clamp(20px, 3vw, 40px); }
   .legend-line-swatch { width: 28px; flex-basis: 28px; }
   .legend-point-swatch { width: 19px; height: 19px; flex-basis: 19px; font-size: 11px; }
   .legend-alley-point-swatch { width: 18px; height: 18px; flex-basis: 18px; }
-  .legend-alley-point-swatch::after { width: 11px; height: 11px; border-width: 3px; }
   .legend-item.parcel .legend-point-swatch, .legend-item.vending .legend-point-swatch { font-size: 20px; }
   .action-bar { align-items: stretch; flex-direction: column; padding: 18px; border-radius: 18px; }
   .action-bar strong { font-size: 18px; }
