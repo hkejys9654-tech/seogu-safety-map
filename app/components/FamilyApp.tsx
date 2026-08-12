@@ -135,7 +135,7 @@ export default function FamilyApp() {
                 <button onClick={() => void enter()} disabled={!familyNo || loading}>{loading ? "여는 중" : "시작하기"}</button>
               </div>
               {message && <p className="error-text" role="alert">{message}</p>}
-              <p id="privacy-note" className="privacy-note">이름과 주소는 받지 않아요. 가족끼리 쓰는 호칭만 입력해 주세요.</p>
+              <p id="privacy-note" className="privacy-note">이름과 주소는 받지 않아요. 가족 호칭과 활동 기록은 운영 데이터베이스에 저장되어 관리자 참여 현황에 반영됩니다.</p>
             </div>
           </div>
           <div className="landing-visual" aria-hidden="true">
@@ -163,7 +163,7 @@ export default function FamilyApp() {
   return (
     <main className="app-canvas">
       <header className="app-header">
-        <button className="mini-brand" onClick={() => setFamily(null)} aria-label="첫 화면으로 돌아가기"><img src="/assets/seo-gu-symbol.png" alt="" /><span><strong>반반한 家</strong><small>{family.no}번 우리집</small></span></button>
+        <button className="mini-brand" onClick={() => setFamily(null)} aria-label="첫 화면으로 돌아가기"><img src="/assets/seo-gu-symbol.png" alt="" /><span><strong>반반한 가정</strong><small>{family.no}번 우리집</small></span></button>
         <div className={`save-pill ${saveState}`} aria-live="polite">{saveState === "saving" ? "저장 중…" : saveState === "error" ? "저장 확인" : "자동 저장됨"}</div>
       </header>
       <div className="app-layout">
