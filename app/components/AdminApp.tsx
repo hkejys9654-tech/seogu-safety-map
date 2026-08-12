@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ChoreCard, FamilyRecord } from "../data";
-import { DEFAULT_CARDS } from "../data";
+import { DEFAULT_CARDS, WEEK_INFO } from "../data";
 
 function familyStats(family: FamilyRecord) {
   let done = 0;
@@ -24,6 +24,7 @@ export default function AdminApp() {
   const [cards, setCards] = useState<ChoreCard[]>(DEFAULT_CARDS);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [selectedFamily, setSelectedFamily] = useState<FamilyRecord | null>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("haeoni-admin-pin");
@@ -87,15 +88,58 @@ export default function AdminApp() {
   return <main className="admin-canvas">
     <aside className="admin-sidebar"><a href="/" className="admin-logo"><img src="/assets/seo-gu-symbol.png" alt="" /><span><strong>반반한 가정</strong><small>관리자</small></span></a><nav><button className={tab === "overview" ? "active" : ""} onClick={() => setTab("overview")}>참여 현황</button><button className={tab === "cards" ? "active" : ""} onClick={() => setTab("cards")}>집안일 카드</button></nav><img className="admin-character" src="/assets/haeoni-suit-cheer.png" alt="두 팔을 든 해온이" /><button className="logout" onClick={() => { sessionStorage.removeItem("haeoni-admin-pin"); setAuthorized(false); setPin(""); }}>로그아웃</button></aside>
     <section className="admin-workspace">
-      <header className="admin-top"><div><p>광주광역시 서구</p><h1>{tab === "overview" ? "참여 현황" : "집안일 카드 관리"}</h1></div><div><button className="secondary" onClick={() => void loadData()} disabled={busy}>새로고침</button>{tab === "overview" ? <button onClick={exportCsv}>엑셀용 자료 받기</button> : <button onClick={() => void saveCards()} disabled={busy}>{busy ? "저장 중…" : "전체 저장"}</button>}</div></header>
+      <header className="admin-top"><div><p>전남광주통합특별시</p><h1>{tab === "overview" ? "참여 현황" : "집안일 카드 관리"}</h1></div><div><button className="secondary" onClick={() => void loadData()} disabled={busy}>새로고침</button>{tab === "overview" ? <button onClick={exportCsv}>엑셀용 자료 받기</button> : <button onClick={() => void saveCards()} disabled={busy}>{busy ? "저장 중…" : "전체 저장"}</button>}</div></header>
       {message && <div className="admin-message" role="status">{message}</div>}
       {tab === "overview" && <div className="admin-message" role="note">가족용 화면에서 저장된 가정번호·가족 호칭·카드 배치·실천 스티커·최근 저장 기록이 이 화면에 자동 반영됩니다.</div>}
       {tab === "overview" ? <>
         <div className="admin-stats"><article><span>참여 가정</span><strong>{families.length}</strong><small>가정</small></article><article><span>완주 예정</span><strong>{completed}</strong><small>가정</small></article><article><span>실천 스티커</span><strong>{totalStickers}</strong><small>개</small></article><article><span>운영 카드</span><strong>{cards.length}</strong><small>장</small></article></div>
-        <div className="admin-table-card"><div className="table-head"><div><strong>가정별 진행 현황</strong><span>최근 저장 순서로 표시됩니다.</span></div><button onClick={exportCsv}>CSV 내려받기</button></div>{families.length ? <div className="family-table"><div className="family-table-row labels"><span>가정번호</span><span>구성원</span><span>카드 배치</span><span>스티커</span><span>실천율</span><span>관리</span></div>{families.map((family) => { const stats = familyStats(family); return <div className="family-table-row" key={family.no}><strong>{family.no}번</strong><span>{family.members.filter((m) => m.nickname).map((m) => m.nickname).join(" · ") || "미입력"}</span><span>{Object.keys(family.placementBefore || {}).length} / {cards.length}</span><span>{stats.done}개</span><span><i className="rate-bar"><b style={{ width: `${stats.rate}%` }} /></i>{stats.rate}%</span><button onClick={() => void deleteFamily(family.no)}>삭제</button></div>; })}</div> : <div className="admin-empty"><img src="/assets/haeoni-red-cheer.png" alt="기다리는 해온이" /><strong>아직 참여 기록이 없습니다.</strong><p>가족이 가정번호로 시작하면 여기에 표시됩니다.</p></div>}</div>
+        <div className="admin-table-card"><div className="table-head"><div><strong>가정별 진행 현황</strong><span>상세보기를 누르면 구성원별 카드·약속·실천 기록을 모두 확인할 수 있습니다.</span></div><button onClick={exportCsv}>CSV 내려받기</button></div>{families.length ? <div className="family-table"><div className="family-table-row labels"><span>가정번호</span><span>구성원</span><span>카드 배치</span><span>스티커</span><span>실천율</span><span>관리</span></div>{families.map((family) => { const stats = familyStats(family); return <div className="family-table-row" key={family.no}><strong>{family.no}번</strong><span>{family.members.filter((m) => m.nickname).map((m) => m.nickname).join(" · ") || "미입력"}</span><span>{Object.keys(family.placementBefore || {}).length} / {cards.length}</span><span>{stats.done}개</span><span><i className="rate-bar"><b style={{ width: `${stats.rate}%` }} /></i>{stats.rate}%</span><div className="family-row-actions"><button onClick={() => setSelectedFamily(family)}>상세보기</button><button className="danger" onClick={() => void deleteFamily(family.no)}>삭제</button></div></div>; })}</div> : <div className="admin-empty"><img src="/assets/haeoni-red-cheer.png" alt="기다리는 해온이" /><strong>아직 참여 기록이 없습니다.</strong><p>가족이 가정번호로 시작하면 여기에 표시됩니다.</p></div>}</div>
       </> : <CardManager cards={cards} setCards={setCards} onSave={saveCards} busy={busy} />}
     </section>
+    {selectedFamily && <FamilyDetail family={selectedFamily} cards={cards} onClose={() => setSelectedFamily(null)} />}
   </main>;
+}
+
+function FamilyDetail({ family, cards, onClose }: { family: FamilyRecord; cards: ChoreCard[]; onClose: () => void }) {
+  const stats = familyStats(family);
+  const memberName = (memberId: string) => {
+    if (memberId === "together") return "가족이 함께";
+    if (memberId === "none") return "담당 없음";
+    return family.members.find((member) => member.id === memberId)?.nickname || "미입력 구성원";
+  };
+  const cardName = (cardId?: string) => cards.find((card) => card.id === cardId)?.name || "선택 안 함";
+  const savedAt = family.updatedAt ? new Date(family.updatedAt).toLocaleString("ko-KR") : "저장 시각 없음";
+
+  return <div className="detail-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="family-detail" role="dialog" aria-modal="true" aria-labelledby="family-detail-title">
+      <header className="detail-header"><div><p>가정별 전체 기록</p><h2 id="family-detail-title">{family.no}번 가정 상세</h2><span>{savedAt} 기준</span></div><button type="button" onClick={onClose} aria-label="상세 화면 닫기">닫기 ×</button></header>
+      <div className="detail-summary">
+        <article><span>구성원</span><strong>{family.members.filter((member) => member.nickname).map((member) => member.nickname).join(" · ") || "미입력"}</strong></article>
+        <article><span>실천 스티커</span><strong>{stats.done}개</strong></article>
+        <article><span>전체 실천율</span><strong>{stats.rate}%</strong></article>
+      </div>
+
+      <section className="detail-section">
+        <div className="detail-section-title"><div><span>01</span><h3>집안일 카드 배치 전후</h3></div><p>모든 카드의 담당자가 어떻게 달라졌는지 확인합니다.</p></div>
+        <div className="placement-detail-grid">
+          {([{ title: "시작 전", placement: family.placementBefore || {} }, { title: "30일 후", placement: family.placementAfter || {} }] as const).map((phase) => <article className="placement-phase" key={phase.title}><header><strong>{phase.title}</strong><span>{Object.keys(phase.placement).length}장 배치</span></header><div className="assignment-list">{cards.map((card) => <div className="assignment-row" key={card.id}><span>{card.name}</span><strong className={phase.placement[card.id] ? "" : "empty"}>{phase.placement[card.id] ? memberName(phase.placement[card.id]) : "미배치"}</strong></div>)}</div></article>)}
+        </div>
+      </section>
+
+      <section className="detail-section">
+        <div className="detail-section-title"><div><span>02</span><h3>주차별 구성원 실천 기록</h3></div><p>각 구성원이 선택한 카드, 작성한 약속, 요일별 실천을 모두 표시합니다.</p></div>
+        <div className="week-detail-list">{WEEK_INFO.map((weekInfo, weekIndex) => {
+          const week = family.weeks?.[weekIndex];
+          const thankedMember = week?.thanks?.memberId ? memberName(week.thanks.memberId) : "선택 안 함";
+          return <article className="week-detail-card" key={weekInfo.label}><header><div><strong>{weekInfo.label}</strong><span>{weekInfo.period}</span></div><small>{Object.values(week?.checks || {}).flat().filter(Boolean).length}개 실천</small></header><div className="member-week-list">{family.members.map((member) => {
+            const pick = week?.picks?.[member.id];
+            const checks = week?.checks?.[member.id] || [];
+            return <section className="member-week-row" key={member.id}><div className="member-week-name"><strong>{member.nickname || "미입력 구성원"}</strong>{member.kid && <span>아이</span>}</div><dl><div><dt>선택한 카드</dt><dd>{cardName(pick?.cardId)}</dd></div><div><dt>작성한 약속</dt><dd>{pick?.promise?.trim() || "작성 안 함"}</dd></div></dl><div className="detail-checks" aria-label={`${member.nickname || "구성원"}의 요일별 실천`}><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span>{Array.from({ length: 7 }, (_, dayIndex) => <b className={checks[dayIndex] ? "done" : ""} key={dayIndex}>{checks[dayIndex] ? "✓" : "–"}</b>)}</div></section>;
+          })}</div><footer className="thanks-detail"><span>고마운 가족</span><strong>{thankedMember}</strong><p>{week?.thanks?.note?.trim() || "작성 안 함"}</p></footer></article>;
+        })}</div>
+      </section>
+    </section>
+  </div>;
 }
 
 function CardManager({ cards, setCards, onSave, busy }: { cards: ChoreCard[]; setCards: (cards: ChoreCard[]) => void; onSave: () => Promise<void>; busy: boolean }) {

@@ -118,8 +118,8 @@ export default function FamilyApp() {
       <main className="landing-shell">
         <header className="brand-header">
           <div className="brand-lockup">
-            <img src="/assets/seo-gu-symbol.png" alt="광주광역시 서구 심볼" />
-            <div><strong>광주광역시 서구</strong><span>양성평등 가족실천 워크북</span></div>
+            <img src="/assets/seo-gu-symbol.png" alt="전남광주통합특별시 심볼" />
+            <div><strong>전남광주통합특별시</strong><span>양성평등 가족실천 워크북</span></div>
           </div>
           <a className="admin-shortcut" href="/admin">관리자</a>
         </header>

@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const description = "집안일도 마음도 반반하게 나누는 광주광역시 서구 가족실천 워크북";
+  const description = "집안일도 마음도 반반하게 나누는 전남광주통합특별시 가족실천 워크북";
   return {
     title: { default: "반반한 가정", template: "%s | 반반한 가정" },
     description,
