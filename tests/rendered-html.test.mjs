@@ -17,7 +17,7 @@ test("family and admin products replace the starter", async () => {
   ]);
   assert.match(page, /FamilyApp/);
   assert.match(family, /가정번호/);
-  assert.match(family, /반반한 가정/);
+  assert.match(family, /같이 온\(溫\) 가정/);
   assert.match(family, /haeoni-yellow/);
   assert.match(admin, /관리자 화면/);
   assert.match(layout, /lang="ko"/);

@@ -7,19 +7,19 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const description = "집안일도 마음도 반반하게 나누는 전남광주통합특별시 가족실천 워크북";
+  const description = "집안일도 마음도 같이 나누는 전남광주통합특별시 가족실천 워크북";
   return {
-    title: { default: "반반한 가정", template: "%s | 반반한 가정" },
+    title: { default: "같이 온(溫) 가정", template: "%s | 같이 온(溫) 가정" },
     description,
     icons: { icon: "/assets/seo-gu-symbol.png", shortcut: "/assets/seo-gu-symbol.png" },
     openGraph: {
       type: "website",
       url: origin,
-      title: "반반한 가정 | 우리집 워크북",
+      title: "같이 온(溫) 가정 | 우리집 워크북",
       description,
-      images: [{ url: `${origin}/og.png`, width: 1536, height: 1024, alt: "집안일도 마음도 반반하게, 반반한 가정" }],
+      images: [{ url: `${origin}/og.png`, width: 1536, height: 1024, alt: "집안일도 마음도 같이, 같이 온(溫) 가정" }],
     },
-    twitter: { card: "summary_large_image", title: "반반한 가정 | 우리집 워크북", description, images: [`${origin}/og.png`] },
+    twitter: { card: "summary_large_image", title: "같이 온(溫) 가정 | 우리집 워크북", description, images: [`${origin}/og.png`] },
   };
 }
 

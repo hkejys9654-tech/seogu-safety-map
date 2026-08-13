@@ -126,7 +126,7 @@ export default function FamilyApp() {
         <section className="landing-card">
           <div className="landing-copy">
             <p className="eyebrow">30일, 우리집을 바꾸는 작은 약속</p>
-            <h1>집안일도 마음도<br /><em>반반하게</em></h1>
+            <h1>집안일도 마음도<br /><em>같이</em></h1>
             <p className="lead">보이는 일부터 보이지 않는 마음까지, 우리 가족의 일을 함께 발견하고 나누는 모바일 워크북입니다.</p>
             <div className="login-card">
               <label htmlFor="family-number">가정번호</label>
@@ -163,7 +163,7 @@ export default function FamilyApp() {
   return (
     <main className="app-canvas">
       <header className="app-header">
-        <button className="mini-brand" onClick={() => setFamily(null)} aria-label="첫 화면으로 돌아가기"><img src="/assets/seo-gu-symbol.png" alt="" /><span><strong>반반한 가정</strong><small>{family.no}번 우리집</small></span></button>
+        <button className="mini-brand" onClick={() => setFamily(null)} aria-label="첫 화면으로 돌아가기"><img src="/assets/seo-gu-symbol.png" alt="" /><span><strong>같이 온(溫) 가정</strong><small>{family.no}번 우리집</small></span></button>
         <div className={`save-pill ${saveState}`} aria-live="polite">{saveState === "saving" ? "저장 중…" : saveState === "error" ? "저장 확인" : "자동 저장됨"}</div>
       </header>
       <div className="app-layout">
@@ -196,7 +196,7 @@ function HomeTab({ family, cards, update, go }: { family: FamilyRecord; cards: C
   const stats = getCompletion(family);
   const changeMember = (index: number, patch: Partial<Member>) => update({ ...family, members: family.members.map((member, i) => i === index ? { ...member, ...patch } : member) });
   return <div>
-    <SectionHead eyebrow={`${family.no}번 우리집`} title="오늘도 반반하게" description="가족과 집안일을 함께 나눠보세요." />
+    <SectionHead eyebrow={`${family.no}번 우리집`} title="오늘도 같이" description="가족과 집안일을 함께 나눠보세요." />
     <div className="welcome-panel"><div><p>해온이의 한마디</p><strong>{members.length ? `${members.map((m) => m.nickname).join(" · ")} 가족, 반가워!` : "우리 가족을 먼저 알려줘!"}</strong></div><img src={IMAGES.apron} alt="엄지를 든 해온이" /></div>
     <div className="stat-grid">
       <button onClick={() => go("place")}><span>카드 배치</span><strong>{placed}<small> / {cards.length}</small></strong><em>이어하기 →</em></button>
