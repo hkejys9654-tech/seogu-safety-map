@@ -34,6 +34,8 @@ img { display: block; max-width: 100%; }
 .brand-lockup strong { font-size: 17px; letter-spacing: -.03em; }
 .brand-lockup span { color: var(--ink-soft); font-size: 12px; }
 .admin-shortcut { padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-soft); font-size: 13px; font-weight: 700; background: rgba(255,255,255,.86); }
+.landing-actions, .app-header-actions, .detail-header-actions { display: flex; align-items: center; gap: 8px; }
+.print-button { padding: 10px 15px; border: 1px solid #bfd1df; border-radius: 999px; color: var(--blue); background: #fff; font-size: 12px; font-weight: 800; }
 .landing-card { max-width: 1180px; min-height: 520px; margin: 0 auto; border: 1px solid rgba(203, 220, 229, .9); border-radius: 34px; overflow: hidden; display: grid; grid-template-columns: 1.08fr .92fr; background: rgba(255,255,255,.95); box-shadow: var(--shadow); }
 .landing-copy { padding: 68px 36px 58px 72px; position: relative; z-index: 2; }
 .eyebrow { margin: 0 0 15px; color: var(--blue); font-size: 13px; font-weight: 800; letter-spacing: .06em; }
@@ -440,3 +442,42 @@ img { display: block; max-width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body { background: #fff !important; }
+  body { font-size: 10pt; }
+  .print-button, .admin-shortcut, .desktop-nav, .mobile-nav, .save-pill, .admin-sidebar, .admin-message, .admin-top > div:last-child, .family-row-actions, .card-admin-actions, .add-card, .panel-title > button, .add-row { display: none !important; }
+  .landing-shell, .app-canvas, .admin-canvas { min-height: 0; padding: 0; background: #fff !important; }
+  .brand-header { height: 62px; }
+  .landing-card { min-height: 0; box-shadow: none; break-inside: avoid; }
+  .landing-copy { padding: 38px; }
+  .landing-visual { min-height: 410px; }
+  .how-grid { margin-top: 14px; }
+  .brand-slogan { margin-top: 18px; }
+  .app-header { height: 58px; position: static; padding: 0; border-bottom: 2px solid var(--blue); }
+  .app-layout { max-width: none; display: block; padding: 14px 0 0; }
+  .workspace { width: 100%; padding: 0; }
+  .section-head { margin-bottom: 14px; }
+  .section-head h2 { font-size: 24px; }
+  .panel, .promise-card, .chore-row, .week-banner, .report-hero, .stat-grid button { break-inside: avoid; box-shadow: none !important; }
+  .card-stack, .promise-list { gap: 5px; }
+  .chore-row { min-height: 55px; }
+  .chore-row select, .promise-card select, .promise-card input, .thanks-card input { border-color: #cbd8e2; background: #fff; }
+  .admin-workspace { padding: 0; }
+  .admin-top { margin-bottom: 14px; }
+  .admin-stats { margin-bottom: 10px; }
+  .admin-stats article { min-height: 80px; }
+  .admin-table-card, .family-detail, .detail-section { box-shadow: none !important; }
+  .family-table-row { min-width: 0; grid-template-columns: 70px minmax(120px, 1.4fr) 85px 70px 130px; }
+  .family-table-row > :last-child { display: none !important; }
+  body:has(.detail-backdrop) .admin-workspace { display: none !important; }
+  .detail-backdrop { position: static; padding: 0; overflow: visible; background: #fff; backdrop-filter: none; }
+  .family-detail { width: 100%; margin: 0; border-radius: 0; overflow: visible; }
+  .detail-header { position: static; min-height: 82px; padding: 18px 22px; }
+  .detail-summary { padding: 10px 0 0; }
+  .detail-section { margin: 10px 0 0; padding: 14px; break-inside: auto; }
+  .placement-phase, .week-detail-card, .member-week-row { break-inside: avoid; }
+  .assignment-list { max-height: none; overflow: visible; }
+}

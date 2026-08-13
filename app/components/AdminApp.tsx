@@ -88,7 +88,7 @@ export default function AdminApp() {
   return <main className="admin-canvas">
     <aside className="admin-sidebar"><a href="/" className="admin-logo"><img src="/assets/seo-gu-symbol.png" alt="" /><span><strong>같이 온(溫) 가정</strong><small>관리자</small></span></a><nav><button className={tab === "overview" ? "active" : ""} onClick={() => setTab("overview")}>참여 현황</button><button className={tab === "cards" ? "active" : ""} onClick={() => setTab("cards")}>집안일 카드</button></nav><img className="admin-character" src="/assets/haeoni-suit-cheer.png" alt="두 팔을 든 해온이" /><button className="logout" onClick={() => { sessionStorage.removeItem("haeoni-admin-pin"); setAuthorized(false); setPin(""); }}>로그아웃</button></aside>
     <section className="admin-workspace">
-      <header className="admin-top"><div><p>전남광주통합특별시</p><h1>{tab === "overview" ? "참여 현황" : "집안일 카드 관리"}</h1></div><div><button className="secondary" onClick={() => void loadData()} disabled={busy}>새로고침</button>{tab === "overview" ? <button onClick={exportCsv}>엑셀용 자료 받기</button> : <button onClick={() => void saveCards()} disabled={busy}>{busy ? "저장 중…" : "전체 저장"}</button>}</div></header>
+      <header className="admin-top"><div><p>전남광주통합특별시</p><h1>{tab === "overview" ? "참여 현황" : "집안일 카드 관리"}</h1></div><div><button className="secondary print-button" type="button" onClick={() => window.print()}>현재 화면 인쇄·PDF</button><button className="secondary" onClick={() => void loadData()} disabled={busy}>새로고침</button>{tab === "overview" ? <button onClick={exportCsv}>엑셀용 자료 받기</button> : <button onClick={() => void saveCards()} disabled={busy}>{busy ? "저장 중…" : "전체 저장"}</button>}</div></header>
       {message && <div className="admin-message" role="status">{message}</div>}
       {tab === "overview" && <div className="admin-message" role="note">가족용 화면에서 저장된 가정번호·가족 호칭·카드 배치·실천 스티커·최근 저장 기록이 이 화면에 자동 반영됩니다.</div>}
       {tab === "overview" ? <>
@@ -112,7 +112,7 @@ function FamilyDetail({ family, cards, onClose }: { family: FamilyRecord; cards:
 
   return <div className="detail-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="family-detail" role="dialog" aria-modal="true" aria-labelledby="family-detail-title">
-      <header className="detail-header"><div><p>가정별 전체 기록</p><h2 id="family-detail-title">{family.no}번 가정 상세</h2><span>{savedAt} 기준</span></div><button type="button" onClick={onClose} aria-label="상세 화면 닫기">닫기 ×</button></header>
+      <header className="detail-header"><div><p>가정별 전체 기록</p><h2 id="family-detail-title">{family.no}번 가정 상세</h2><span>{savedAt} 기준</span></div><div className="detail-header-actions"><button className="print-button" type="button" onClick={() => window.print()}>인쇄·PDF</button><button type="button" onClick={onClose} aria-label="상세 화면 닫기">닫기 ×</button></div></header>
       <div className="detail-summary">
         <article><span>구성원</span><strong>{family.members.filter((member) => member.nickname).map((member) => member.nickname).join(" · ") || "미입력"}</strong></article>
         <article><span>실천 스티커</span><strong>{stats.done}개</strong></article>

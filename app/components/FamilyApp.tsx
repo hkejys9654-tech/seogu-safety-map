@@ -121,7 +121,7 @@ export default function FamilyApp() {
             <img src="/assets/seo-gu-symbol.png" alt="전남광주통합특별시 심볼" />
             <div><strong>전남광주통합특별시</strong><span>양성평등 가족실천 워크북</span></div>
           </div>
-          <a className="admin-shortcut" href="/admin">관리자</a>
+          <div className="landing-actions"><button className="print-button" type="button" onClick={() => window.print()}>인쇄·PDF</button><a className="admin-shortcut" href="/admin">관리자</a></div>
         </header>
         <section className="landing-card">
           <div className="landing-copy">
@@ -164,7 +164,7 @@ export default function FamilyApp() {
     <main className="app-canvas">
       <header className="app-header">
         <button className="mini-brand" onClick={() => setFamily(null)} aria-label="첫 화면으로 돌아가기"><img src="/assets/seo-gu-symbol.png" alt="" /><span><strong>같이 온(溫) 가정</strong><small>{family.no}번 우리집</small></span></button>
-        <div className={`save-pill ${saveState}`} aria-live="polite">{saveState === "saving" ? "저장 중…" : saveState === "error" ? "저장 확인" : "자동 저장됨"}</div>
+        <div className="app-header-actions"><button className="print-button" type="button" onClick={() => window.print()}>현재 화면 인쇄·PDF</button><div className={`save-pill ${saveState}`} aria-live="polite">{saveState === "saving" ? "저장 중…" : saveState === "error" ? "저장 확인" : "자동 저장됨"}</div></div>
       </header>
       <div className="app-layout">
         <aside className="desktop-nav">
