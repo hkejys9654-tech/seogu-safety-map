@@ -162,6 +162,62 @@ h2 { margin: 0; font-size: 20px; letter-spacing: -.03em; }
 
 .map-landmark-toggle input { width: 18px; height: 18px; accent-color: var(--green); }
 
+.map-location-button {
+  position: absolute;
+  z-index: 1000;
+  top: 14px;
+  left: 62px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1px solid #c9dce9;
+  border-radius: 13px;
+  background: rgba(255,255,255,.96);
+  color: #24516c;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(28, 53, 47, .13);
+  cursor: pointer;
+}
+.map-location-button:disabled { cursor: wait; opacity: .82; }
+.map-location-button.is-active { border-color: #75b8eb; color: #075fa6; background: #f3faff; }
+.location-button-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #1677d2;
+  box-shadow: 0 0 0 2px #1677d2;
+}
+.map-location-button.is-loading .location-button-dot { animation: location-pulse 1s ease-in-out infinite; }
+
+.user-location-icon { overflow: visible !important; background: transparent !important; border: 0 !important; }
+.user-location-marker {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(59,156,255,.22);
+  animation: location-pulse 1.8s ease-out infinite;
+}
+.user-location-marker > span {
+  width: 16px;
+  height: 16px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: #1677d2;
+  box-shadow: 0 2px 8px rgba(4,67,116,.45);
+}
+@keyframes location-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: .72; }
+}
+
 .landmark-marker {
   position: relative;
   display: flex;
@@ -720,6 +776,7 @@ main { width: min(1500px, 100%); padding: clamp(20px, 3vw, 40px); }
   .notice { align-items: flex-start; flex-direction: column; gap: 3px; padding: 10px 12px; font-size: 12px; }
   .map-shell { min-height: 58vh; border-width: 4px; border-radius: 22px; }
   .map-landmark-toggle { top: 9px; right: 9px; min-height: 38px; font-size: 11px; }
+  .map-location-button { top: 9px; left: 56px; min-height: 38px; padding: 7px 10px; font-size: 11px; }
   .map-legend { right: 8px; left: 8px; bottom: 8px; padding: 8px 9px; gap: 3px 7px; }
   .legend-item { min-height: 27px; padding: 3px 6px; gap: 5px; font-size: 10px; }
   .legend-line-swatch { width: 28px; flex-basis: 28px; }

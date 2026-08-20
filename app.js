@@ -43,7 +43,10 @@
     placing: false,
     pendingLatLng: null,
     receipts: readReceipts(),
-    featureOverrides: []
+    featureOverrides: [],
+    locationWatchId: null,
+    lastLocation: null,
+    locationCentered: false
   };
 
   const dongSelect = document.getElementById("citizen-dong");
@@ -51,12 +54,16 @@
   const reportDialog = document.getElementById("report-dialog");
   const reportForm = document.getElementById("report-form");
   const note = document.getElementById("report-note");
+  const locateButton = document.getElementById("locate-me");
   const submitButton = reportForm.querySelector('button[type="submit"]');
   const map = createMap("citizen-map");
   const officialLayer = L.layerGroup().addTo(map);
   const landmarkLayer = L.layerGroup().addTo(map);
   const receiptLayer = L.layerGroup().addTo(map);
+  const locationLayer = L.layerGroup().addTo(map);
   let pendingMarker = null;
+  let locationMarker = null;
+  let accuracyCircle = null;
 
   populateDongSelect();
   bindEvents();
@@ -88,6 +95,7 @@
       renderDong();
     });
     document.getElementById("start-report").addEventListener("click", startPlacement);
+    locateButton.addEventListener("click", locateUser);
     document.getElementById("citizen-landmark-toggle").addEventListener("change", (event) => {
       if (event.target.checked) landmarkLayer.addTo(map);
       else map.removeLayer(landmarkLayer);
@@ -96,9 +104,101 @@
     document.getElementById("close-dialog").addEventListener("click", closeReportDialog);
     document.getElementById("cancel-report").addEventListener("click", closeReportDialog);
     reportForm.addEventListener("submit", submitReport);
+    window.addEventListener("pagehide", stopLocationWatch);
     note.addEventListener("input", () => {
       document.getElementById("note-count").textContent = String(note.value.length);
     });
+  }
+
+  function locateUser() {
+    if (!navigator.geolocation) {
+      showToast("이 휴대폰에서는 위치 기능을 사용할 수 없습니다.");
+      return;
+    }
+
+    if (state.locationWatchId !== null) {
+      if (state.lastLocation) map.setView(state.lastLocation, Math.max(map.getZoom(), 16), { animate: true });
+      return;
+    }
+
+    locateButton.disabled = true;
+    locateButton.classList.add("is-loading");
+    locateButton.querySelector(".location-button-label").textContent = "위치 확인 중";
+    state.locationCentered = false;
+    showToast("휴대폰의 위치 권한을 허용해주세요.");
+
+    state.locationWatchId = navigator.geolocation.watchPosition(
+      updateUserLocation,
+      handleLocationError,
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
+    );
+  }
+
+  function updateUserLocation(position) {
+    const latLng = L.latLng(position.coords.latitude, position.coords.longitude);
+    const accuracy = Math.max(1, Number(position.coords.accuracy) || 1);
+    state.lastLocation = latLng;
+
+    if (!accuracyCircle) {
+      accuracyCircle = L.circle(latLng, {
+        radius: accuracy,
+        color: "#1677d2",
+        weight: 1,
+        opacity: .5,
+        fillColor: "#3b9cff",
+        fillOpacity: .12,
+        interactive: false
+      }).addTo(locationLayer);
+    } else {
+      accuracyCircle.setLatLng(latLng).setRadius(accuracy);
+    }
+
+    if (!locationMarker) {
+      locationMarker = L.marker(latLng, {
+        zIndexOffset: 1200,
+        icon: L.divIcon({
+          className: "leaflet-div-icon user-location-icon",
+          html: '<span class="user-location-marker"><span></span></span>',
+          iconSize: [34, 34],
+          iconAnchor: [17, 17]
+        })
+      }).bindPopup("<strong>현재 내 위치</strong>").addTo(locationLayer);
+    } else {
+      locationMarker.setLatLng(latLng);
+    }
+
+    locateButton.disabled = false;
+    locateButton.classList.remove("is-loading");
+    locateButton.classList.add("is-active");
+    locateButton.setAttribute("aria-pressed", "true");
+    locateButton.querySelector(".location-button-label").textContent = "위치 표시 중";
+
+    if (!state.locationCentered) {
+      state.locationCentered = true;
+      map.setView(latLng, Math.max(map.getZoom(), 16), { animate: true });
+      showToast("현재 위치를 지도에 표시했습니다.");
+    }
+  }
+
+  function handleLocationError(error) {
+    stopLocationWatch();
+    const messages = {
+      1: "위치 권한이 필요합니다. 휴대폰 설정에서 위치 권한을 허용해주세요.",
+      2: "현재 위치를 확인할 수 없습니다. GPS와 인터넷 연결을 확인해주세요.",
+      3: "위치 확인 시간이 초과되었습니다. 잠시 후 다시 눌러주세요."
+    };
+    showToast(messages[error.code] || "현재 위치를 확인하지 못했습니다.");
+  }
+
+  function stopLocationWatch() {
+    if (state.locationWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(state.locationWatchId);
+    }
+    state.locationWatchId = null;
+    locateButton.disabled = false;
+    locateButton.classList.remove("is-loading", "is-active");
+    locateButton.setAttribute("aria-pressed", "false");
+    locateButton.querySelector(".location-button-label").textContent = "내 위치";
   }
 
   function renderConnectionNotice() {
