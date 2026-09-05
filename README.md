@@ -7,6 +7,14 @@
 - `/` 참여 가정: 가족 등록, 함께카드 100장, 성인별 함께지수, 주간 시간 기록, 사후 만족도
 - `/admin` 관리자: 30가정 접속번호, 제출 현황, 가정별 세부 응답, 엑셀 내려받기
 
+## 빠른 수정 위치
+
+- 문구·설문 문항: `app/content.ts`
+- 함께카드 100장: `app/cards.json`
+- 참여 화면: `app/components/family/`
+- 관리자 화면: `app/components/admin/`
+- 색상·화면 모양: `app/globals.css`
+
 ## 저장과 접근
 
 - Firebase Authentication과 Cloud Firestore 사용
