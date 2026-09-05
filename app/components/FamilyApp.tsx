@@ -17,6 +17,7 @@ import {
 import { auth, db, FAMILY_COLLECTION } from "../firebase";
 import {
   cards,
+  familyDocumentId,
   FamilyRecord,
   indexQuestions,
   childlessQuestion,
@@ -52,7 +53,7 @@ const phases: {
 
 function formatError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  if (message.includes("permission-denied"))
+  if (message.includes("permission-denied") || message.includes("not-found"))
     return "가정 번호 또는 접속번호가 맞지 않습니다.";
   if (message.includes("operation-not-allowed"))
     return "익명 로그인이 아직 설정되지 않았습니다. 관리자에게 알려주세요.";
@@ -84,8 +85,8 @@ export default function FamilyApp() {
 
   async function enter() {
     const no = Number(familyNo);
-    if (!Number.isInteger(no) || no < 1 || !/^\d{4}$/.test(pin)) {
-      setNotice("가정 번호와 4자리 접속번호를 확인해주세요.");
+    if (!Number.isInteger(no) || no < 1 || !/^\d{6}$/.test(pin)) {
+      setNotice("가정 번호와 6자리 접속번호를 확인해주세요.");
       return;
     }
     setBusy(true);
@@ -102,7 +103,8 @@ export default function FamilyApp() {
           active = (await signInWithPopup(auth, new GoogleAuthProvider())).user;
         }
       }
-      const ref = doc(db, FAMILY_COLLECTION, String(no).padStart(2, "0"));
+      const documentId = await familyDocumentId(no, pin);
+      const ref = doc(db, FAMILY_COLLECTION, documentId);
       let snapshot;
       try {
         snapshot = await getDoc(ref);
@@ -125,7 +127,7 @@ export default function FamilyApp() {
         snapshot = await getDoc(ref);
       }
       setUser(active);
-      setFamily(snapshot.data() as FamilyRecord);
+      setFamily({ ...(snapshot.data() as FamilyRecord), _docId: snapshot.id });
       sessionStorage.setItem("hamkkeFamilyNo", String(no));
     } catch (error) {
       setNotice(formatError(error));
@@ -137,11 +139,10 @@ export default function FamilyApp() {
   async function persist(nextFamily: FamilyRecord, message = "저장됨") {
     if (!user) return;
     setSaved("저장 중…");
-    const ref = doc(
-      db,
-      FAMILY_COLLECTION,
-      String(nextFamily.familyNo).padStart(2, "0"),
-    );
+    const documentId =
+      nextFamily._docId ||
+      (await familyDocumentId(nextFamily.familyNo, nextFamily.accessPin));
+    const ref = doc(db, FAMILY_COLLECTION, documentId);
     await setDoc(
       ref,
       {
@@ -223,9 +224,9 @@ export default function FamilyApp() {
                 type="password"
                 value={pin}
                 onChange={(e) =>
-                  setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
+                  setPin(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
-                placeholder="4자리"
+                placeholder="6자리"
               />
             </label>
             {notice && (

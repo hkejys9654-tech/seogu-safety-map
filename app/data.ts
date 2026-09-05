@@ -83,6 +83,7 @@ export function blankPhase() {
 export type PhaseData = ReturnType<typeof blankPhase>;
 
 export type FamilyRecord = {
+  _docId?: string;
   familyNo: number;
   accessPin: string;
   ownerUid: string;
@@ -97,6 +98,16 @@ export type FamilyRecord = {
   createdAt?: unknown;
   updatedAt?: unknown;
 };
+
+export async function familyDocumentId(familyNo: number, accessPin: string) {
+  const value = new TextEncoder().encode(
+    `hamkke-family-v1:${familyNo}:${accessPin}`,
+  );
+  const digest = await crypto.subtle.digest("SHA-256", value);
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
 
 export function blankFamily(familyNo: number, accessPin: string): FamilyRecord {
   return {

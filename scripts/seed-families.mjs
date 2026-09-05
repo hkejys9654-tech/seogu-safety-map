@@ -1,4 +1,4 @@
-import { randomInt } from "node:crypto";
+import { createHash, randomInt } from "node:crypto";
 
 const projectId = "seogu-safety-map";
 const collectionName = "hamkkeFamilies";
@@ -61,7 +61,9 @@ if (!listResponse.ok && listResponse.status !== 404)
   throw new Error(`가정 목록 확인 실패: ${listResponse.status}`);
 const list = listResponse.ok ? await listResponse.json() : {};
 const existing = new Set(
-  (list.documents || []).map((document) => document.name.split("/").at(-1)),
+  (list.documents || [])
+    .map((document) => Number(document.fields?.familyNo?.integerValue))
+    .filter(Boolean),
 );
 const usedPins = new Set(
   (list.documents || [])
@@ -72,12 +74,14 @@ const now = new Date().toISOString();
 const writes = [];
 
 for (let familyNo = 1; familyNo <= 30; familyNo++) {
-  const id = String(familyNo).padStart(2, "0");
-  if (existing.has(id)) continue;
+  if (existing.has(familyNo)) continue;
   let pin;
-  do pin = String(randomInt(1000, 10000));
+  do pin = String(randomInt(100000, 1000000));
   while (usedPins.has(pin));
   usedPins.add(pin);
+  const id = createHash("sha256")
+    .update(`hamkke-family-v1:${familyNo}:${pin}`)
+    .digest("hex");
   const family = {
     familyNo,
     accessPin: pin,

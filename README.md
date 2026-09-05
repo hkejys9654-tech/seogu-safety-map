@@ -10,7 +10,8 @@
 ## 저장과 접근
 
 - Firebase Authentication과 Cloud Firestore 사용
-- 참여자는 가정 번호와 4자리 접속번호로 최초 기기를 연결
+- 참여자는 가정 번호와 6자리 접속번호로 최초 기기를 연결
+- 실제 Firestore 문서 주소는 가정 번호와 접속번호를 SHA-256으로 변환해 순번이 노출되지 않음
 - 참여 가정은 자기 가정 자료만 읽고 수정 가능
 - 관리자는 Firestore `admins/{uid}` 문서가 있는 Google 계정만 접근 가능
 - 기존 여성안전지도 Firestore 규칙을 보존한 통합 규칙 사용

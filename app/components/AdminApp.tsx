@@ -22,6 +22,7 @@ import { auth, db, FAMILY_COLLECTION } from "../firebase";
 import {
   blankFamily,
   cards,
+  familyDocumentId,
   FamilyRecord,
   indexQuestions,
   childlessQuestion,
@@ -50,7 +51,7 @@ function ts(value: unknown) {
 
 function randomPin(used: Set<string>) {
   let pin = "";
-  do pin = String(Math.floor(1000 + Math.random() * 9000));
+  do pin = String(Math.floor(100000 + Math.random() * 900000));
   while (used.has(pin));
   used.add(pin);
   return pin;
@@ -85,7 +86,10 @@ export default function AdminApp() {
       collection(db, FAMILY_COLLECTION),
       (snapshot) => {
         const list = snapshot.docs
-          .map((item) => item.data() as FamilyRecord)
+          .map((item) => ({
+            ...(item.data() as FamilyRecord),
+            _docId: item.id,
+          }))
           .sort((a, b) => a.familyNo - b.familyNo);
         setFamilies(list);
         setSelected((current) =>
@@ -121,7 +125,8 @@ export default function AdminApp() {
       for (let no = 1; no <= 30; no++) {
         if (families.some((f) => f.familyNo === no)) continue;
         const data = blankFamily(no, randomPin(used));
-        batch.set(doc(db, FAMILY_COLLECTION, String(no).padStart(2, "0")), {
+        const documentId = await familyDocumentId(no, data.accessPin);
+        batch.set(doc(db, FAMILY_COLLECTION, documentId), {
           ...data,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -137,10 +142,13 @@ export default function AdminApp() {
   }
 
   async function changeCompletion(family: FamilyRecord, value: number) {
-    await updateDoc(
-      doc(db, FAMILY_COLLECTION, String(family.familyNo).padStart(2, "0")),
-      { completionCount: Math.max(0, value), updatedAt: serverTimestamp() },
-    );
+    const documentId =
+      family._docId ||
+      (await familyDocumentId(family.familyNo, family.accessPin));
+    await updateDoc(doc(db, FAMILY_COLLECTION, documentId), {
+      completionCount: Math.max(0, value),
+      updatedAt: serverTimestamp(),
+    });
   }
 
   async function resetAccess(family: FamilyRecord) {
@@ -150,10 +158,13 @@ export default function AdminApp() {
       )
     )
       return;
-    await updateDoc(
-      doc(db, FAMILY_COLLECTION, String(family.familyNo).padStart(2, "0")),
-      { ownerUid: "", updatedAt: serverTimestamp() },
-    );
+    const documentId =
+      family._docId ||
+      (await familyDocumentId(family.familyNo, family.accessPin));
+    await updateDoc(doc(db, FAMILY_COLLECTION, documentId), {
+      ownerUid: "",
+      updatedAt: serverTimestamp(),
+    });
   }
 
   async function exportExcel() {
