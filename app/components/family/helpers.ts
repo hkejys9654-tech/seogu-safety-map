@@ -7,7 +7,7 @@ export type UpdateFamily = (
 export function formatError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   if (message.includes("permission-denied") || message.includes("not-found"))
-    return "가정 번호 또는 접속번호가 맞지 않습니다.";
+    return "가정 번호를 확인해주세요.";
   if (message.includes("operation-not-allowed"))
     return "로그인 설정을 확인해주세요.";
   if (message.includes("network"))

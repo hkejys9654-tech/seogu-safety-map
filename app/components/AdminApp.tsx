@@ -101,7 +101,7 @@ export default function AdminApp() {
       }
       if (created) await batch.commit();
     } catch {
-      setError("접속번호를 만들지 못했습니다.");
+      setError("가정을 만들지 못했습니다.");
     } finally {
       setBusy(false);
     }
@@ -113,22 +113,6 @@ export default function AdminApp() {
       (await familyDocumentId(family.familyNo, family.accessPin));
     await updateDoc(doc(db, FAMILY_COLLECTION, documentId), {
       completionCount: Math.max(0, value),
-      updatedAt: serverTimestamp(),
-    });
-  }
-
-  async function resetAccess(family: FamilyRecord) {
-    if (
-      !confirm(
-        `${family.familyNo}번 가정의 기기 연결을 초기화할까요? 응답 내용은 지워지지 않습니다.`,
-      )
-    )
-      return;
-    const documentId =
-      family._docId ||
-      (await familyDocumentId(family.familyNo, family.accessPin));
-    await updateDoc(doc(db, FAMILY_COLLECTION, documentId), {
-      ownerUid: "",
       updatedAt: serverTimestamp(),
     });
   }
@@ -200,7 +184,7 @@ export default function AdminApp() {
                 onClick={createFamilies}
                 disabled={busy}
               >
-                {busy ? "만드는 중…" : "30가정 접속번호 만들기"}
+                {busy ? "만드는 중…" : "30가정 만들기"}
               </button>
             )}
             <button
@@ -246,13 +230,13 @@ export default function AdminApp() {
         <section className="family-table-card">
           <div className="table-head">
             <b>가정별 현황</b>
-            <span>접속번호는 참여 가정에 개별 안내하세요.</span>
+            <span>가정별 신청자와 제출 현황을 확인할 수 있어요.</span>
           </div>
           <div className="family-table">
             <div className="table-row labels">
               <span>번호</span>
               <span>가정</span>
-              <span>접속번호</span>
+              <span>신청자</span>
               <span>사전</span>
               <span>사후</span>
               <span>인증</span>
@@ -275,7 +259,7 @@ export default function AdminApp() {
                       `${f.adults.adult1} · ${f.adults.adult2}`}
                   </small>
                 </span>
-                <code>{f.accessPin}</code>
+                <span>{f.applicantName || "미입력"}</span>
                 <Status value={f.pre.status} />
                 <Status value={f.post.status} />
                 <span>{f.completionCount || 0}회</span>
@@ -292,7 +276,6 @@ export default function AdminApp() {
           setPhase={setPhase}
           onClose={() => setSelected(null)}
           onCompletion={changeCompletion}
-          onReset={resetAccess}
         />
       )}
     </main>

@@ -17,14 +17,12 @@ export function FamilyDetail({
   setPhase,
   onClose,
   onCompletion,
-  onReset,
 }: {
   family: FamilyRecord;
   phase: PhaseKey;
   setPhase: (p: PhaseKey) => void;
   onClose: () => void;
   onCompletion: (f: FamilyRecord, v: number) => void;
-  onReset: (f: FamilyRecord) => void;
 }) {
   const data = family[phase],
     score1 = indexScore(data.indexAnswers.adult1),
@@ -52,8 +50,8 @@ export function FamilyDetail({
             <h2>{family.familyName || "미등록 가정"}</h2>
             <p>
               {family.adults.adult1 || "성인 1 미등록"} ·{" "}
-              {family.adults.adult2 || "성인 2 미등록"} · 접속번호{" "}
-              <b>{family.accessPin}</b>
+              {family.adults.adult2 || "성인 2 미등록"} · 신청자{" "}
+              <b>{family.applicantName || "미입력"}</b>
             </p>
           </div>
           <button aria-label="닫기" onClick={onClose}>
@@ -70,7 +68,6 @@ export function FamilyDetail({
               onChange={(e) => onCompletion(family, Number(e.target.value))}
             />
           </label>
-          <button onClick={() => onReset(family)}>접속 기기 초기화</button>
         </div>
         <div className="phase-tabs">
           <button

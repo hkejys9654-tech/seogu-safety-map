@@ -11,7 +11,7 @@ export async function exportExcel(families: FamilyRecord[]) {
   const XLSX = await import("xlsx");
   const summary = families.map((f) => ({
     가정번호: f.familyNo,
-    접속번호: f.accessPin,
+    신청자이름: f.applicantName || "",
     가정이름: f.familyName,
     성인1: f.adults.adult1,
     성인2: f.adults.adult2,

@@ -24,10 +24,6 @@ service cloud.firestore {
       return type in ['dark', 'surveillance', 'visibility', 'walking', 'anxiety', 'other'];
     }
 
-    function validFamilyId(familyId) {
-      return familyId.matches('^[a-f0-9]{64}$');
-    }
-
     // 기존 여성안전지도 규칙
     match /reports/{reportId} {
       allow create: if request.resource.data.keys().hasOnly([
@@ -108,25 +104,16 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // 함께가정: 관리자 또는 해당 가정의 연결 기기만 접근
+    // 함께가정 데모: 가정 번호와 신청자 이름으로 간단 접속
     match /hamkkeFamilies/{familyId} {
       allow create, delete: if isAdmin();
-      allow read: if isAdmin() || (validFamilyId(familyId) && signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow read: if signedIn();
       allow update: if isAdmin();
-
-      allow update: if validFamilyId(familyId) && signedIn()
-        && resource.data.ownerUid == ''
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.accessPin == resource.data.accessPin
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ownerUid', 'claimedAt']);
-
-      allow update: if validFamilyId(familyId) && signedIn()
-        && resource.data.ownerUid == request.auth.uid
-        && request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.accessPin == resource.data.accessPin
+      allow update: if signedIn()
         && request.resource.data.familyNo == resource.data.familyNo
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'familyName', 'familyType', 'adults', 'children', 'changeWish', 'pre', 'post', 'updatedAt'
+          'applicantName', 'lastVisitorUid', 'familyName', 'familyType', 'adults',
+          'children', 'changeWish', 'pre', 'post', 'updatedAt'
         ]);
     }
 

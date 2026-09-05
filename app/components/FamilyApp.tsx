@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { signInAnonymously, User } from "firebase/auth";
 import {
-  GoogleAuthProvider,
-  signInAnonymously,
-  signInWithPopup,
-  User,
-} from "firebase/auth";
-import {
+  collection,
   doc,
-  getDoc,
+  getDocs,
+  limit,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { auth, db, FAMILY_COLLECTION } from "../firebase";
-import { familyDocumentId, FamilyRecord, PhaseKey } from "../data";
+import { FamilyRecord, PhaseKey } from "../data";
 import { cloneFamily, formatError } from "./family/helpers";
 import { Header, Progress } from "./family/Shared";
 import { CardSurvey, FamilyInfo } from "./family/SetupAndCards";
@@ -48,7 +47,11 @@ export default function FamilyApp() {
       ? ""
       : sessionStorage.getItem("hamkkeFamilyNo") || "",
   );
-  const [pin, setPin] = useState("");
+  const [applicantName, setApplicantName] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : sessionStorage.getItem("hamkkeApplicantName") || "",
+  );
   const [user, setUser] = useState<User | null>(null);
   const [family, setFamily] = useState<FamilyRecord | null>(null);
   const [phase, setPhase] = useState<PhaseKey | null>(null);
@@ -60,50 +63,37 @@ export default function FamilyApp() {
 
   async function enter() {
     const no = Number(familyNo);
-    if (!Number.isInteger(no) || no < 1 || !/^\d{6}$/.test(pin)) {
-      setNotice("가정 번호와 6자리 접속번호를 확인해주세요.");
+    const name = applicantName.trim();
+    if (!Number.isInteger(no) || no < 1 || no > 30 || !name) {
+      setNotice("가정 번호와 신청자 이름을 입력해주세요.");
       return;
     }
     setBusy(true);
     setNotice("");
     try {
-      let active = auth.currentUser;
-      if (!active) {
-        try {
-          active = (await signInAnonymously(auth)).user;
-        } catch (authError) {
-          const authMessage =
-            authError instanceof Error ? authError.message : String(authError);
-          if (!authMessage.includes("operation-not-allowed")) throw authError;
-          active = (await signInWithPopup(auth, new GoogleAuthProvider())).user;
-        }
-      }
-      const documentId = await familyDocumentId(no, pin);
-      const ref = doc(db, FAMILY_COLLECTION, documentId);
-      let snapshot;
-      try {
-        snapshot = await getDoc(ref);
-      } catch {
-        await updateDoc(ref, {
-          ownerUid: active.uid,
-          accessPin: pin,
-          claimedAt: serverTimestamp(),
-        });
-        snapshot = await getDoc(ref);
-      }
-      if (!snapshot.exists()) throw new Error("permission-denied");
-      const data = snapshot.data() as FamilyRecord;
-      if (data.ownerUid !== active.uid) {
-        await updateDoc(ref, {
-          ownerUid: active.uid,
-          accessPin: pin,
-          claimedAt: serverTimestamp(),
-        });
-        snapshot = await getDoc(ref);
-      }
+      const active = auth.currentUser || (await signInAnonymously(auth)).user;
+      const matches = await getDocs(
+        query(
+          collection(db, FAMILY_COLLECTION),
+          where("familyNo", "==", no),
+          limit(1),
+        ),
+      );
+      const snapshot = matches.docs[0];
+      if (!snapshot) throw new Error("not-found");
+      await updateDoc(snapshot.ref, {
+        applicantName: name,
+        lastVisitorUid: active.uid,
+        updatedAt: serverTimestamp(),
+      });
       setUser(active);
-      setFamily({ ...(snapshot.data() as FamilyRecord), _docId: snapshot.id });
+      setFamily({
+        ...(snapshot.data() as FamilyRecord),
+        applicantName: name,
+        _docId: snapshot.id,
+      });
       sessionStorage.setItem("hamkkeFamilyNo", String(no));
+      sessionStorage.setItem("hamkkeApplicantName", name);
     } catch (error) {
       setNotice(formatError(error));
     } finally {
@@ -114,14 +104,14 @@ export default function FamilyApp() {
   async function persist(nextFamily: FamilyRecord, message = "저장됨") {
     if (!user) return;
     setSaved("저장 중…");
-    const documentId =
-      nextFamily._docId ||
-      (await familyDocumentId(nextFamily.familyNo, nextFamily.accessPin));
+    if (!nextFamily._docId) throw new Error("not-found");
+    const documentId = nextFamily._docId;
     const ref = doc(db, FAMILY_COLLECTION, documentId);
     await setDoc(
       ref,
       {
         familyName: nextFamily.familyName,
+        applicantName: nextFamily.applicantName || "",
         familyType: nextFamily.familyType,
         adults: nextFamily.adults,
         children: nextFamily.children,
@@ -193,15 +183,11 @@ export default function FamilyApp() {
               />
             </label>
             <label>
-              접속번호
+              신청자 이름
               <input
-                inputMode="numeric"
-                type="password"
-                value={pin}
-                onChange={(e) =>
-                  setPin(e.target.value.replace(/\D/g, "").slice(0, 6))
-                }
-                placeholder="6자리"
+                value={applicantName}
+                onChange={(e) => setApplicantName(e.target.value.slice(0, 30))}
+                placeholder="신청자 이름"
               />
             </label>
             {notice && (
@@ -214,7 +200,7 @@ export default function FamilyApp() {
             </button>
           </div>
           <p className="privacy-note">
-            가정별 접속번호로 응답을 안전하게 구분합니다.
+            가정 번호와 신청자 이름으로 시작합니다.
           </p>
         </section>
       </main>
