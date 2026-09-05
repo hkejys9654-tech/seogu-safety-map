@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import FamilyApp from "./components/FamilyApp";
 
 export const metadata: Metadata = {
-  title: "같이 온(溫) 가정 | 우리집 워크북",
-  description: "집안일도 마음도 같이 나누는 전남광주통합특별시 가족실천 워크북",
+  title: "함께가정 | 사전·사후 진단",
+  description: "함께카드로 우리 가족의 역할을 살펴보고 30일의 변화를 기록합니다.",
 };
 
 export default function Home() {

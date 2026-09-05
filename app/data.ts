@@ -1,90 +1,115 @@
-export type ChoreCard = {
-  id: string;
-  name: string;
-  notice: string;
-  prepare: string;
-  action: string;
-  kid: boolean;
-  invisible: boolean;
-  position: number;
-};
+import rawCards from "./cards.json";
 
-export type Member = { id: string; nickname: string; kid: boolean };
-export type WeekRecord = {
-  picks: Record<string, { cardId: string; promise: string }>;
-  checks: Record<string, boolean[]>;
-  thanks: { memberId: string; note: string };
-};
+export type OwnerChoice =
+  | "adult1"
+  | "adult2"
+  | "child"
+  | "together"
+  | "none"
+  | "na";
+export type IndexChoice = "O" | "△" | "X";
+export type PhaseKey = "pre" | "post";
+
+export type Card = { id: string; category: string; title: string };
+export const cards = rawCards as Card[];
+
+export const indexQuestions = [
+  "우리는 집안일을 누가 더 많이 하는지 서로 알고 있다.",
+  "우리는 집안일을 상황에 따라 자연스럽게 나누어 한다.",
+  "우리는 자녀 돌봄과 교육을 함께 책임진다.",
+  "우리는 가족의 일정과 필요한 일을 함께 챙긴다.",
+  "우리는 아프거나 힘든 가족을 함께 돌본다.",
+  "우리는 집안일의 방법과 기준을 서로 존중한다.",
+  "우리는 가족을 위한 일도 중요한 노동이라고 생각한다.",
+  "우리는 집안일 때문에 한 사람만 쉬지 못하는 일이 적다.",
+  "우리는 역할 분담에 불편함이 생기면 대화로 조정한다.",
+  "우리는 서로의 수고를 알아보고 고마움을 표현한다.",
+];
+
+export const childlessQuestion = "우리는 서로의 일을 대신할 수 있다.";
+
+export const satisfactionQuestions = [
+  "함께카드를 통해 우리 가족의 역할을 쉽게 살펴볼 수 있었다.",
+  "함께노트와 30일 실천이 역할을 조정하는 데 도움이 되었다.",
+  "가족과 집안일·돌봄에 대해 대화하는 시간이 늘었다.",
+  "앞으로도 가족이 함께 역할을 나누어 실천할 수 있을 것 같다.",
+  "함께가정 활동을 다른 가족에게 추천하고 싶다.",
+];
+
+export const ownerOptions: {
+  value: OwnerChoice;
+  label: string;
+  icon: string;
+}[] = [
+  { value: "adult1", label: "성인 1", icon: "①" },
+  { value: "adult2", label: "성인 2", icon: "②" },
+  { value: "child", label: "자녀", icon: "♧" },
+  { value: "together", label: "가족 같이", icon: "♡" },
+  { value: "none", label: "담당 없음", icon: "―" },
+  { value: "na", label: "해당 없음", icon: "×" },
+];
+
+export function indexScore(answers: (IndexChoice | null)[]) {
+  return answers.reduce(
+    (sum, answer) => sum + (answer === "O" ? 10 : answer === "△" ? 5 : 0),
+    0,
+  );
+}
+
+export function indexType(score: number) {
+  if (score >= 85) return "이미 함께하는 가정";
+  if (score >= 60) return "함께 가는 중인 가정";
+  if (score >= 35) return "한쪽으로 기울어진 가정";
+  return "이제 시작하는 가정";
+}
+
+export function blankPhase() {
+  return {
+    cards: {} as Record<string, OwnerChoice>,
+    customTitles: {} as Record<string, string>,
+    indexAnswers: {
+      adult1: Array<IndexChoice | null>(10).fill(null),
+      adult2: Array<IndexChoice | null>(10).fill(null),
+    },
+    times: {
+      adult1: { housework: "", mental: "", rest: "" },
+      adult2: { housework: "", mental: "", rest: "" },
+    },
+    satisfaction: { ratings: Array<number | null>(5).fill(null), feedback: "" },
+    status: "draft" as "draft" | "submitted",
+  };
+}
+
+export type PhaseData = ReturnType<typeof blankPhase>;
 
 export type FamilyRecord = {
-  no: string;
-  members: Member[];
-  placementBefore: Record<string, string>;
-  placementAfter: Record<string, string>;
-  weeks: WeekRecord[];
-  updatedAt?: string;
+  familyNo: number;
+  accessPin: string;
+  ownerUid: string;
+  familyName: string;
+  familyType: "children" | "childless";
+  adults: { adult1: string; adult2: string };
+  children: string[];
+  changeWish: string;
+  pre: PhaseData;
+  post: PhaseData;
+  completionCount: number;
+  createdAt?: unknown;
+  updatedAt?: unknown;
 };
 
-export const WEEK_INFO = [
-  { label: "1주차", period: "함께 시작하기" },
-  { label: "2주차", period: "작은 약속 이어가기" },
-  { label: "3주차", period: "서로 응원하기" },
-  { label: "4주차", period: "우리집 변화 돌아보기" },
-];
-
-const CARD_ROWS: Array<Omit<ChoreCard, "id" | "position">> = [
-  { name: "아침 차리기", notice: "무엇을 먹을지 살피기", prepare: "재료 확인하기", action: "차리고 치우기", kid: false, invisible: false },
-  { name: "저녁 차리기", notice: "메뉴 정하기", prepare: "장보기·손질하기", action: "요리하고 차리기", kid: false, invisible: false },
-  { name: "설거지", notice: "그릇과 조리도구 살피기", prepare: "세제·수세미 준비하기", action: "씻고 정리하기", kid: false, invisible: false },
-  { name: "청소", notice: "더러워진 곳 알아채기", prepare: "도구·세제 준비하기", action: "청소하고 정돈하기", kid: false, invisible: false },
-  { name: "빨래 돌리기·널기", notice: "빨랫감 살피기", prepare: "세제와 분류 준비하기", action: "돌리고 널기", kid: false, invisible: false },
-  { name: "빨래 개기·정리", notice: "마른 빨래 확인하기", prepare: "갤 자리 만들기", action: "개어 제자리에 넣기", kid: true, invisible: false },
-  { name: "장보기", notice: "필요한 것 알아채기", prepare: "목록 작성하기", action: "사 오고 정리하기", kid: false, invisible: false },
-  { name: "쓰레기·분리수거", notice: "배출일 기억하기", prepare: "분류·봉투 준비하기", action: "분리해 내놓기", kid: true, invisible: false },
-  { name: "아이 등원·등교", notice: "출발 시간 살피기", prepare: "깨우고 챙기기", action: "안전하게 데려다주기", kid: false, invisible: false },
-  { name: "아이 하원·하교", notice: "마치는 시간 확인하기", prepare: "일정 조율하기", action: "안전하게 데려오기", kid: false, invisible: false },
-  { name: "아이 목욕·씻기기", notice: "씻을 때 알아채기", prepare: "옷·수건 준비하기", action: "씻기고 정리하기", kid: false, invisible: false },
-  { name: "아이 재우기", notice: "잘 시간 챙기기", prepare: "잠자리 준비하기", action: "편안히 재우기", kid: false, invisible: false },
-  { name: "아이와 놀아주기", notice: "하고 싶은 것 물어보기", prepare: "시간·놀잇감 준비하기", action: "함께 놀기", kid: true, invisible: false },
-  { name: "아이 숙제 봐주기", notice: "숙제 있는지 확인하기", prepare: "자리·도구 준비하기", action: "함께 살펴보기", kid: true, invisible: false },
-  { name: "집 정리·수납", notice: "어질러진 곳 알아채기", prepare: "둘 자리 만들기", action: "정리하기", kid: true, invisible: false },
-  { name: "아이 준비물 챙기기", notice: "내일 필요한 것 확인하기", prepare: "미리 마련하기", action: "가방에 넣기", kid: true, invisible: true },
-  { name: "학원·학교 일정 관리", notice: "일정 파악하기", prepare: "달력에 표시하기", action: "시간 맞춰 챙기기", kid: false, invisible: true },
-  { name: "병원 예약·예방접종", notice: "접종·검진 시기 알기", prepare: "예약하기", action: "함께 다녀오기", kid: false, invisible: true },
-  { name: "아이 옷·신발 사이즈", notice: "작아진 것 알아채기", prepare: "필요한 것 정하기", action: "구입해 정리하기", kid: false, invisible: true },
-  { name: "냉장고 재고 파악", notice: "떨어진 식재료 살피기", prepare: "살 목록에 넣기", action: "채워 넣기", kid: true, invisible: true },
-  { name: "생필품 챙기기", notice: "남은 양 확인하기", prepare: "주문·구입하기", action: "채워두기", kid: false, invisible: true },
-  { name: "가족 경조사·선물", notice: "날짜 기억하기", prepare: "마음과 선물 준비하기", action: "연락하고 전달하기", kid: false, invisible: true },
-  { name: "공과금·각종 신청", notice: "납부일·기한 파악하기", prepare: "서류 준비하기", action: "처리하기", kid: false, invisible: true },
-  { name: "양가 부모님 챙기기", notice: "안부·건강 살피기", prepare: "연락 시간 내기", action: "연락·방문하기", kid: false, invisible: true },
-  { name: "아이 친구·학교생활", notice: "관계와 생활 살피기", prepare: "들을 시간 만들기", action: "이야기 나누기", kid: false, invisible: true },
-  { name: "가족 일정 관리", notice: "이번 주 일정 파악하기", prepare: "달력에 정리하기", action: "서로에게 알리기", kid: false, invisible: true },
-  { name: "아이 감정·컨디션", notice: "기분 알아채기", prepare: "대화 시간 내기", action: "마음을 살펴주기", kid: false, invisible: true },
-  { name: "계절 옷·이불 교체", notice: "계절 변화 알아채기", prepare: "정리·세탁 준비하기", action: "바꿔 넣기", kid: false, invisible: true },
-  { name: "집 수리·관리", notice: "고장난 곳 알아채기", prepare: "방법·업체 알아보기", action: "수리하고 확인하기", kid: false, invisible: true },
-  { name: "우리 가족 쉼 챙기기", notice: "누가 지쳤는지 살피기", prepare: "쉴 시간 만들기", action: "서로 쉬게 해주기", kid: false, invisible: true },
-];
-
-export const DEFAULT_CARDS: ChoreCard[] = CARD_ROWS.map((card, index) => ({
-  ...card,
-  id: `c${index + 1}`,
-  position: index,
-}));
-
-export function createBlankFamily(no: string): FamilyRecord {
+export function blankFamily(familyNo: number, accessPin: string): FamilyRecord {
   return {
-    no,
-    members: [
-      { id: "m1", nickname: "", kid: false },
-      { id: "m2", nickname: "", kid: false },
-      { id: "m3", nickname: "", kid: true },
-    ],
-    placementBefore: {},
-    placementAfter: {},
-    weeks: WEEK_INFO.map(() => ({
-      picks: {},
-      checks: {},
-      thanks: { memberId: "", note: "" },
-    })),
+    familyNo,
+    accessPin,
+    ownerUid: "",
+    familyName: "",
+    familyType: "children",
+    adults: { adult1: "", adult2: "" },
+    children: [],
+    changeWish: "",
+    pre: blankPhase(),
+    post: blankPhase(),
+    completionCount: 0,
   };
 }

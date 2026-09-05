@@ -1,33 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host") || "localhost:3000";
-  const protocol = requestHeaders.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
-  const description = "집안일도 마음도 같이 나누는 전남광주통합특별시 가족실천 워크북";
-  return {
-    title: { default: "같이 온(溫) 가정", template: "%s | 같이 온(溫) 가정" },
-    description,
-    icons: { icon: "/assets/seo-gu-symbol.png", shortcut: "/assets/seo-gu-symbol.png" },
-    openGraph: {
-      type: "website",
-      url: origin,
-      title: "같이 온(溫) 가정 | 우리집 워크북",
-      description,
-      images: [{ url: `${origin}/og.png`, width: 1536, height: 1024, alt: "집안일도 마음도 같이, 같이 온(溫) 가정" }],
-    },
-    twitter: { card: "summary_large_image", title: "같이 온(溫) 가정 | 우리집 워크북", description, images: [`${origin}/og.png`] },
-  };
-}
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  themeColor: "#0f5ca8",
+export const metadata: Metadata = {
+  title: { default: "함께가정", template: "%s | 함께가정" },
+  description: "생활 속 양성평등 함께 잇다 — 함께가정 사전·사후 진단",
+  icons: { icon: "/assets/seo-gu-symbol.png" },
+  openGraph: {
+    type: "website",
+    title: "함께가정",
+    description: "함께 나누고, 함께 쉬는 우리 가족의 30일",
+    images: [{ url: "/og.png", width: 1536, height: 1024 }],
+  },
 };
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#176b55" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="ko"><body>{children}</body></html>;
