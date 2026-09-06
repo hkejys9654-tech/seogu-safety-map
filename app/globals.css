@@ -87,6 +87,12 @@ textarea:focus {
   background: #fff1bb;
   right: -100px;
   top: -100px;
+  z-index: 0;
+  pointer-events: none;
+}
+.login-card > * {
+  position: relative;
+  z-index: 1;
 }
 .brand-symbol {
   position: absolute;

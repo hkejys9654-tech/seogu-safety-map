@@ -221,8 +221,15 @@ export default function FamilyApp() {
                 key={item.key}
                 className="phase-card"
                 onClick={() => {
+                  const hasFamilyInfo = Boolean(
+                    family.familyName.trim() &&
+                      family.adults.adult1.trim() &&
+                      family.adults.adult2.trim(),
+                  );
                   setPhase(item.key);
-                  setStep(0);
+                  setStep(item.key === "post" && hasFamilyInfo ? 1 : 0);
+                  setCardIndex(0);
+                  setNotice("");
                 }}
               >
                 <img src={item.image} alt="" />

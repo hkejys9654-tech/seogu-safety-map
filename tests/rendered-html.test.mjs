@@ -38,6 +38,7 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(participant, /sticky-card-actions/);
   assert.match(family, /신청자 이름/);
   assert.doesNotMatch(participant, /6자리 접속번호/);
+  assert.match(family, /item\.key === "post" && hasFamilyInfo/);
   assert.match(admin, /가족별 관리/);
   assert.match(manager, /함께카드 100장/);
   assert.match(layout, /lang="ko"/);
