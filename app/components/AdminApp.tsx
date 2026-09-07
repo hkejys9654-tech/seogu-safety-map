@@ -20,6 +20,7 @@ import { auth, db, FAMILY_COLLECTION } from "../firebase";
 import { blankFamily, familyDocumentId, FamilyRecord, PhaseKey } from "../data";
 import { exportExcel } from "./admin/exportExcel";
 import { FamilyDetail } from "./admin/FamilyDetail";
+import { FamilyEdits } from "./admin/FamilyEditForm";
 import { randomPin, Status, ts } from "./admin/helpers";
 
 export default function AdminApp() {
@@ -118,6 +119,50 @@ export default function AdminApp() {
       completionCount: Math.max(0, value),
       updatedAt: serverTimestamp(),
     });
+  }
+
+  async function saveFamily(family: FamilyRecord, edits: FamilyEdits) {
+    if (!family._docId) return;
+    setError("");
+    try {
+      await updateDoc(doc(db, FAMILY_COLLECTION, family._docId), {
+        ...edits,
+        updatedAt: serverTimestamp(),
+      });
+    } catch {
+      setError("수정 내용을 저장하지 못했습니다.");
+      throw new Error("save-failed");
+    }
+  }
+
+  async function deleteSubmitter(family: FamilyRecord) {
+    if (!family._docId) return;
+    if (
+      !confirm(
+        `${family.familyNo}번 가정의 제출자와 모든 응답을 삭제할까요? 삭제한 내용은 되돌릴 수 없습니다.`,
+      )
+    )
+      return;
+    setError("");
+    try {
+      const empty = blankFamily(family.familyNo, family.accessPin);
+      await updateDoc(doc(db, FAMILY_COLLECTION, family._docId), {
+        applicantName: "",
+        lastVisitorUid: "",
+        familyName: empty.familyName,
+        familyType: empty.familyType,
+        adults: empty.adults,
+        children: empty.children,
+        changeWish: empty.changeWish,
+        pre: empty.pre,
+        post: empty.post,
+        completionCount: 0,
+        updatedAt: serverTimestamp(),
+      });
+      setSelected(null);
+    } catch {
+      setError("제출자 자료를 삭제하지 못했습니다.");
+    }
   }
 
   const submittedPre = families.filter(
@@ -269,6 +314,8 @@ export default function AdminApp() {
           setPhase={setPhase}
           onClose={() => setSelected(null)}
           onCompletion={changeCompletion}
+          onSave={saveFamily}
+          onDelete={deleteSubmitter}
         />
       )}
     </main>

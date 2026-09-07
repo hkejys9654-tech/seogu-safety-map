@@ -1020,6 +1020,62 @@ button.table-row:hover {
   font-size: 12px;
   font-weight: 700;
 }
+.detail-tool-buttons {
+  display: flex;
+  gap: 8px;
+}
+.detail-tools .danger-button {
+  color: #a63c2b;
+  border-color: #efc9c1;
+  background: #fff3f0;
+}
+.admin-edit-form {
+  margin: 16px 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #f7fbf9;
+}
+.admin-edit-form h3 {
+  margin: 0 0 14px;
+}
+.admin-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+.admin-edit-grid label {
+  display: grid;
+  gap: 6px;
+  color: #476158;
+  font-size: 13px;
+  font-weight: 700;
+}
+.admin-edit-grid .full {
+  grid-column: 1 / -1;
+}
+.admin-edit-grid input,
+.admin-edit-grid select,
+.admin-edit-grid textarea {
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  color: var(--ink);
+  font: inherit;
+}
+.admin-edit-grid textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+.admin-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
 .phase-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1298,6 +1354,18 @@ button.table-row:hover {
     flex-direction: column;
     align-items: flex-start;
   }
+  .detail-tool-buttons {
+    width: 100%;
+  }
+  .detail-tool-buttons button {
+    flex: 1;
+  }
+  .admin-edit-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-edit-grid .full {
+    grid-column: auto;
+  }
 }
 @media print {
   body {
@@ -1336,7 +1404,6 @@ button.table-row:hover {
 .promise-card textarea {
   min-height: 170px;
 }
-
 
 /* ── 함께카드 영역별 목록 ───────────────────────────── */
 .checkbox-line {

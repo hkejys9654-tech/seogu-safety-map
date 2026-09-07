@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   cards,
   childlessQuestion,
@@ -10,6 +10,7 @@ import {
   satisfactionQuestions,
 } from "../../data";
 import { ownerLabel, Status } from "./helpers";
+import { FamilyEditForm, FamilyEdits } from "./FamilyEditForm";
 
 export function FamilyDetail({
   family,
@@ -17,13 +18,18 @@ export function FamilyDetail({
   setPhase,
   onClose,
   onCompletion,
+  onSave,
+  onDelete,
 }: {
   family: FamilyRecord;
   phase: PhaseKey;
   setPhase: (p: PhaseKey) => void;
   onClose: () => void;
   onCompletion: (f: FamilyRecord, v: number) => void;
+  onSave: (f: FamilyRecord, edits: FamilyEdits) => Promise<void>;
+  onDelete: (f: FamilyRecord) => Promise<void>;
 }) {
+  const [editing, setEditing] = useState(false);
   const data = family[phase],
     score1 = indexScore(data.indexAnswers.adult1),
     score2 = indexScore(data.indexAnswers.adult2);
@@ -68,7 +74,22 @@ export function FamilyDetail({
               onChange={(e) => onCompletion(family, Number(e.target.value))}
             />
           </label>
+          <div className="detail-tool-buttons">
+            <button onClick={() => setEditing((value) => !value)}>
+              {editing ? "수정 닫기" : "정보 수정"}
+            </button>
+            <button className="danger-button" onClick={() => onDelete(family)}>
+              제출자 삭제
+            </button>
+          </div>
         </div>
+        {editing && (
+          <FamilyEditForm
+            family={family}
+            onSave={(edits) => onSave(family, edits)}
+            onCancel={() => setEditing(false)}
+          />
+        )}
         <div className="phase-tabs">
           <button
             className={phase === "pre" ? "selected" : ""}

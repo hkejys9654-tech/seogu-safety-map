@@ -5,7 +5,7 @@ import test from "node:test";
 test("배포 결과와 두 화면이 만들어진다", async () => {
   await access(new URL("../dist/server/index.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
-  const [page, family, setup, finish, content, admin, detail, layout] =
+  const [page, family, setup, finish, content, admin, detail, edit, layout] =
     await Promise.all([
       readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
       readFile(
@@ -29,10 +29,14 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
         new URL("../app/components/admin/FamilyDetail.tsx", import.meta.url),
         "utf8",
       ),
+      readFile(
+        new URL("../app/components/admin/FamilyEditForm.tsx", import.meta.url),
+        "utf8",
+      ),
       readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     ]);
   const participant = family + setup + finish + content;
-  const manager = admin + detail;
+  const manager = admin + detail + edit;
   assert.match(page, /함께가정/);
   assert.match(participant, /우리 가족이 이번 30일 동안 바꿔보고 싶은 점/);
   assert.match(participant, /sticky-card-actions/);
@@ -41,6 +45,8 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(family, /item\.key === "post" && hasFamilyInfo/);
   assert.match(admin, /가족별 관리/);
   assert.match(admin, /데모 관리자 들어가기/);
+  assert.match(manager, /제출자 삭제/);
+  assert.match(manager, /수정 저장/);
   assert.match(manager, /함께카드 100장/);
   assert.match(layout, /lang="ko"/);
   assert.doesNotMatch(page + participant + manager + layout, /[媛숈繹愿]/);
