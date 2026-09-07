@@ -137,6 +137,7 @@ export function CardSurvey({
   busy: boolean;
   setNotice: (s: string) => void;
 }) {
+  const [openDescription, setOpenDescription] = useState<string | null>(null);
   const visible = useMemo(
     () => cardsFor(family.familyType),
     [family.familyType],
@@ -273,12 +274,35 @@ export function CardSurvey({
               <div className="card-row-title">
                 <small>{card.id}</small>
                 <div>
-                  <strong>
+                  <button
+                    type="button"
+                    className="card-title-button"
+                    aria-expanded={openDescription === card.id}
+                    onClick={() =>
+                      setOpenDescription((current) =>
+                        current === card.id ? null : card.id,
+                      )
+                    }
+                  >
                     {custom
                       ? data.customTitles[card.id] || card.title
                       : card.title}
-                  </strong>
-                  {card.desc && <em>{card.desc}</em>}
+                    <span aria-hidden>?</span>
+                  </button>
+                  {openDescription === card.id && (
+                    <div className="card-description-popover" role="note">
+                      <p>
+                        {card.desc ||
+                          `${card.title}와 관련된 일을 누가 주로 맡는지 떠올려보세요.`}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setOpenDescription(null)}
+                      >
+                        닫기
+                      </button>
+                    </div>
+                  )}
                   {custom && (
                     <input
                       className="custom-role"

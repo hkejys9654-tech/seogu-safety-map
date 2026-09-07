@@ -1533,19 +1533,64 @@ button.table-row:hover {
   color: #9bb0a8;
   padding-top: 3px;
 }
-.card-row-title strong {
-  display: block;
+.card-row-title strong,
+.card-title-button {
   font-size: 16px;
   letter-spacing: -0.03em;
   line-height: 1.35;
 }
-.card-row-title em {
+.card-row-title > div {
+  position: relative;
+}
+.card-title-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  padding: 2px 0;
+  color: var(--ink);
+  text-align: left;
+  font-weight: 800;
+}
+.card-title-button > span {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e6f3ed;
+  color: var(--green);
+  font-size: 11px;
+}
+.card-description-popover {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(330px, calc(100vw - 84px));
+  padding: 12px 13px 9px;
+  border: 1px solid #c9ded5;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(24, 66, 53, 0.18);
+}
+.card-description-popover p {
+  margin: 0;
+  color: #3e5c52;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.card-description-popover > button {
   display: block;
-  margin-top: 3px;
-  font-style: normal;
-  font-size: 12.5px;
-  color: var(--muted);
-  line-height: 1.5;
+  margin: 5px 0 0 auto;
+  border: 0;
+  background: transparent;
+  padding: 3px;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
 }
 .owner-inline {
   display: grid;
@@ -1590,7 +1635,8 @@ button.table-row:hover {
   grid-template-columns: 1fr;
 }
 @media (max-width: 480px) {
-  .card-row-title strong {
+  .card-row-title strong,
+  .card-title-button {
     font-size: 15px;
   }
   .owner-chip {
