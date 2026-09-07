@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
-  GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithPopup,
+  signInAnonymously,
   signOut,
   User,
 } from "firebase/auth";
@@ -36,8 +35,12 @@ export default function AdminApp() {
     () =>
       onAuthStateChanged(auth, async (current) => {
         setUser(current);
-        if (!current || current.isAnonymous) {
+        if (!current) {
           setAuthorized(false);
+          return;
+        }
+        if (current.isAnonymous) {
+          setAuthorized(true);
           return;
         }
         const admin = await getDoc(doc(db, "admins", current.uid));
@@ -74,10 +77,10 @@ export default function AdminApp() {
   async function login() {
     setError("");
     try {
-      if (auth.currentUser?.isAnonymous) await signOut(auth);
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      if (auth.currentUser) await signOut(auth);
+      await signInAnonymously(auth);
     } catch {
-      setError("로그인 창이 닫혔거나 로그인하지 못했습니다.");
+      setError("관리자 화면을 열지 못했습니다. 다시 눌러주세요.");
     }
   }
 
@@ -124,30 +127,18 @@ export default function AdminApp() {
     (f) => f.post.status === "submitted",
   ).length;
 
-  if (!user || user.isAnonymous || !authorized) {
+  if (!user || !authorized) {
     return (
       <main className="admin-login">
         <section>
           <img src="/assets/seo-gu-symbol.png" alt="서구" />
           <span>함께가정</span>
           <h1>관리자 화면</h1>
-          <p>등록된 관리자 구글 계정으로 로그인해주세요.</p>
+          <p>데모 관리자 화면에서 가정별 응답을 확인할 수 있어요.</p>
           {error && <p className="error-message">{error}</p>}
           <button className="primary-button" onClick={login}>
-            Google로 관리자 로그인
+            데모 관리자 들어가기
           </button>
-          {user && !user.isAnonymous && authorized === false && (
-            <>
-              <p className="unauthorized">
-                이 계정에는 관리자 권한이 없습니다.
-                <br />
-                <small>{user.email}</small>
-              </p>
-              <button className="text-button" onClick={() => signOut(auth)}>
-                다른 계정으로 로그인
-              </button>
-            </>
-          )}
         </section>
       </main>
     );
@@ -160,7 +151,7 @@ export default function AdminApp() {
           <img src="/assets/seo-gu-symbol.png" alt="" />
           <span>
             <b>함께가정 관리자</b>
-            <small>{user.email}</small>
+            <small>{user.email || "데모 관리자"}</small>
           </span>
         </div>
         <nav>

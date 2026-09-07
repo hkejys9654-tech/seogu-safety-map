@@ -40,6 +40,7 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.doesNotMatch(participant, /6자리 접속번호/);
   assert.match(family, /item\.key === "post" && hasFamilyInfo/);
   assert.match(admin, /가족별 관리/);
+  assert.match(admin, /데모 관리자 들어가기/);
   assert.match(manager, /함께카드 100장/);
   assert.match(layout, /lang="ko"/);
   assert.doesNotMatch(page + participant + manager + layout, /[媛숈繹愿]/);
