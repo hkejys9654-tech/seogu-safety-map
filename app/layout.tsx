@@ -4,7 +4,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "함께가정", template: "%s | 함께가정" },
   description: "생활 속 양성평등 함께 잇다 — 함께가정 사전·사후 진단",
-  icons: { icon: "/assets/seo-gu-symbol.png" },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/assets/haeoni-app-icon-192.png",
+    shortcut: "/assets/haeoni-app-icon-192.png",
+    apple: "/assets/haeoni-app-icon-512.png",
+  },
   openGraph: {
     type: "website",
     title: "함께가정",
@@ -13,8 +18,18 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#176b55" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#176b55",
+};
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ko"><body>{children}</body></html>;
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="ko">
+      <body>{children}</body>
+    </html>
+  );
 }

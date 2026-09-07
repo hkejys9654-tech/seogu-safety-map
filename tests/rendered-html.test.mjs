@@ -52,6 +52,15 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(manager, /제출자 삭제/);
   assert.match(manager, /수정 저장/);
   assert.match(manager, /함께카드 100장/);
+  assert.match(finish, /haeoni-suit-cheer\.png/);
+  assert.doesNotMatch(finish, /haeoni-suit-arms\.png/);
+  assert.match(layout, /haeoni-app-icon-192\.png/);
+  await access(
+    new URL("../public/assets/haeoni-app-icon-192.png", import.meta.url),
+  );
+  await access(
+    new URL("../public/assets/haeoni-suit-cheer.png", import.meta.url),
+  );
   assert.match(layout, /lang="ko"/);
   assert.doesNotMatch(page + participant + manager + layout, /[媛숈繹愿]/);
 });

@@ -118,7 +118,7 @@ export function Result({
   return (
     <section className="content-card result-card">
       <div className="result-hero">
-        <img src="/assets/haeoni-suit-arms.png" alt="기뻐하는 해온이" />
+        <img src="/assets/haeoni-suit-cheer.png" alt="기뻐하는 해온이" />
         <div>
           <span className="section-kicker">
             {phase === "pre" ? "사전" : "사후"} 진단 결과
