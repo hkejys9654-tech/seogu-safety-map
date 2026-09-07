@@ -43,6 +43,7 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(setup, /실명 입력/);
   assert.match(participant, /sticky-card-actions/);
   assert.match(setup, /card-description-popover/);
+  assert.doesNotMatch(setup, /관련된 일을 누가 주로 맡는지 떠올려보세요/);
   assert.match(family, /신청자 이름/);
   assert.doesNotMatch(participant, /6자리 접속번호/);
   assert.match(family, /item\.key === "post" && hasFamilyInfo/);
@@ -62,6 +63,7 @@ test("확정 함께카드가 100장이고 영역별 수가 맞다", async () => 
   assert.equal(cards.length, 100);
   assert.match(cards.find((card) => card.title === "대출").desc, /신청·상환/);
   assert.match(cards.find((card) => card.title === "보험").desc, /보상 청구/);
+  assert.match(cards.find((card) => card.title === "죽음").desc, /장례 절차/);
   const counts = Object.groupBy(cards, (card) => card.category);
   assert.deepEqual(
     Object.fromEntries(

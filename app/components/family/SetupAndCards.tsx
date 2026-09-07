@@ -274,27 +274,32 @@ export function CardSurvey({
               <div className="card-row-title">
                 <small>{card.id}</small>
                 <div>
-                  <button
-                    type="button"
-                    className="card-title-button"
-                    aria-expanded={openDescription === card.id}
-                    onClick={() =>
-                      setOpenDescription((current) =>
-                        current === card.id ? null : card.id,
-                      )
-                    }
-                  >
-                    {custom
-                      ? data.customTitles[card.id] || card.title
-                      : card.title}
-                    <span aria-hidden>?</span>
-                  </button>
-                  {openDescription === card.id && (
+                  {card.desc ? (
+                    <button
+                      type="button"
+                      className="card-title-button"
+                      aria-expanded={openDescription === card.id}
+                      onClick={() =>
+                        setOpenDescription((current) =>
+                          current === card.id ? null : card.id,
+                        )
+                      }
+                    >
+                      {custom
+                        ? data.customTitles[card.id] || card.title
+                        : card.title}
+                      <span aria-hidden>?</span>
+                    </button>
+                  ) : (
+                    <strong>
+                      {custom
+                        ? data.customTitles[card.id] || card.title
+                        : card.title}
+                    </strong>
+                  )}
+                  {card.desc && openDescription === card.id && (
                     <div className="card-description-popover" role="note">
-                      <p>
-                        {card.desc ||
-                          `${card.title}와 관련된 일을 누가 주로 맡는지 떠올려보세요.`}
-                      </p>
+                      <p>{card.desc}</p>
                       <button
                         type="button"
                         onClick={() => setOpenDescription(null)}
