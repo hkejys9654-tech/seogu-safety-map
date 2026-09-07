@@ -14,7 +14,7 @@ import {
   where,
 } from "firebase/firestore";
 import { auth, db, FAMILY_COLLECTION } from "../firebase";
-import { FamilyRecord, PhaseKey } from "../data";
+import { FamilyRecord, hasSecondAdult, PhaseKey } from "../data";
 import { cloneFamily, formatError } from "./family/helpers";
 import { Header, Progress } from "./family/Shared";
 import { CardSurvey, FamilyInfo } from "./family/SetupAndCards";
@@ -222,9 +222,7 @@ export default function FamilyApp() {
                 className="phase-card"
                 onClick={() => {
                   const hasFamilyInfo = Boolean(
-                    family.familyName.trim() &&
-                      family.adults.adult1.trim() &&
-                      family.adults.adult2.trim(),
+                    family.familyName.trim() && family.adults.adult1.trim(),
                   );
                   setPhase(item.key);
                   setStep(item.key === "post" && hasFamilyInfo ? 1 : 0);
@@ -249,11 +247,22 @@ export default function FamilyApp() {
   }
 
   const current = family[phase];
+  const twoAdults = hasSecondAdult(family);
   const finalStep = 6;
+  // 어른이 한 분인 가정은 성인 2 함께지수(3단계)를 건너뜁니다.
+  const goForward = (from: number) =>
+    saveAndGo(!twoAdults && from + 1 === 3 ? 4 : from + 1);
+  const goBack = (from: number) =>
+    setStep(!twoAdults && from - 1 === 3 ? 2 : from - 1);
   return (
     <main className="site-shell app-shell">
       <Header family={family} saved={saved} onHome={() => setPhase(null)} />
-      <Progress step={step} finalStep={finalStep} phase={phase} />
+      <Progress
+        step={step}
+        finalStep={finalStep}
+        phase={phase}
+        twoAdults={twoAdults}
+      />
       {notice && (
         <p className="floating-notice" role="alert">
           {notice}
@@ -264,14 +273,8 @@ export default function FamilyApp() {
           family={family}
           updateFamily={updateFamily}
           onNext={() => {
-            if (
-              !family.familyName.trim() ||
-              !family.adults.adult1.trim() ||
-              !family.adults.adult2.trim()
-            ) {
-              setNotice(
-                "가정 이름과 성인 두 분의 이름(또는 별명)을 적어주세요.",
-              );
+            if (!family.familyName.trim() || !family.adults.adult1.trim()) {
+              setNotice("가정 이름과 어른의 이름(또는 별명)을 적어주세요.");
               return;
             }
             saveAndGo(1);
@@ -302,7 +305,7 @@ export default function FamilyApp() {
           data={current}
           updateFamily={updateFamily}
           onBack={() => setStep(1)}
-          onNext={() => saveAndGo(3)}
+          onNext={() => goForward(2)}
           busy={busy}
           setNotice={setNotice}
         />
@@ -326,7 +329,7 @@ export default function FamilyApp() {
           phase={phase}
           data={current}
           updateFamily={updateFamily}
-          onBack={() => setStep(3)}
+          onBack={() => goBack(4)}
           onNext={() => saveAndGo(5)}
           busy={busy}
           setNotice={setNotice}

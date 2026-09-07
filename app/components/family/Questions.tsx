@@ -1,6 +1,7 @@
 import {
   childlessQuestion,
   FamilyRecord,
+  hasSecondAdult,
   IndexChoice,
   indexQuestions,
   PhaseData,
@@ -74,7 +75,11 @@ export function IndexSurvey({
         ))}
       </div>
       <BottomActions
-        primary={who === "adult1" ? "성인 2 응답으로" : "시간 기록으로"}
+        primary={
+          who === "adult1" && hasSecondAdult(family)
+            ? `${family.adults.adult2}님 응답으로`
+            : "시간 기록으로"
+        }
         onPrimary={() => {
           if (!complete) {
             setNotice("10문항을 모두 답해주세요.");
@@ -114,7 +119,10 @@ export function TimeSurvey({
     ["mental", "가족 챙김", "일정·준비물·연락 등을 생각하고 챙긴 시간"],
     ["rest", "혼자 쉰 시간", "온전히 나를 위해 쉰 시간"],
   ] as const;
-  const complete = (["adult1", "adult2"] as const).every((who) =>
+  const people = hasSecondAdult(family)
+    ? (["adult1", "adult2"] as const)
+    : (["adult1"] as const);
+  const complete = people.every((who) =>
     rows.every(([key]) => data.times[who][key] !== ""),
   );
   return (
@@ -124,17 +132,21 @@ export function TimeSurvey({
       <p className="lead">
         정확하지 않아도 괜찮아요. 대략적인 시간을 숫자로 적어주세요.
       </p>
-      <div className="time-table">
+      <div
+        className={
+          people.length === 1 ? "time-table single" : "time-table"
+        }
+      >
         <div />
         <b>{family.adults.adult1 || "성인 1"}</b>
-        <b>{family.adults.adult2 || "성인 2"}</b>
+        {people.length === 2 && <b>{family.adults.adult2}</b>}
         {rows.map(([key, title, help]) => (
           <div className="time-row" key={key}>
             <div>
               <strong>{title}</strong>
               <small>{help}</small>
             </div>
-            {(["adult1", "adult2"] as const).map((who) => (
+            {people.map((who) => (
               <label key={who}>
                 <input
                   type="number"
@@ -158,7 +170,11 @@ export function TimeSurvey({
         primary={phase === "post" ? "만족도 조사로" : "결과 확인"}
         onPrimary={() => {
           if (!complete) {
-            setNotice("두 분의 시간을 모두 적어주세요.");
+            setNotice(
+              people.length === 1
+                ? "시간을 모두 적어주세요."
+                : "두 분의 시간을 모두 적어주세요.",
+            );
             return;
           }
           onNext();

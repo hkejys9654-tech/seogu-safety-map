@@ -1,7 +1,8 @@
 import {
-  cards,
+  cardsFor,
   childlessQuestion,
   FamilyRecord,
+  hasSecondAdult,
   indexQuestions,
   PhaseKey,
 } from "../../data";
@@ -14,7 +15,7 @@ export async function exportExcel(families: FamilyRecord[]) {
     신청자이름: f.applicantName || "",
     가정이름: f.familyName,
     성인1: f.adults.adult1,
-    성인2: f.adults.adult2,
+    성인2: f.adults.adult2 || "(어른 1인 가정)",
     바꾸고싶은점: f.changeWish || "",
     사전상태: f.pre.status === "submitted" ? "제출완료" : "작성중",
     사후상태: f.post.status === "submitted" ? "제출완료" : "작성중",
@@ -23,7 +24,7 @@ export async function exportExcel(families: FamilyRecord[]) {
   const detail: Record<string, string | number>[] = [];
   families.forEach((f) =>
     (["pre", "post"] as PhaseKey[]).forEach((p) =>
-      cards.forEach((c) =>
+      cardsFor(f.familyType).forEach((c) =>
         detail.push({
           가정번호: f.familyNo,
           조사: p === "pre" ? "사전" : "사후",
@@ -38,7 +39,10 @@ export async function exportExcel(families: FamilyRecord[]) {
   const indexRows: Record<string, string | number>[] = [];
   families.forEach((f) =>
     (["pre", "post"] as PhaseKey[]).forEach((p) =>
-      (["adult1", "adult2"] as const).forEach((who) =>
+      (hasSecondAdult(f)
+        ? (["adult1", "adult2"] as const)
+        : (["adult1"] as const)
+      ).forEach((who) =>
         indexQuestions.forEach((q, i) =>
           indexRows.push({
             가정번호: f.familyNo,

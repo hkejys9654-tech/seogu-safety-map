@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import {
+  cardsFor,
   changeWishQuestion,
   FamilyRecord,
+  hasSecondAdult,
   indexScore,
   indexType,
   ownerOptions,
@@ -83,17 +85,23 @@ export function Result({
   setBusy: (b: boolean) => void;
   setNotice: (s: string) => void;
 }) {
+  const twoAdults = hasSecondAdult(family);
   const score1 = indexScore(data.indexAnswers.adult1),
     score2 = indexScore(data.indexAnswers.adult2);
   const gap = Math.abs(score1 - score2);
-  const counts = useMemo(
-    () =>
-      ownerOptions.map((o) => ({
+  const counts = useMemo(() => {
+    const visible = cardsFor(family.familyType);
+    return ownerOptions
+      .filter(
+        (o) =>
+          !(o.value === "child" && family.familyType === "childless") &&
+          !(o.value === "adult2" && !twoAdults),
+      )
+      .map((o) => ({
         ...o,
-        count: Object.values(data.cards).filter((v) => v === o.value).length,
-      })),
-    [data.cards],
-  );
+        count: visible.filter((card) => data.cards[card.id] === o.value).length,
+      }));
+  }, [data.cards, family.familyType, twoAdults]);
   async function submit() {
     setBusy(true);
     try {
@@ -121,7 +129,7 @@ export function Result({
           </h2>
         </div>
       </div>
-      <div className="score-grid">
+      <div className={twoAdults ? "score-grid" : "score-grid single"}>
         <article>
           <span>{family.adults.adult1}</span>
           <strong>
@@ -130,16 +138,18 @@ export function Result({
           </strong>
           <b>{indexType(score1)}</b>
         </article>
-        <article>
-          <span>{family.adults.adult2}</span>
-          <strong>
-            {score2}
-            <small>점</small>
-          </strong>
-          <b>{indexType(score2)}</b>
-        </article>
+        {twoAdults && (
+          <article>
+            <span>{family.adults.adult2}</span>
+            <strong>
+              {score2}
+              <small>점</small>
+            </strong>
+            <b>{indexType(score2)}</b>
+          </article>
+        )}
       </div>
-      {gap >= 15 && (
+      {twoAdults && gap >= 15 && (
         <p className="gap-note">
           두 분의 생각에 {gap}점 차이가 있어요. 틀린 답은 없습니다. 서로 다르게
           느낀 문항부터 편안하게 이야기해보세요.
@@ -158,19 +168,19 @@ export function Result({
       </section>
       <section className="summary-box">
         <h3>일주일 시간 비교</h3>
-        <div className="time-summary">
+        <div className={twoAdults ? "time-summary" : "time-summary single"}>
           <span />
           <b>{family.adults.adult1}</b>
-          <b>{family.adults.adult2}</b>
+          {twoAdults && <b>{family.adults.adult2}</b>}
           <span>집안일·돌봄</span>
           <b>{data.times.adult1.housework}시간</b>
-          <b>{data.times.adult2.housework}시간</b>
+          {twoAdults && <b>{data.times.adult2.housework}시간</b>}
           <span>가족 챙김</span>
           <b>{data.times.adult1.mental}시간</b>
-          <b>{data.times.adult2.mental}시간</b>
+          {twoAdults && <b>{data.times.adult2.mental}시간</b>}
           <span>혼자 쉼</span>
           <b>{data.times.adult1.rest}시간</b>
-          <b>{data.times.adult2.rest}시간</b>
+          {twoAdults && <b>{data.times.adult2.rest}시간</b>}
         </div>
       </section>
       {data.status === "submitted" ? (

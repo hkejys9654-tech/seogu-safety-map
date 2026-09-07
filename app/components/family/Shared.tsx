@@ -29,26 +29,31 @@ export function Progress({
   step,
   finalStep,
   phase,
+  twoAdults = true,
 }: {
   step: number;
   finalStep: number;
   phase: PhaseKey;
+  twoAdults?: boolean;
 }) {
-  const labels =
-    phase === "post"
-      ? ["가족", "카드", "성인1", "성인2", "시간", "만족도", "완료"]
-      : ["가족", "카드", "성인1", "성인2", "시간", "약속", "완료"];
+  const last = phase === "post" ? "만족도" : "약속";
+  const labels = twoAdults
+    ? ["가족", "카드", "어른1", "어른2", "시간", last, "완료"]
+    : ["가족", "카드", "함께지수", "시간", last, "완료"];
   return (
     <nav className="progress-wrap" aria-label="진행 단계">
       <div className="progress-line">
         <i style={{ width: `${(step / finalStep) * 100}%` }} />
       </div>
       <div className="progress-labels">
-        {labels.map((label, i) => (
-          <span className={i <= step ? "active" : ""} key={label}>
-            {label}
-          </span>
-        ))}
+        {labels.map((label, i) => {
+          const at = twoAdults ? step : step > 3 ? step - 1 : step;
+          return (
+            <span className={i <= at ? "active" : ""} key={label}>
+              {label}
+            </span>
+          );
+        })}
       </div>
     </nav>
   );

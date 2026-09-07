@@ -256,7 +256,9 @@ export default function AdminApp() {
                   {f.familyName || "미등록"}
                   <small>
                     {f.adults.adult1 &&
-                      `${f.adults.adult1} · ${f.adults.adult2}`}
+                      [f.adults.adult1, f.adults.adult2]
+                        .filter(Boolean)
+                        .join(" · ")}
                   </small>
                 </span>
                 <span>{f.applicantName || "미입력"}</span>

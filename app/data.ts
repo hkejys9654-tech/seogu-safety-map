@@ -16,8 +16,31 @@ export type OwnerChoice =
 export type IndexChoice = "O" | "△" | "X";
 export type PhaseKey = "pre" | "post";
 
-export type Card = { id: string; category: string; title: string };
+export type Card = {
+  id: string;
+  category: string;
+  title: string;
+  desc?: string;
+};
 export const cards = rawCards as Card[];
+
+// 자녀가 없는 2인 가구에서 제외하는 영역
+export const childOnlyCategories = ["아이돌봄", "아이교육"];
+
+export function cardsFor(familyType: FamilyRecord["familyType"]) {
+  return familyType === "childless"
+    ? cards.filter((card) => !childOnlyCategories.includes(card.category))
+    : cards;
+}
+
+export function categoriesFor(familyType: FamilyRecord["familyType"]) {
+  const list = cardsFor(familyType);
+  const seen: string[] = [];
+  list.forEach((card) => {
+    if (!seen.includes(card.category)) seen.push(card.category);
+  });
+  return seen;
+}
 
 export const ownerOptions: {
   value: OwnerChoice;
@@ -91,6 +114,10 @@ export async function familyDocumentId(familyNo: number, accessPin: string) {
   return Array.from(new Uint8Array(digest), (byte) =>
     byte.toString(16).padStart(2, "0"),
   ).join("");
+}
+
+export function hasSecondAdult(family: FamilyRecord) {
+  return Boolean(family.adults.adult2.trim());
 }
 
 export function blankFamily(familyNo: number, accessPin: string): FamilyRecord {
