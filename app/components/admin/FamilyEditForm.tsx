@@ -6,10 +6,8 @@ import { FamilyRecord } from "../../data";
 export type FamilyEdits = Pick<
   FamilyRecord,
   | "applicantName"
-  | "familyName"
   | "familyType"
   | "adults"
-  | "children"
   | "changeWish"
   | "completionCount"
   | "pre"
@@ -28,11 +26,9 @@ export function FamilyEditForm({
   const [applicantName, setApplicantName] = useState(
     family.applicantName || "",
   );
-  const [familyName, setFamilyName] = useState(family.familyName || "");
   const [adult1, setAdult1] = useState(family.adults.adult1 || "");
   const [adult2, setAdult2] = useState(family.adults.adult2 || "");
   const [familyType, setFamilyType] = useState(family.familyType);
-  const [children, setChildren] = useState(family.children.join(", "));
   const [changeWish, setChangeWish] = useState(family.changeWish || "");
   const [completionCount, setCompletionCount] = useState(
     family.completionCount || 0,
@@ -47,16 +43,8 @@ export function FamilyEditForm({
     try {
       await onSave({
         applicantName: applicantName.trim(),
-        familyName: familyName.trim(),
         familyType,
         adults: { adult1: adult1.trim(), adult2: adult2.trim() },
-        children:
-          familyType === "children"
-            ? children
-                .split(",")
-                .map((name) => name.trim())
-                .filter(Boolean)
-            : [],
         changeWish: changeWish.trim(),
         completionCount: Math.max(0, completionCount),
         pre: { ...family.pre, status: preStatus },
@@ -77,13 +65,6 @@ export function FamilyEditForm({
           <input
             value={applicantName}
             onChange={(event) => setApplicantName(event.target.value)}
-          />
-        </label>
-        <label>
-          가정 이름
-          <input
-            value={familyName}
-            onChange={(event) => setFamilyName(event.target.value)}
           />
         </label>
         <label>
@@ -111,14 +92,6 @@ export function FamilyEditForm({
             <option value="children">자녀가 있어요</option>
             <option value="childless">자녀가 없어요</option>
           </select>
-        </label>
-        <label>
-          자녀 이름·별명
-          <input
-            value={children}
-            disabled={familyType === "childless"}
-            onChange={(event) => setChildren(event.target.value)}
-          />
         </label>
         <label>
           사전 상태

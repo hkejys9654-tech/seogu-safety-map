@@ -124,7 +124,8 @@ export function Result({
             {phase === "pre" ? "사전" : "사후"} 진단 결과
           </span>
           <h2>
-            {family.familyName},<br />
+            {family.applicantName || family.adults.adult1}님 가족,
+            <br />
             함께여서 더 따뜻해요!
           </h2>
         </div>

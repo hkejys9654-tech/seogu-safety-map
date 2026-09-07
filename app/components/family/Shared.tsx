@@ -15,7 +15,11 @@ export function Header({
         <img src="/assets/seo-gu-symbol.png" alt="" />
         <span>
           <b>함께가정</b>
-          <small>{family.familyName || `${family.familyNo}번 가정`}</small>
+          <small>
+            {family.applicantName
+              ? `${family.applicantName}님`
+              : `${family.familyNo}번 가정`}
+          </small>
         </span>
       </button>
       <span className={saved === "저장됨" ? "save-state done" : "save-state"}>

@@ -221,9 +221,7 @@ export default function FamilyApp() {
                 key={item.key}
                 className="phase-card"
                 onClick={() => {
-                  const hasFamilyInfo = Boolean(
-                    family.familyName.trim() && family.adults.adult1.trim(),
-                  );
+                  const hasFamilyInfo = Boolean(family.adults.adult1.trim());
                   setPhase(item.key);
                   setStep(item.key === "post" && hasFamilyInfo ? 1 : 0);
                   setCardIndex(0);
@@ -273,8 +271,8 @@ export default function FamilyApp() {
           family={family}
           updateFamily={updateFamily}
           onNext={() => {
-            if (!family.familyName.trim() || !family.adults.adult1.trim()) {
-              setNotice("가정 이름과 어른의 이름(또는 별명)을 적어주세요.");
+            if (!family.adults.adult1.trim()) {
+              setNotice("성인 1의 실명을 입력해주세요.");
               return;
             }
             saveAndGo(1);

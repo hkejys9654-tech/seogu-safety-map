@@ -289,7 +289,7 @@ export default function AdminApp() {
               >
                 <b>{String(f.familyNo).padStart(2, "0")}</b>
                 <span>
-                  {f.familyName || "미등록"}
+                  {f.applicantName || f.adults.adult1 || "미등록"}
                   <small>
                     {f.adults.adult1 &&
                       [f.adults.adult1, f.adults.adult2]

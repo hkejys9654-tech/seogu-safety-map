@@ -53,7 +53,11 @@ export function FamilyDetail({
         <header>
           <div>
             <span>{String(family.familyNo).padStart(2, "0")}번 가정</span>
-            <h2>{family.familyName || "미등록 가정"}</h2>
+            <h2>
+              {family.applicantName
+                ? `${family.applicantName} 신청자`
+                : "미등록 가정"}
+            </h2>
             <p>
               {family.adults.adult1 || "성인 1 미등록"} ·{" "}
               {family.adults.adult2 || "성인 2 미등록"} · 신청자{" "}

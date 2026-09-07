@@ -24,28 +24,14 @@ export function FamilyInfo({
   busy: boolean;
 }) {
   const [single, setSingle] = useState(
-    () => Boolean(family.familyName.trim()) && !family.adults.adult2.trim(),
+    () => Boolean(family.adults.adult1.trim()) && !family.adults.adult2.trim(),
   );
   return (
     <section className="content-card">
       <span className="section-kicker">1. 가족 등록</span>
       <h2>우리 가족을 알려주세요</h2>
-      <p className="lead">
-        이름 대신 가족끼리 알아볼 수 있는 별명을 적어도 좋아요.
-      </p>
+      <p className="lead">성인 구성원의 실명을 입력해주세요.</p>
       <div className="form-grid">
-        <label className="full">
-          가정 이름
-          <input
-            value={family.familyName}
-            onChange={(e) =>
-              updateFamily((d) => {
-                d.familyName = e.target.value;
-              })
-            }
-            placeholder="예: 행복한 해온이네"
-          />
-        </label>
         <label className={single ? "full" : ""}>
           성인 1
           <input
@@ -55,7 +41,7 @@ export function FamilyInfo({
                 d.adults.adult1 = e.target.value;
               })
             }
-            placeholder="이름 또는 별명"
+            placeholder="실명 입력"
           />
         </label>
         {!single && (
@@ -68,7 +54,7 @@ export function FamilyInfo({
                   d.adults.adult2 = e.target.value;
                 })
               }
-              placeholder="이름 또는 별명"
+              placeholder="실명 입력"
             />
           </label>
         )}
@@ -95,6 +81,7 @@ export function FamilyInfo({
               onClick={() =>
                 updateFamily((d) => {
                   d.familyType = "children";
+                  d.children = [];
                 })
               }
             >
@@ -119,23 +106,6 @@ export function FamilyInfo({
             </p>
           )}
         </fieldset>
-        {family.familyType === "children" && (
-          <label className="full">
-            자녀 이름·별명 (선택)
-            <input
-              value={family.children.join(", ")}
-              onChange={(e) =>
-                updateFamily((d) => {
-                  d.children = e.target.value
-                    .split(",")
-                    .map((v) => v.trim())
-                    .filter(Boolean);
-                })
-              }
-              placeholder="여러 명이면 쉼표로 구분"
-            />
-          </label>
-        )}
       </div>
       <BottomActions primary="함께카드 시작" onPrimary={onNext} busy={busy} />
     </section>
@@ -167,7 +137,10 @@ export function CardSurvey({
   busy: boolean;
   setNotice: (s: string) => void;
 }) {
-  const visible = useMemo(() => cardsFor(family.familyType), [family.familyType]);
+  const visible = useMemo(
+    () => cardsFor(family.familyType),
+    [family.familyType],
+  );
   const categories = useMemo(
     () => categoriesFor(family.familyType),
     [family.familyType],

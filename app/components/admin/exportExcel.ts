@@ -13,7 +13,6 @@ export async function exportExcel(families: FamilyRecord[]) {
   const summary = families.map((f) => ({
     가정번호: f.familyNo,
     신청자이름: f.applicantName || "",
-    가정이름: f.familyName,
     성인1: f.adults.adult1,
     성인2: f.adults.adult2 || "(어른 1인 가정)",
     바꾸고싶은점: f.changeWish || "",

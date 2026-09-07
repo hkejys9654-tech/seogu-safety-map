@@ -39,6 +39,8 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   const manager = admin + detail + edit;
   assert.match(page, /함께가정/);
   assert.match(participant, /우리 가족이 이번 30일 동안 바꿔보고 싶은 점/);
+  assert.doesNotMatch(setup, /가정 이름|자녀 이름|이름 또는 별명/);
+  assert.match(setup, /실명 입력/);
   assert.match(participant, /sticky-card-actions/);
   assert.match(family, /신청자 이름/);
   assert.doesNotMatch(participant, /6자리 접속번호/);
