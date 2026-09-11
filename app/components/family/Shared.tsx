@@ -31,12 +31,10 @@ export function Header({
 
 export function Progress({
   step,
-  finalStep,
   phase,
   twoAdults = true,
 }: {
   step: number;
-  finalStep: number;
   phase: PhaseKey;
   twoAdults?: boolean;
 }) {
@@ -44,20 +42,17 @@ export function Progress({
   const labels = twoAdults
     ? ["가족", "카드", "어른1", "어른2", "시간", last, "완료"]
     : ["가족", "카드", "함께지수", "시간", last, "완료"];
+  const at = twoAdults ? step : step > 3 ? step - 1 : step;
   return (
     <nav className="progress-wrap" aria-label="진행 단계">
-      <div className="progress-line">
-        <i style={{ width: `${(step / finalStep) * 100}%` }} />
+      <div className="progress-meta">
+        <span>{labels[at]}</span>
+        <b>
+          {at + 1} <small>/ {labels.length}단계</small>
+        </b>
       </div>
-      <div className="progress-labels">
-        {labels.map((label, i) => {
-          const at = twoAdults ? step : step > 3 ? step - 1 : step;
-          return (
-            <span className={i <= at ? "active" : ""} key={label}>
-              {label}
-            </span>
-          );
-        })}
+      <div className="progress-line">
+        <i style={{ width: `${((at + 1) / labels.length) * 100}%` }} />
       </div>
     </nav>
   );

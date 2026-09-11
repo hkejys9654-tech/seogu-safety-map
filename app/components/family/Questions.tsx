@@ -50,24 +50,24 @@ export function IndexSurvey({
                 : question}
             </p>
             <div className="answer-three">
-              {(["O", "△", "X"] as IndexChoice[]).map((choice) => (
+              {(
+                [
+                  { value: "O", label: "그렇다", help: "내 생각과 같아요" },
+                  { value: "△", label: "보통", help: "보통이에요" },
+                  { value: "X", label: "아니다", help: "내 생각과 달라요" },
+                ] as { value: IndexChoice; label: string; help: string }[]
+              ).map((choice) => (
                 <button
-                  key={choice}
-                  className={answers[i] === choice ? "selected" : ""}
+                  key={choice.value}
+                  className={answers[i] === choice.value ? "selected" : ""}
                   onClick={() =>
                     updateFamily((d) => {
-                      d[phase].indexAnswers[who][i] = choice;
+                      d[phase].indexAnswers[who][i] = choice.value;
                     })
                   }
                 >
-                  <b>{choice}</b>
-                  <small>
-                    {choice === "O"
-                      ? "그렇다"
-                      : choice === "△"
-                        ? "보통"
-                        : "아니다"}
-                  </small>
+                  <b>{choice.label}</b>
+                  <small>{choice.help}</small>
                 </button>
               ))}
             </div>
@@ -132,11 +132,7 @@ export function TimeSurvey({
       <p className="lead">
         정확하지 않아도 괜찮아요. 대략적인 시간을 숫자로 적어주세요.
       </p>
-      <div
-        className={
-          people.length === 1 ? "time-table single" : "time-table"
-        }
-      >
+      <div className={people.length === 1 ? "time-table single" : "time-table"}>
         <div />
         <b>{family.adults.adult1 || "성인 1"}</b>
         {people.length === 2 && <b>{family.adults.adult2}</b>}

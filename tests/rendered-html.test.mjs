@@ -70,9 +70,24 @@ test("확정 함께카드가 100장이고 영역별 수가 맞다", async () => 
     await readFile(new URL("../app/cards.json", import.meta.url), "utf8"),
   );
   assert.equal(cards.length, 100);
-  assert.match(cards.find((card) => card.title === "대출").desc, /신청·상환/);
-  assert.match(cards.find((card) => card.title === "보험").desc, /보상 청구/);
-  assert.match(cards.find((card) => card.title === "죽음").desc, /장례 절차/);
+  assert.ok(cards.every((card) => card.steps?.length === 4));
+  assert.match(
+    cards.find((card) => card.title === "대출").steps.join(" "),
+    /금리, 기간, 상환방법/,
+  );
+  assert.match(
+    cards.find((card) => card.title === "보험").steps.join(" "),
+    /보장 내용과 납부일/,
+  );
+  assert.match(
+    cards.find((card) => card.title === "죽음").steps.join(" "),
+    /행정·장례 절차/,
+  );
+  assert.equal(
+    cards.find((card) => card.id === "25").title,
+    "집 관리(직접수리, 업체의뢰)",
+  );
+  assert.equal(cards.find((card) => card.id === "97").title, "아픈 (조)부모님");
   const counts = Object.groupBy(cards, (card) => card.category);
   assert.deepEqual(
     Object.fromEntries(

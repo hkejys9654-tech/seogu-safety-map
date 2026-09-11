@@ -12,6 +12,15 @@ import {
 import { UpdateFamily } from "./helpers";
 import { BottomActions } from "./Shared";
 
+const categoryVisuals: Record<string, string> = {
+  살림: "🧺",
+  관리: "🗂️",
+  아이돌봄: "🧸",
+  아이교육: "📚",
+  가족돌봄: "🤝",
+  우리집카드: "🏠",
+};
+
 export function FamilyInfo({
   family,
   updateFamily,
@@ -238,15 +247,21 @@ export function CardSurvey({
                 setCardIndex(i);
               }}
             >
+              <span aria-hidden>{categoryVisuals[name]}</span>
               {name}
-              {done && <i aria-hidden>✓</i>}
+              {done && <i>완료</i>}
             </button>
           );
         })}
       </div>
 
       <div className="group-head">
-        <h2>{category}</h2>
+        <div>
+          <span className="category-visual" aria-hidden>
+            {categoryVisuals[category]}
+          </span>
+          <h2>{category}</h2>
+        </div>
         <span>
           {groupAnswered}/{groupCards.length}
         </span>
@@ -255,8 +270,8 @@ export function CardSurvey({
 
       <div className="owner-legend">
         {options.map((option) => (
-          <span key={option.value}>
-            <b>{option.icon}</b>
+          <span key={option.value} data-owner={option.value}>
+            <i aria-hidden />
             {optionLabel(option.value)}
           </span>
         ))}
@@ -266,6 +281,9 @@ export function CardSurvey({
         {groupCards.map((card) => {
           const selected = data.cards[card.id];
           const custom = Number(card.id) > 98;
+          const hasGuide = Boolean(
+            card.desc || card.note || card.steps?.length,
+          );
           return (
             <li
               key={card.id}
@@ -274,7 +292,7 @@ export function CardSurvey({
               <div className="card-row-title">
                 <small>{card.id}</small>
                 <div>
-                  {card.desc ? (
+                  {hasGuide ? (
                     <button
                       type="button"
                       className="card-title-button"
@@ -285,10 +303,14 @@ export function CardSurvey({
                         )
                       }
                     >
-                      {custom
-                        ? data.customTitles[card.id] || card.title
-                        : card.title}
-                      <span aria-hidden>?</span>
+                      <span>
+                        {custom
+                          ? data.customTitles[card.id] || card.title
+                          : card.title}
+                      </span>
+                      <small>
+                        {openDescription === card.id ? "닫기" : "내용 보기"}
+                      </small>
                     </button>
                   ) : (
                     <strong>
@@ -297,9 +319,22 @@ export function CardSurvey({
                         : card.title}
                     </strong>
                   )}
-                  {card.desc && openDescription === card.id && (
-                    <div className="card-description-popover" role="note">
-                      <p>{card.desc}</p>
+                  {hasGuide && openDescription === card.id && (
+                    <div
+                      className="card-description-popover"
+                      role="dialog"
+                      aria-label={`${card.title} 카드 내용`}
+                    >
+                      <b>{card.title}</b>
+                      {card.desc && <p>{card.desc}</p>}
+                      {card.note && <em>{card.note}</em>}
+                      {card.steps?.length ? (
+                        <ol>
+                          {card.steps.map((step) => (
+                            <li key={step}>{step.replace(/^[①②③④]\s*/, "")}</li>
+                          ))}
+                        </ol>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => setOpenDescription(null)}
@@ -326,6 +361,7 @@ export function CardSurvey({
                 {options.map((option) => (
                   <button
                     key={option.value}
+                    data-owner={option.value}
                     title={optionLabel(option.value)}
                     aria-label={optionLabel(option.value)}
                     className={
@@ -335,7 +371,7 @@ export function CardSurvey({
                     }
                     onClick={() => choose(card.id, option.value)}
                   >
-                    {option.icon}
+                    <span>{optionLabel(option.value)}</span>
                   </button>
                 ))}
               </div>

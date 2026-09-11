@@ -255,12 +255,7 @@ export default function FamilyApp() {
   return (
     <main className="site-shell app-shell">
       <Header family={family} saved={saved} onHome={() => setPhase(null)} />
-      <Progress
-        step={step}
-        finalStep={finalStep}
-        phase={phase}
-        twoAdults={twoAdults}
-      />
+      <Progress step={step} phase={phase} twoAdults={twoAdults} />
       {notice && (
         <p className="floating-notice" role="alert">
           {notice}

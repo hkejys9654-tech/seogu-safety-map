@@ -21,6 +21,8 @@ export type Card = {
   category: string;
   title: string;
   desc?: string;
+  note?: string;
+  steps?: string[];
 };
 export const cards = rawCards as Card[];
 
@@ -45,14 +47,13 @@ export function categoriesFor(familyType: FamilyRecord["familyType"]) {
 export const ownerOptions: {
   value: OwnerChoice;
   label: string;
-  icon: string;
 }[] = [
-  { value: "adult1", label: "성인 1", icon: "①" },
-  { value: "adult2", label: "성인 2", icon: "②" },
-  { value: "child", label: "자녀", icon: "♧" },
-  { value: "together", label: "가족 같이", icon: "♡" },
-  { value: "none", label: "담당 없음", icon: "―" },
-  { value: "na", label: "해당 없음", icon: "×" },
+  { value: "adult1", label: "성인 1" },
+  { value: "adult2", label: "성인 2" },
+  { value: "child", label: "자녀" },
+  { value: "together", label: "가족 같이" },
+  { value: "none", label: "담당 없음" },
+  { value: "na", label: "해당 없음" },
 ];
 
 export function indexScore(answers: (IndexChoice | null)[]) {
