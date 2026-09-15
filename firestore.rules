@@ -21,7 +21,10 @@ service cloud.firestore {
     }
 
     function validType(type) {
-      return type in ['dark', 'surveillance', 'visibility', 'walking', 'anxiety', 'other'];
+      return type in [
+        'dark', 'cctv', 'emergencyBell', 'surveillance',
+        'visibility', 'walking', 'anxiety', 'other'
+      ];
     }
 
     match /reports/{reportId} {

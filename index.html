@@ -14,13 +14,13 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260721-1">
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=20260820-1">
+  <link rel="stylesheet" href="styles.css?v=20260916-1">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
   <script src="map-data.js?v=20260721-5" defer></script>
   <script src="landmarks-data.js?v=20260721-8" defer></script>
   <script src="firebase-config.js?v=20260721-4" defer></script>
   <script src="firebase-service.js?v=20260721-4" defer></script>
-  <script src="app.js?v=20260820-1" defer></script>
+  <script src="app.js?v=20260916-1" defer></script>
 </head>
 <body>
   <header class="app-header">
@@ -108,11 +108,12 @@
         <legend>취약 유형을 선택해주세요</legend>
         <div class="type-grid">
           <label><input type="radio" name="type" value="dark" required><span>어두워요</span></label>
-          <label><input type="radio" name="type" value="surveillance"><span>CCTV·비상벨 부족</span></label>
+          <label><input type="radio" name="type" value="cctv"><span>CCTV 부족</span></label>
+          <label><input type="radio" name="type" value="emergencyBell"><span>비상벨 부족</span></label>
           <label><input type="radio" name="type" value="visibility"><span>시야가 가려져요</span></label>
           <label><input type="radio" name="type" value="walking"><span>보행하기 위험해요</span></label>
           <label><input type="radio" name="type" value="anxiety"><span>혼자 걷기 불안해요</span></label>
-          <label><input type="radio" name="type" value="other"><span>기타</span></label>
+          <label class="type-full"><input type="radio" name="type" value="other"><span>기타</span></label>
         </div>
       </fieldset>
 

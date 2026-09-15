@@ -12,7 +12,9 @@
   };
   const TYPE_LABELS = {
     dark: "어두워요",
-    surveillance: "CCTV·비상벨 부족",
+    cctv: "CCTV 부족",
+    emergencyBell: "비상벨 부족",
+    surveillance: "CCTV·비상벨 부족(기존 등록)",
     visibility: "시야가 가려져요",
     walking: "보행하기 위험해요",
     anxiety: "혼자 걷기 불안해요",
@@ -20,6 +22,8 @@
   };
   const TYPE_COLORS = {
     dark: "#d88a18",
+    cctv: "#d94d45",
+    emergencyBell: "#ad4f86",
     surveillance: "#d94d45",
     visibility: "#7c62a6",
     walking: "#2582a9",

@@ -467,6 +467,7 @@ fieldset { margin: 18px 0; padding: 0; border: 0; }
 legend, .text-label > span { display: block; margin-bottom: 9px; font-size: 14px; font-weight: 900; }
 .type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .type-grid label { position: relative; }
+.type-grid .type-full { grid-column: 1 / -1; }
 .type-grid input { position: absolute; opacity: 0; pointer-events: none; }
 .type-grid span { min-height: 50px; padding: 9px 11px; display: grid; place-items: center; border: 1px solid #cfccc2; border-radius: 11px; text-align: center; font-size: 13px; font-weight: 800; }
 .type-grid input:checked + span { border-color: var(--green); color: var(--green-dark); background: var(--green-soft); box-shadow: inset 0 0 0 1px var(--green); }
@@ -564,6 +565,7 @@ legend, .text-label > span { display: block; margin-bottom: 9px; font-size: 14px
   .stats article { padding: 11px; }
   .stats strong { font-size: 22px; }
   .type-grid { grid-template-columns: 1fr; }
+  .type-grid .type-full { grid-column: auto; }
 }
 
 /* 2026-07 commercial UI refresh */
