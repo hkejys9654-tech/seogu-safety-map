@@ -31,7 +31,23 @@ const worker = {
         },
       }, allowedWidths);
     }
-    return handler.fetch(request, env, ctx);
+    const response = await handler.fetch(request, env, ctx);
+
+    // 배포 후 휴대폰 브라우저가 이전 HTML을 재사용하면,
+    // 이미 교체된 스크립트 파일을 찾지 못할 수 있어 HTML은 재검증하게 한다.
+    if (response.headers.get("content-type")?.includes("text/html")) {
+      const headers = new Headers(response.headers);
+      headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+      headers.set("Pragma", "no-cache");
+      headers.set("Expires", "0");
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    }
+
+    return response;
   },
 };
 
