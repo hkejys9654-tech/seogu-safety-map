@@ -11,6 +11,7 @@
     "start": "vinext start",
     "test": "npm run build && node --test --test-force-exit tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "import:applicants": "node scripts/import-applicants.mjs",
     "db:generate": "drizzle-kit generate",
     "seed:families": "node scripts/seed-families.mjs"
   },

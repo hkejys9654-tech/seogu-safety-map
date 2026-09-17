@@ -44,7 +44,9 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(participant, /sticky-card-actions/);
   assert.match(setup, /card-description-popover/);
   assert.doesNotMatch(setup, /관련된 일을 누가 주로 맡는지 떠올려보세요/);
-  assert.match(family, /신청자 이름/);
+  assert.match(family, /엄마 또는 아빠 이름/);
+  assert.match(family, /authorizedNames/);
+  assert.match(family, /name-mismatch/);
   assert.doesNotMatch(participant, /6자리 접속번호/);
   assert.match(family, /item\.key === "post" && hasFamilyInfo/);
   assert.match(admin, /가족별 관리/);

@@ -15,7 +15,11 @@ import {
 } from "firebase/firestore";
 import { auth, db, FAMILY_COLLECTION } from "../firebase";
 import { FamilyRecord, hasSecondAdult, PhaseKey } from "../data";
-import { cloneFamily, formatError } from "./family/helpers";
+import {
+  cloneFamily,
+  formatError,
+  normalizeAccessName,
+} from "./family/helpers";
 import { Header, Progress } from "./family/Shared";
 import { CardSurvey, FamilyInfo } from "./family/SetupAndCards";
 import { IndexSurvey, Satisfaction, TimeSurvey } from "./family/Questions";
@@ -64,8 +68,8 @@ export default function FamilyApp() {
   async function enter() {
     const no = Number(familyNo);
     const name = applicantName.trim();
-    if (!Number.isInteger(no) || no < 1 || no > 30 || !name) {
-      setNotice("가정 번호와 신청자 이름을 입력해주세요.");
+    if (!Number.isInteger(no) || no < 1 || no > 99 || !name) {
+      setNotice("가정 번호와 엄마 또는 아빠 이름을 입력해주세요.");
       return;
     }
     setBusy(true);
@@ -81,15 +85,21 @@ export default function FamilyApp() {
       );
       const snapshot = matches.docs[0];
       if (!snapshot) throw new Error("not-found");
+      const stored = snapshot.data() as FamilyRecord;
+      const enteredName = normalizeAccessName(name);
+      const authorizedNames = (stored.authorizedNames || []).map(
+        normalizeAccessName,
+      );
+      if (!authorizedNames.includes(enteredName)) {
+        throw new Error("name-mismatch");
+      }
       await updateDoc(snapshot.ref, {
-        applicantName: name,
         lastVisitorUid: active.uid,
         updatedAt: serverTimestamp(),
       });
       setUser(active);
       setFamily({
-        ...(snapshot.data() as FamilyRecord),
-        applicantName: name,
+        ...stored,
         _docId: snapshot.id,
       });
       sessionStorage.setItem("hamkkeFamilyNo", String(no));
@@ -183,11 +193,12 @@ export default function FamilyApp() {
               />
             </label>
             <label>
-              신청자 이름
+              엄마 또는 아빠 이름
               <input
                 value={applicantName}
                 onChange={(e) => setApplicantName(e.target.value.slice(0, 30))}
-                placeholder="신청자 이름"
+                placeholder="명단에 적은 이름"
+                autoComplete="name"
               />
             </label>
             {notice && (
@@ -200,7 +211,7 @@ export default function FamilyApp() {
             </button>
           </div>
           <p className="privacy-note">
-            가정 번호와 신청자 이름으로 시작합니다.
+            가정 번호와 엄마·아빠 중 한 명의 이름으로 시작합니다.
           </p>
         </section>
       </main>

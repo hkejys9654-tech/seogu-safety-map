@@ -95,6 +95,7 @@ export type FamilyRecord = {
   accessPin: string;
   ownerUid: string;
   applicantName?: string;
+  authorizedNames?: string[];
   familyName: string;
   familyType: "children" | "childless";
   adults: { adult1: string; adult2: string };
@@ -127,6 +128,7 @@ export function blankFamily(familyNo: number, accessPin: string): FamilyRecord {
     accessPin,
     ownerUid: "",
     applicantName: "",
+    authorizedNames: [],
     familyName: "",
     familyType: "children",
     adults: { adult1: "", adult2: "" },

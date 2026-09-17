@@ -10,8 +10,8 @@ export function formatError(error: unknown) {
   const message = firebaseError?.message || String(error);
   const details = `${code} ${message}`.toLowerCase();
 
-  if (details.includes("not-found"))
-    return "가정 번호를 확인해주세요.";
+  if (details.includes("not-found") || details.includes("name-mismatch"))
+    return "가정 번호와 엄마 또는 아빠 이름을 다시 확인해주세요.";
   if (
     details.includes("permission-denied") ||
     details.includes("missing or insufficient permissions")
@@ -22,6 +22,10 @@ export function formatError(error: unknown) {
   if (details.includes("network"))
     return "인터넷 연결을 확인한 뒤 다시 시도해주세요.";
   return "잠시 후 다시 시도해주세요.";
+}
+
+export function normalizeAccessName(value: string) {
+  return value.normalize("NFC").replace(/\s+/g, "").toLocaleLowerCase("ko-KR");
 }
 
 export function cloneFamily(value: FamilyRecord): FamilyRecord {
