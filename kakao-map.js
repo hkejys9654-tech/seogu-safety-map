@@ -4,10 +4,19 @@
   const config = global.SAFETY_MAP_RUNTIME_CONFIG || {};
   const javascriptKey = String(config.kakaoJavaScriptKey || "").trim();
 
-  global.SafetyMapKakaoReady = loadKakaoMaps(javascriptKey).then(() => {
-    global.KMap = createKakaoMapAdapter(global.kakao.maps);
-    return global.KMap;
-  });
+  global.SafetyMapKakaoReady = loadKakaoMaps(javascriptKey)
+    .then(() => {
+      global.KMap = createKakaoMapAdapter(global.kakao.maps);
+      global.SAFETY_MAP_PROVIDER = "kakao";
+      return global.KMap;
+    })
+    .catch(async (error) => {
+      console.warn("카카오맵을 불러오지 못해 예비 지도로 전환합니다.", error);
+      await loadLeafletFallback();
+      global.KMap = createLeafletFallback(global.L);
+      global.SAFETY_MAP_PROVIDER = "openstreetmap-fallback";
+      return global.KMap;
+    });
 
   function loadKakaoMaps(key) {
     if (!key) {
@@ -42,6 +51,50 @@
       script.onerror = () => reject(new Error("카카오맵 SDK를 불러오지 못했습니다. 허용 도메인과 JavaScript 키를 확인해주세요."));
       document.head.appendChild(script);
     });
+  }
+
+  function loadLeafletFallback() {
+    return new Promise((resolve, reject) => {
+      if (global.L) {
+        resolve();
+        return;
+      }
+
+      if (!document.querySelector("link[data-safety-map-leaflet-fallback]")) {
+        const stylesheet = document.createElement("link");
+        stylesheet.rel = "stylesheet";
+        stylesheet.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        stylesheet.dataset.safetyMapLeafletFallback = "true";
+        document.head.appendChild(stylesheet);
+      }
+
+      const existing = document.querySelector("script[data-safety-map-leaflet-fallback]");
+      if (existing) {
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", () => reject(new Error("예비 지도도 불러오지 못했습니다.")), { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.dataset.safetyMapLeafletFallback = "true";
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("예비 지도도 불러오지 못했습니다."));
+      document.head.appendChild(script);
+    });
+  }
+
+  function createLeafletFallback(leaflet) {
+    const fallback = Object.create(leaflet);
+    fallback.map = (id, options) => {
+      const map = leaflet.map(id, options);
+      leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+      return map;
+    };
+    return fallback;
   }
 
   function createKakaoMapAdapter(maps) {

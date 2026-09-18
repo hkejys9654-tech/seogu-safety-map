@@ -33,6 +33,7 @@ jobs:
           node --check app.js
           node --check admin/app.js
           node tests/kakao-map-adapter.test.mjs
+          node tests/kakao-map-fallback.test.mjs
           node tests/local-http-smoke.test.mjs
 
       - name: Configure Pages
