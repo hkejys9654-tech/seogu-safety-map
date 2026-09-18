@@ -145,6 +145,7 @@ export default function AdminApp() {
       return;
     setError("");
     try {
+      if (family.familyPhoto) await deleteFamilyPhoto(family, false);
       const empty = blankFamily(family.familyNo, family.accessPin);
       await updateDoc(doc(db, FAMILY_COLLECTION, family._docId), {
         applicantName: "",
@@ -162,6 +163,33 @@ export default function AdminApp() {
       setSelected(null);
     } catch {
       setError("제출자 자료를 삭제하지 못했습니다.");
+    }
+  }
+
+  async function deleteFamilyPhoto(
+    family: FamilyRecord,
+    askForConfirmation = true,
+  ) {
+    if (!family.familyPhoto) return;
+    if (
+      askForConfirmation &&
+      !confirm(`${family.familyNo}번 가정의 가족사진을 삭제할까요?`)
+    )
+      return;
+    const token = await auth.currentUser?.getIdToken();
+    const name = family.applicantName || family.authorizedNames?.[0] || "";
+    if (!token || !name) throw new Error("photo-delete-unavailable");
+    const response = await fetch("/api/family-photo", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ familyNo: family.familyNo, name }),
+    });
+    if (!response.ok) {
+      setError("가족사진을 삭제하지 못했습니다.");
+      throw new Error("photo-delete-failed");
     }
   }
 
@@ -275,6 +303,7 @@ export default function AdminApp() {
               <span>신청자</span>
               <span>사전</span>
               <span>사후</span>
+              <span>사진</span>
               <span>인증</span>
               <span>최근 저장</span>
             </div>
@@ -300,6 +329,11 @@ export default function AdminApp() {
                 <span>{f.applicantName || "미입력"}</span>
                 <Status value={f.pre.status} />
                 <Status value={f.post.status} />
+                <span
+                  className={`photo-status ${f.familyPhoto ? "registered" : ""}`}
+                >
+                  {f.familyPhoto ? "등록" : "미등록"}
+                </span>
                 <span>{f.completionCount || 0}회</span>
                 <span>{ts(f.updatedAt)}</span>
               </button>
@@ -316,6 +350,7 @@ export default function AdminApp() {
           onCompletion={changeCompletion}
           onSave={saveFamily}
           onDelete={deleteSubmitter}
+          onDeletePhoto={(family) => deleteFamilyPhoto(family)}
         />
       )}
     </main>

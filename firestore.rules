@@ -113,7 +113,8 @@ service cloud.firestore {
         && request.resource.data.familyNo == resource.data.familyNo
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'applicantName', 'lastVisitorUid', 'familyName', 'familyType', 'adults',
-          'children', 'changeWish', 'pre', 'post', 'completionCount', 'updatedAt'
+          'children', 'changeWish', 'pre', 'post', 'completionCount', 'familyPhoto',
+          'updatedAt'
         ]);
     }
 

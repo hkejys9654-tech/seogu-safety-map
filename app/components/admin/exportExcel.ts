@@ -18,6 +18,8 @@ export async function exportExcel(families: FamilyRecord[]) {
     바꾸고싶은점: f.changeWish || "",
     사전상태: f.pre.status === "submitted" ? "제출완료" : "작성중",
     사후상태: f.post.status === "submitted" ? "제출완료" : "작성중",
+    가족사진: f.familyPhoto ? "등록" : "미등록",
+    홍보활용동의: f.familyPhoto?.publicityConsent ? "동의" : "미동의",
     활동인증횟수: f.completionCount,
   }));
   const detail: Record<string, string | number>[] = [];

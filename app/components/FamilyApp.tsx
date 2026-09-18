@@ -14,7 +14,12 @@ import {
   where,
 } from "firebase/firestore";
 import { auth, db, FAMILY_COLLECTION } from "../firebase";
-import { FamilyRecord, hasSecondAdult, PhaseKey } from "../data";
+import {
+  FamilyPhoto,
+  FamilyRecord,
+  hasSecondAdult,
+  PhaseKey,
+} from "../data";
 import {
   cloneFamily,
   formatError,
@@ -24,6 +29,7 @@ import { Header, Progress } from "./family/Shared";
 import { CardSurvey, FamilyInfo } from "./family/SetupAndCards";
 import { IndexSurvey, Satisfaction, TimeSurvey } from "./family/Questions";
 import { PromiseSurvey, Result } from "./family/Finish";
+import { FamilyPhotoCard } from "./family/FamilyPhotoCard";
 
 const phases: {
   key: PhaseKey;
@@ -144,6 +150,16 @@ export default function FamilyApp() {
     return draft;
   }
 
+  function updateFamilyPhoto(photo?: FamilyPhoto) {
+    setFamily((current) => {
+      if (!current) return current;
+      const next = { ...current };
+      if (photo) next.familyPhoto = photo;
+      else delete next.familyPhoto;
+      return next;
+    });
+  }
+
   async function saveAndGo(nextStep: number) {
     if (!family) return;
     setBusy(true);
@@ -222,6 +238,7 @@ export default function FamilyApp() {
     return (
       <main className="site-shell">
         <Header family={family} saved={saved} />
+        <FamilyPhotoCard family={family} onChange={updateFamilyPhoto} />
         <section className="content-card phase-select">
           <span className="section-kicker">진단 선택</span>
           <h2>어떤 진단을 진행할까요?</h2>

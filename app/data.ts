@@ -89,6 +89,16 @@ export function blankPhase() {
 
 export type PhaseData = ReturnType<typeof blankPhase>;
 
+export type FamilyPhoto = {
+  storagePath: string;
+  downloadUrl: string;
+  contentType: string;
+  size: number;
+  internalConsent: true;
+  publicityConsent: boolean;
+  uploadedAt: string;
+};
+
 export type FamilyRecord = {
   _docId?: string;
   familyNo: number;
@@ -96,6 +106,7 @@ export type FamilyRecord = {
   ownerUid: string;
   applicantName?: string;
   authorizedNames?: string[];
+  familyPhoto?: FamilyPhoto;
   familyName: string;
   familyType: "children" | "childless";
   adults: { adult1: string; adult2: string };

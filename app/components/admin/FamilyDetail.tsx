@@ -20,6 +20,7 @@ export function FamilyDetail({
   onCompletion,
   onSave,
   onDelete,
+  onDeletePhoto,
 }: {
   family: FamilyRecord;
   phase: PhaseKey;
@@ -28,6 +29,7 @@ export function FamilyDetail({
   onCompletion: (f: FamilyRecord, v: number) => void;
   onSave: (f: FamilyRecord, edits: FamilyEdits) => Promise<void>;
   onDelete: (f: FamilyRecord) => Promise<void>;
+  onDeletePhoto: (f: FamilyRecord) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const data = family[phase],
@@ -68,6 +70,38 @@ export function FamilyDetail({
             ×
           </button>
         </header>
+        <section className="admin-family-photo">
+          <div>
+            <span className="section-kicker">가족사진</span>
+            <b>{family.familyPhoto ? "등록 완료" : "미등록"}</b>
+            {family.familyPhoto && (
+              <small>
+                홍보 활용 {family.familyPhoto.publicityConsent ? "동의" : "미동의"}
+              </small>
+            )}
+          </div>
+          {family.familyPhoto ? (
+            <div className="admin-family-photo-media">
+              <a
+                href={family.familyPhoto.downloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="가족사진 크게 보기"
+              >
+                <img src={family.familyPhoto.downloadUrl} alt="등록한 가족사진" />
+              </a>
+              <button
+                type="button"
+                className="photo-delete-button"
+                onClick={() => onDeletePhoto(family)}
+              >
+                사진 삭제
+              </button>
+            </div>
+          ) : (
+            <p>등록된 사진이 없어요.</p>
+          )}
+        </section>
         <div className="detail-tools">
           <label>
             활동 인증 횟수

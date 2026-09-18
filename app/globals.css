@@ -279,6 +279,131 @@ textarea:focus {
   gap: 15px;
   margin-top: 26px;
 }
+.family-photo-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  gap: 16px 24px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 25px 28px;
+  border: 1px solid #dfeae5;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #f2f8f5 100%);
+  box-shadow: 0 8px 28px rgba(24, 70, 56, 0.07);
+}
+.family-photo-copy {
+  min-width: 0;
+}
+.family-photo-copy h2 {
+  margin: 5px 0 4px;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+.family-photo-copy p {
+  margin: 0;
+  color: #465f57;
+  font-size: 14px;
+}
+.family-photo-copy > small {
+  display: block;
+  margin-top: 6px;
+  color: #788a84;
+  font-size: 11px;
+}
+.family-photo-preview {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  overflow: hidden;
+  width: 170px;
+  aspect-ratio: 4 / 3;
+  border: 1px solid #d6e3dd;
+  border-radius: 18px;
+  background: #eaf3ef;
+}
+.family-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.family-photo-preview > div {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, #edf6f1, #dcece5);
+}
+.family-photo-preview > div::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1.5px dashed #adc9bd;
+  border-radius: 13px;
+}
+.family-photo-preview > div span {
+  position: absolute;
+  left: 34px;
+  bottom: 27px;
+  width: 94px;
+  height: 48px;
+  border-radius: 42px 42px 12px 12px;
+  background: #b8d5c8;
+  transform: rotate(-4deg);
+}
+.family-photo-preview > div i {
+  position: absolute;
+  top: 31px;
+  right: 34px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #efd77f;
+}
+.family-photo-controls {
+  display: grid;
+  gap: 10px;
+}
+.photo-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #50665f;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.photo-consent input {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  accent-color: var(--green);
+}
+.primary-consent {
+  font-weight: 700;
+}
+.family-photo-actions {
+  display: flex;
+  gap: 8px;
+}
+.family-photo-actions .primary-button {
+  width: auto;
+  min-width: 128px;
+  padding: 11px 17px;
+  font-size: 13px;
+}
+.photo-delete-button {
+  border: 1px solid #e6d6d1;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 15px;
+  color: #9d5142;
+  font-size: 12px;
+  font-weight: 750;
+}
+.photo-notice {
+  margin: 0;
+  color: #406258;
+  font-size: 12px;
+  font-weight: 650;
+}
 .phase-card {
   display: flex;
   flex-direction: column;
@@ -939,7 +1064,7 @@ legend {
   width: 100%;
   min-width: 850px;
   display: grid;
-  grid-template-columns: 55px 1.6fr 100px 75px 75px 70px 120px;
+  grid-template-columns: 55px 1.6fr 100px 75px 75px 70px 70px 120px;
   gap: 8px;
   align-items: center;
   text-align: left;
@@ -948,6 +1073,20 @@ legend {
   border-top: 1px solid #edf2ef;
   background: #fff;
   color: var(--ink);
+}
+.photo-status {
+  display: inline-flex !important;
+  width: max-content;
+  border-radius: 999px;
+  background: #f0f1f1;
+  padding: 5px 8px;
+  color: #71817c;
+  font-size: 11px !important;
+  font-weight: 800;
+}
+.photo-status.registered {
+  background: #e4eef9;
+  color: #35658f;
 }
 button.table-row:hover {
   background: #f4f9f6;
@@ -1026,6 +1165,48 @@ button.table-row:hover {
   height: 36px;
   border-radius: 50%;
   font-size: 24px;
+}
+.admin-family-photo {
+  display: grid;
+  grid-template-columns: 1fr 170px;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #fff;
+}
+.admin-family-photo > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-family-photo > div b {
+  font-size: 17px;
+}
+.admin-family-photo > div small,
+.admin-family-photo > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.admin-family-photo > a {
+  overflow: hidden;
+  width: 170px;
+  aspect-ratio: 4 / 3;
+  border-radius: 13px;
+  background: #edf3f0;
+}
+.admin-family-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-family-photo-media {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
 }
 .detail-tools {
   display: flex;
@@ -1782,6 +1963,29 @@ button.table-row:hover {
   grid-template-columns: 1fr;
 }
 @media (max-width: 480px) {
+  .family-photo-card {
+    grid-template-columns: 1fr;
+    padding: 21px 18px;
+  }
+  .family-photo-preview {
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+    max-height: 240px;
+  }
+  .family-photo-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+  .family-photo-actions .primary-button {
+    width: 100%;
+  }
+  .admin-family-photo {
+    grid-template-columns: 1fr;
+  }
+  .admin-family-photo > a {
+    width: 100%;
+  }
   .card-row-title strong,
   .card-title-button {
     font-size: 15px;
