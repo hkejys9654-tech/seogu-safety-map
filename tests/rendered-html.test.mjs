@@ -62,7 +62,8 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(admin, /데모 관리자 들어가기/);
   assert.match(manager, /제출자 삭제/);
   assert.match(manager, /수정 저장/);
-  assert.match(manager, /함께카드 100장/);
+  assert.match(manager, /함께카드 응답/);
+  assert.doesNotMatch(setup, /우리집카드|우리 집만의 역할/);
   assert.match(finish, /haeoni-suit-cheer\.png/);
   assert.doesNotMatch(finish, /haeoni-suit-arms\.png/);
   assert.match(layout, /haeoni-app-icon-192\.png/);

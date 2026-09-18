@@ -18,7 +18,6 @@ const categoryVisuals: Record<string, string> = {
   아이돌봄: "🧸",
   아이교육: "📚",
   가족돌봄: "🤝",
-  우리집카드: "🏠",
 };
 
 export function FamilyInfo({
@@ -280,7 +279,6 @@ export function CardSurvey({
       <ul className="card-list">
         {groupCards.map((card) => {
           const selected = data.cards[card.id];
-          const custom = Number(card.id) > 98;
           const hasGuide = Boolean(
             card.desc || card.note || card.steps?.length,
           );
@@ -303,21 +301,13 @@ export function CardSurvey({
                         )
                       }
                     >
-                      <span>
-                        {custom
-                          ? data.customTitles[card.id] || card.title
-                          : card.title}
-                      </span>
+                      <span>{card.title}</span>
                       <small>
                         {openDescription === card.id ? "닫기" : "내용 보기"}
                       </small>
                     </button>
                   ) : (
-                    <strong>
-                      {custom
-                        ? data.customTitles[card.id] || card.title
-                        : card.title}
-                    </strong>
+                    <strong>{card.title}</strong>
                   )}
                   {hasGuide && openDescription === card.id && (
                     <div
@@ -342,18 +332,6 @@ export function CardSurvey({
                         닫기
                       </button>
                     </div>
-                  )}
-                  {custom && (
-                    <input
-                      className="custom-role"
-                      value={data.customTitles[card.id] || ""}
-                      onChange={(e) =>
-                        updateFamily((d) => {
-                          d[phase].customTitles[card.id] = e.target.value;
-                        })
-                      }
-                      placeholder="우리 집만의 역할을 적어주세요"
-                    />
                   )}
                 </div>
               </div>

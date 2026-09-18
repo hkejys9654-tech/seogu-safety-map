@@ -30,9 +30,12 @@ export const cards = rawCards as Card[];
 export const childOnlyCategories = ["아이돌봄", "아이교육"];
 
 export function cardsFor(familyType: FamilyRecord["familyType"]) {
+  const surveyCards = cards.filter((card) => card.category !== "우리집카드");
   return familyType === "childless"
-    ? cards.filter((card) => !childOnlyCategories.includes(card.category))
-    : cards;
+    ? surveyCards.filter(
+        (card) => !childOnlyCategories.includes(card.category),
+      )
+    : surveyCards;
 }
 
 export function categoriesFor(familyType: FamilyRecord["familyType"]) {

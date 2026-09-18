@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  cards,
+  cardsFor,
   childlessQuestion,
   FamilyRecord,
   indexQuestions,
@@ -36,12 +36,16 @@ export function FamilyDetail({
     score1 = indexScore(data.indexAnswers.adult1),
     score2 = indexScore(data.indexAnswers.adult2);
   const grouped = useMemo(
-    () =>
-      Array.from(new Set(cards.map((c) => c.category))).map((category) => ({
-        category,
-        cards: cards.filter((c) => c.category === category),
-      })),
-    [],
+    () => {
+      const visibleCards = cardsFor(family.familyType);
+      return Array.from(new Set(visibleCards.map((c) => c.category))).map(
+        (category) => ({
+          category,
+          cards: visibleCards.filter((c) => c.category === category),
+        }),
+      );
+    },
+    [family.familyType],
   );
   return (
     <div
@@ -202,7 +206,7 @@ export function FamilyDetail({
           </div>
         </section>
         <section className="detail-section">
-          <h3>함께카드 100장</h3>
+          <h3>함께카드 응답</h3>
           {grouped.map((group) => (
             <details key={group.category}>
               <summary>

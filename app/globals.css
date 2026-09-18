@@ -591,11 +591,6 @@ legend {
   color: var(--muted);
   font-size: 14px;
 }
-.custom-role {
-  max-width: 390px;
-  text-align: center;
-  margin: -2px 0 8px;
-}
 .owner-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
