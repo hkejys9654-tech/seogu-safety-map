@@ -3,3 +3,6 @@
 .firebase/
 .firebaserc
 firebase-debug.log
+.env.local
+runtime-config.js
+dist/

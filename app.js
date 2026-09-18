@@ -1,5 +1,13 @@
-(function () {
+(async function () {
   "use strict";
+
+  try {
+    await window.SafetyMapKakaoReady;
+  } catch (error) {
+    console.error(error);
+    document.body.innerHTML = "<p class='map-load-error'>카카오 지도를 불러오지 못했습니다. 지도 키와 허용 도메인 설정을 확인해주세요.</p>";
+    return;
+  }
 
   const DATA = window.SAFETY_MAP_DATA;
   const LANDMARKS = window.SAFETY_MAP_LANDMARKS || { dongs: {} };
@@ -37,7 +45,7 @@
     "#3d8a68", "#6d72a8", "#ad7448", "#4d899a", "#8a6a9b", "#73854c"
   ];
 
-  if (!DATA || !Array.isArray(DATA.dongs) || typeof L === "undefined" || !SERVICE) {
+  if (!DATA || !Array.isArray(DATA.dongs) || typeof KMap === "undefined" || !SERVICE) {
     document.body.innerHTML = "<p style='padding:24px'>지도를 불러오지 못했습니다. 인터넷 연결과 파일 구성을 확인해주세요.</p>";
     return;
   }
@@ -61,10 +69,10 @@
   const locateButton = document.getElementById("locate-me");
   const submitButton = reportForm.querySelector('button[type="submit"]');
   const map = createMap("citizen-map");
-  const officialLayer = L.layerGroup().addTo(map);
-  const landmarkLayer = L.layerGroup().addTo(map);
-  const receiptLayer = L.layerGroup().addTo(map);
-  const locationLayer = L.layerGroup().addTo(map);
+  const officialLayer = KMap.layerGroup().addTo(map);
+  const landmarkLayer = KMap.layerGroup().addTo(map);
+  const receiptLayer = KMap.layerGroup().addTo(map);
+  const locationLayer = KMap.layerGroup().addTo(map);
   let pendingMarker = null;
   let locationMarker = null;
   let accuracyCircle = null;
@@ -76,11 +84,7 @@
   subscribeMapFeatures();
 
   function createMap(id) {
-    const instance = L.map(id, { zoomControl: true, minZoom: 12, maxZoom: 19 });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(instance);
+    const instance = KMap.map(id, { zoomControl: true, minZoom: 12, maxZoom: 19 });
     const updateLabels = () => instance.getContainer().classList.toggle("show-landmark-labels", instance.getZoom() >= 15);
     instance.on("zoomend", updateLabels);
     updateLabels();
@@ -139,12 +143,12 @@
   }
 
   function updateUserLocation(position) {
-    const latLng = L.latLng(position.coords.latitude, position.coords.longitude);
+    const latLng = KMap.latLng(position.coords.latitude, position.coords.longitude);
     const accuracy = Math.max(1, Number(position.coords.accuracy) || 1);
     state.lastLocation = latLng;
 
     if (!accuracyCircle) {
-      accuracyCircle = L.circle(latLng, {
+      accuracyCircle = KMap.circle(latLng, {
         radius: accuracy,
         color: "#1677d2",
         weight: 1,
@@ -158,10 +162,10 @@
     }
 
     if (!locationMarker) {
-      locationMarker = L.marker(latLng, {
+      locationMarker = KMap.marker(latLng, {
         zIndexOffset: 1200,
-        icon: L.divIcon({
-          className: "leaflet-div-icon user-location-icon",
+        icon: KMap.divIcon({
+          className: "map-div-icon user-location-icon",
           html: '<span class="user-location-marker"><span></span></span>',
           iconSize: [34, 34],
           iconAnchor: [17, 17]
@@ -237,7 +241,7 @@
 
   function drawBoundary(dong) {
     const color = getDongColor(dong.name);
-    const line = L.polygon(toLatLngs(dong.boundary), {
+    const line = KMap.polygon(toLatLngs(dong.boundary), {
       color,
       weight: 5,
       opacity: .95,
@@ -259,7 +263,7 @@
       } else {
         const latLngs = feature.points.map((point) => [point.lat, point.lon]);
         const style = officialLineStyle(feature.type);
-        L.polyline(latLngs, {
+        KMap.polyline(latLngs, {
           color: "#fff",
           weight: style.weight + 4,
           opacity: .9,
@@ -267,7 +271,7 @@
           lineJoin: "round",
           interactive: false
         }).addTo(officialLayer);
-        L.polyline(latLngs, style)
+        KMap.polyline(latLngs, style)
           .bindPopup(`<strong>${symbol} ${escapeHtml(feature.name)}</strong><br>${escapeHtml(feature.location || "")}`)
           .addTo(officialLayer);
       }
@@ -286,12 +290,12 @@
     const items = LANDMARKS.dongs && Array.isArray(LANDMARKS.dongs[dong.name]) ? LANDMARKS.dongs[dong.name] : [];
     items.forEach((item) => {
       const symbol = categorySymbols[item.category] || "점";
-      L.marker([Number(item.lat), Number(item.lon)], {
+      KMap.marker([Number(item.lat), Number(item.lon)], {
         interactive: false,
         keyboard: false,
         zIndexOffset: -500,
-        icon: L.divIcon({
-          className: "leaflet-div-icon landmark-icon",
+        icon: KMap.divIcon({
+          className: "map-div-icon landmark-icon",
           html: `<div class="landmark-marker ${escapeHtml(item.category)}"><span class="landmark-dot">${symbol}</span><span class="landmark-label">${escapeHtml(item.name)}</span></div>`,
           iconSize: [27, 27],
           iconAnchor: [13, 13]
@@ -388,9 +392,9 @@
   }
 
   function createOfficialMarker(item, type, symbol, label, location) {
-    return L.marker([Number(item.lat), Number(item.lon)], {
-      icon: L.divIcon({
-        className: "leaflet-div-icon",
+    return KMap.marker([Number(item.lat), Number(item.lon)], {
+      icon: KMap.divIcon({
+        className: "map-div-icon",
         html: `<div class="official-marker ${type}">${symbol}</div>`,
         iconSize: [30, 30],
         iconAnchor: [15, 15]
@@ -400,9 +404,9 @@
 
   function createReceiptMarker(report) {
     const color = TYPE_COLORS[report.type] || TYPE_COLORS.other;
-    return L.marker([report.lat, report.lon], {
-      icon: L.divIcon({
-        className: "leaflet-div-icon",
+    return KMap.marker([report.lat, report.lon], {
+      icon: KMap.divIcon({
+        className: "map-div-icon",
         html: `<div class="citizen-marker" style="background:${color}"></div>`,
         iconSize: [27, 27],
         iconAnchor: [13, 13]
@@ -451,7 +455,7 @@
     if (!state.placing) return;
     state.pendingLatLng = event.latlng;
     if (pendingMarker) pendingMarker.remove();
-    pendingMarker = L.circleMarker(event.latlng, {
+    pendingMarker = KMap.circleMarker(event.latlng, {
       radius: 11,
       color: "#fff",
       weight: 4,

@@ -1,5 +1,13 @@
-(function () {
+(async function () {
   "use strict";
+
+  try {
+    await window.SafetyMapKakaoReady;
+  } catch (error) {
+    console.error(error);
+    document.body.innerHTML = "<p class='map-load-error'>카카오 지도를 불러오지 못했습니다. 지도 키와 허용 도메인 설정을 확인해주세요.</p>";
+    return;
+  }
 
   const DATA = window.SAFETY_MAP_DATA;
   const LANDMARKS = window.SAFETY_MAP_LANDMARKS || { dongs: {} };
@@ -43,7 +51,7 @@
     "#3d8a68", "#6d72a8", "#ad7448", "#4d899a", "#8a6a9b", "#73854c"
   ];
 
-  if (!DATA || !Array.isArray(DATA.dongs) || typeof L === "undefined" || !SERVICE) {
+  if (!DATA || !Array.isArray(DATA.dongs) || typeof KMap === "undefined" || !SERVICE) {
     document.body.innerHTML = "<p style='padding:24px'>관리자 앱을 불러오지 못했습니다. 인터넷 연결과 파일 구성을 확인해주세요.</p>";
     return;
   }
@@ -204,16 +212,12 @@
   }
 
   function createMap() {
-    map = L.map("admin-map", { zoomControl: true, minZoom: 11, maxZoom: 19 });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(map);
-    officialLayer = L.layerGroup().addTo(map);
-    landmarkLayer = L.layerGroup().addTo(map);
-    featureLayer = L.layerGroup().addTo(map);
-    reportLayer = L.layerGroup().addTo(map);
-    editLayer = L.layerGroup().addTo(map);
+    map = KMap.map("admin-map", { zoomControl: true, minZoom: 11, maxZoom: 19 });
+    officialLayer = KMap.layerGroup().addTo(map);
+    landmarkLayer = KMap.layerGroup().addTo(map);
+    featureLayer = KMap.layerGroup().addTo(map);
+    reportLayer = KMap.layerGroup().addTo(map);
+    editLayer = KMap.layerGroup().addTo(map);
     map.on("click", handleAdminMapClick);
     const updateLabels = () => map.getContainer().classList.toggle("show-landmark-labels", map.getZoom() >= 15);
     map.on("zoomend", updateLabels);
@@ -278,7 +282,7 @@
     });
 
     if (!state.editMode && state.dong === "all") {
-      const bounds = L.latLngBounds(DATA.dongs.flatMap((dong) => toLatLngs(dong.boundary)));
+      const bounds = KMap.latLngBounds(DATA.dongs.flatMap((dong) => toLatLngs(dong.boundary)));
       map.fitBounds(bounds, { padding: [20, 20] });
     } else if (!state.editMode && boundaries[0]) {
       map.fitBounds(boundaries[0].getBounds(), { padding: [22, 22] });
@@ -313,7 +317,7 @@
 
   function drawDong(dong) {
     const color = getDongColor(dong.name);
-    const boundary = L.polygon(toLatLngs(dong.boundary), {
+    const boundary = KMap.polygon(toLatLngs(dong.boundary), {
       color,
       weight: state.dong === "all" ? 2.5 : 5,
       opacity: .9,
@@ -330,7 +334,7 @@
 
     boundary.on("click", (event) => {
       if (state.dong !== "all" || state.editMode) return;
-      L.DomEvent.stopPropagation(event.originalEvent);
+      KMap.DomEvent.stopPropagation(event.originalEvent);
       dongSelect.value = dong.name;
       state.dong = dong.name;
       renderAdmin();
@@ -345,12 +349,12 @@
     const items = LANDMARKS.dongs && Array.isArray(LANDMARKS.dongs[dong.name]) ? LANDMARKS.dongs[dong.name] : [];
     items.forEach((item) => {
       const symbol = categorySymbols[item.category] || "점";
-      L.marker([Number(item.lat), Number(item.lon)], {
+      KMap.marker([Number(item.lat), Number(item.lon)], {
         interactive: false,
         keyboard: false,
         zIndexOffset: -500,
-        icon: L.divIcon({
-          className: "leaflet-div-icon landmark-icon",
+        icon: KMap.divIcon({
+          className: "map-div-icon landmark-icon",
           html: `<div class="landmark-marker ${escapeHtml(item.category)}${compact ? " compact" : ""}"><span class="landmark-dot">${symbol}</span><span class="landmark-label">${escapeHtml(item.name)}</span></div>`,
           iconSize: compact ? [15, 15] : [27, 27],
           iconAnchor: compact ? [7, 7] : [13, 13]
@@ -440,23 +444,23 @@
     const symbol = FEATURE_SYMBOLS[feature.type] || "□";
     if (feature.geometry === "point") {
       const point = feature.points[0];
-      const marker = L.marker([point.lat, point.lon], {
-        icon: L.divIcon({
-          className: "leaflet-div-icon",
+      const marker = KMap.marker([point.lat, point.lon], {
+        icon: KMap.divIcon({
+          className: "map-div-icon",
           html: `<div class="official-marker ${feature.type}${selected ? " selected" : ""}">${symbol}</div>`,
           iconSize: [34, 34],
           iconAnchor: [17, 17]
         })
       }).bindTooltip(`${symbol} ${feature.name}`, { sticky: true }).addTo(featureLayer);
       marker.on("click", (event) => {
-        L.DomEvent.stopPropagation(event.originalEvent);
+        KMap.DomEvent.stopPropagation(event.originalEvent);
         selectFeature(feature);
       });
       return;
     }
     const latLngs = feature.points.map((point) => [point.lat, point.lon]);
     const style = officialLineStyle(feature.type, selected);
-    L.polyline(latLngs, {
+    KMap.polyline(latLngs, {
       color: selected ? "#fff3cf" : "#fff",
       weight: style.weight + (selected ? 6 : 4),
       opacity: selected ? 1 : .9,
@@ -464,11 +468,11 @@
       lineJoin: "round",
       interactive: false
     }).addTo(featureLayer);
-    const line = L.polyline(latLngs, style)
+    const line = KMap.polyline(latLngs, style)
       .bindTooltip(`${symbol} ${feature.name}`, { sticky: true })
       .addTo(featureLayer);
     line.on("click", (event) => {
-      L.DomEvent.stopPropagation(event.originalEvent);
+      KMap.DomEvent.stopPropagation(event.originalEvent);
       selectFeature(feature);
     });
   }
@@ -603,7 +607,7 @@
     if (!feature) return;
     const points = feature.points;
     if (feature.geometry === "line" && points.length >= 2) {
-      L.polyline(points.map((point) => [point.lat, point.lon]), {
+      KMap.polyline(points.map((point) => [point.lat, point.lon]), {
         color: "#df6b3f",
         weight: 7,
         opacity: .95,
@@ -611,11 +615,11 @@
       }).addTo(editLayer);
     }
     points.forEach((point, index) => {
-      const marker = L.marker([point.lat, point.lon], {
+      const marker = KMap.marker([point.lat, point.lon], {
         draggable: state.editMode === "editing",
         keyboard: false,
-        icon: L.divIcon({
-          className: "leaflet-div-icon",
+        icon: KMap.divIcon({
+          className: "map-div-icon",
           html: '<div class="edit-vertex"></div>',
           iconSize: [22, 22],
           iconAnchor: [11, 11]
@@ -714,9 +718,9 @@
 
   function createReportMarker(report) {
     const color = TYPE_COLORS[report.type] || TYPE_COLORS.other;
-    return L.marker([report.lat, report.lon], {
-      icon: L.divIcon({
-        className: "leaflet-div-icon",
+    return KMap.marker([report.lat, report.lon], {
+      icon: KMap.divIcon({
+        className: "map-div-icon",
         html: `<div class="citizen-marker" style="background:${color}"></div>`,
         iconSize: [27, 27],
         iconAnchor: [13, 13]
@@ -842,10 +846,10 @@
   function renderReportEditMarker() {
     if (!editLayer || !state.editingReport) return;
     editLayer.clearLayers();
-    const marker = L.marker([state.editingReport.lat, state.editingReport.lon], {
+    const marker = KMap.marker([state.editingReport.lat, state.editingReport.lon], {
       draggable: true,
-      icon: L.divIcon({
-        className: "leaflet-div-icon",
+      icon: KMap.divIcon({
+        className: "map-div-icon",
         html: '<div class="edit-report-marker">●</div>',
         iconSize: [34, 34],
         iconAnchor: [17, 17]

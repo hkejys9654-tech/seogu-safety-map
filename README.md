@@ -40,6 +40,12 @@
 - 시민참여단: `https://사용자명.github.io/저장소명/`
 - 관리자: `https://사용자명.github.io/저장소명/admin/`
 
-## 지도 저작권
+## 카카오맵 연결
 
-Map data © OpenStreetMap contributors (ODbL)
+- 지도 엔진: Kakao Maps JavaScript SDK
+- 기존 주요장소 좌표 자료: OpenStreetMap contributors (ODbL)
+- 로컬 설정: `.env.example`을 `.env.local`로 복사한 뒤 `KAKAO_MAP_JAVASCRIPT_KEY` 입력
+- GitHub Pages 설정: 저장소 Actions secret `KAKAO_MAP_JAVASCRIPT_KEY` 사용
+- 상세 절차: `KAKAO_MAP_설정안내.md`
+
+API 키가 포함된 `runtime-config.js`는 빌드할 때만 생성되며 Git 저장소에는 커밋되지 않습니다.
