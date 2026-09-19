@@ -32,17 +32,13 @@ export function Header({
 export function Progress({
   step,
   phase,
-  twoAdults = true,
 }: {
   step: number;
   phase: PhaseKey;
-  twoAdults?: boolean;
 }) {
   const last = phase === "post" ? "만족도" : "약속";
-  const labels = twoAdults
-    ? ["가족", "카드", "어른1", "어른2", "시간", last, "완료"]
-    : ["가족", "카드", "함께지수", "시간", last, "완료"];
-  const at = twoAdults ? step : step > 3 ? step - 1 : step;
+  const labels = ["가족", "카드", "함께지수", "시간", last, "완료"];
+  const at = step;
   return (
     <nav className="progress-wrap" aria-label="진행 단계">
       <div className="progress-meta">

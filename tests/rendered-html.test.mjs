@@ -5,7 +5,7 @@ import test from "node:test";
 test("배포 결과와 두 화면이 만들어진다", async () => {
   await access(new URL("../dist/server/index.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
-  const [page, family, setup, finish, photo, content, admin, detail, edit, layout] =
+  const [page, family, setup, questions, finish, photo, content, data, admin, detail, edit, layout] =
     await Promise.all([
       readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
       readFile(
@@ -17,6 +17,10 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
         "utf8",
       ),
       readFile(
+        new URL("../app/components/family/Questions.tsx", import.meta.url),
+        "utf8",
+      ),
+      readFile(
         new URL("../app/components/family/Finish.tsx", import.meta.url),
         "utf8",
       ),
@@ -25,6 +29,7 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
         "utf8",
       ),
       readFile(new URL("../app/content.ts", import.meta.url), "utf8"),
+      readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
       readFile(
         new URL("../app/components/AdminApp.tsx", import.meta.url),
         "utf8",
@@ -39,7 +44,7 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
       ),
       readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     ]);
-  const participant = family + setup + finish + photo + content;
+  const participant = family + setup + questions + finish + photo + content + data;
   const manager = admin + detail + edit;
   assert.match(page, /함께가정/);
   assert.match(participant, /우리 가족이 이번 30일 동안 바꿔보고 싶은 점/);
@@ -51,6 +56,14 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(family, /엄마 또는 아빠 이름/);
   assert.match(family, /authorizedNames/);
   assert.match(family, /name-mismatch/);
+  assert.match(family, /respondentRole/);
+  assert.match(family, /saveAdditionalIndex/);
+  assert.match(questions, /대표 응답자가 느낀 우리 가족의 모습/);
+  assert.match(finish, /1인 응답 리포트/);
+  assert.match(finish, /2인 응답 리포트/);
+  assert.doesNotMatch(finish, /비교 자료 부족/);
+  assert.match(data, /indexRespondents/);
+  assert.match(data, /hasTwoPersonReport/);
   assert.match(photo, /사진 등록/);
   assert.match(photo, /리포트에 자동으로 들어가지 않아요/);
   assert.match(photo, /\/api\/family-photo/);
@@ -63,6 +76,7 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.match(manager, /제출자 삭제/);
   assert.match(manager, /수정 저장/);
   assert.match(manager, /함께카드 응답/);
+  assert.match(manager, /추가응답|추가 응답/);
   assert.doesNotMatch(setup, /우리집카드|우리 집만의 역할/);
   assert.match(finish, /haeoni-suit-cheer\.png/);
   assert.doesNotMatch(finish, /haeoni-suit-arms\.png/);

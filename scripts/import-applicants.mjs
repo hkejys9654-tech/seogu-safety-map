@@ -79,6 +79,7 @@ function blankPhase() {
       adult1: Array(10).fill(null),
       adult2: Array(10).fill(null),
     },
+    indexRespondents: { adult1: "", adult2: "" },
     times: {
       adult1: { housework: "", mental: "", rest: "" },
       adult2: { housework: "", mental: "", rest: "" },

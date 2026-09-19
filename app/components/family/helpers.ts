@@ -12,6 +12,8 @@ export function formatError(error: unknown) {
 
   if (details.includes("not-found") || details.includes("name-mismatch"))
     return "가정 번호와 엄마 또는 아빠 이름을 다시 확인해주세요.";
+  if (details.includes("family-setup-required"))
+    return "대표 응답자가 가족 등록을 마친 후 참여해주세요.";
   if (
     details.includes("permission-denied") ||
     details.includes("missing or insufficient permissions")

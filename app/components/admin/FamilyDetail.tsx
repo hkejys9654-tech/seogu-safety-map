@@ -3,6 +3,10 @@ import {
   cardsFor,
   childlessQuestion,
   FamilyRecord,
+  hasAdditionalResponse,
+  hasCompleteIndex,
+  hasSecondAdult,
+  hasTwoPersonReport,
   indexQuestions,
   indexScore,
   indexType,
@@ -35,6 +39,10 @@ export function FamilyDetail({
   const data = family[phase],
     score1 = indexScore(data.indexAnswers.adult1),
     score2 = indexScore(data.indexAnswers.adult2);
+  const twoAdults = hasSecondAdult(family);
+  const representativeComplete = hasCompleteIndex(data.indexAnswers.adult1);
+  const additionalComplete = hasAdditionalResponse(family, phase);
+  const twoPersonReport = hasTwoPersonReport(family);
   const grouped = useMemo(
     () => {
       const visibleCards = cardsFor(family.familyType);
@@ -156,26 +164,39 @@ export function FamilyDetail({
         )}
         <section className="detail-section">
           <h3>우리집 함께지수</h3>
-          <div className="mini-score">
+          <div className={twoAdults ? "mini-score" : "mini-score single"}>
             <div>
-              <span>{family.adults.adult1 || "성인 1"}</span>
-              <strong>{score1}점</strong>
-              <small>{indexType(score1)}</small>
+              <span>{family.applicantName || family.adults.adult1 || "대표 응답자"}</span>
+              <strong>{representativeComplete ? `${score1}점` : "작성 중"}</strong>
+              <small>
+                {representativeComplete ? indexType(score1) : "대표 응답"}
+              </small>
             </div>
-            <div>
-              <span>{family.adults.adult2 || "성인 2"}</span>
-              <strong>{score2}점</strong>
-              <small>{indexType(score2)}</small>
-            </div>
+            {twoAdults && (
+              <div>
+                <span>{data.indexRespondents?.adult2 || family.adults.adult2}</span>
+                <strong>
+                  {additionalComplete ? `${score2}점` : "선택 미참여"}
+                </strong>
+                <small>
+                  {additionalComplete ? indexType(score2) : "추가 응답"}
+                </small>
+              </div>
+            )}
           </div>
+          {phase === "post" && representativeComplete && (
+            <p className="admin-report-type">
+              리포트 유형: {twoPersonReport ? "2인 응답" : "1인 응답"}
+            </p>
+          )}
           <div className="index-detail">
-            <div className="index-row labels">
+            <div className={twoAdults ? "index-row labels" : "index-row labels single"}>
               <span>문항</span>
-              <b>{family.adults.adult1 || "성인 1"}</b>
-              <b>{family.adults.adult2 || "성인 2"}</b>
+              <b>{family.applicantName || family.adults.adult1 || "대표"}</b>
+              {twoAdults && <b>{data.indexRespondents?.adult2 || "추가 응답"}</b>}
             </div>
             {indexQuestions.map((q, i) => (
-              <div className="index-row" key={q}>
+              <div className={twoAdults ? "index-row" : "index-row single"} key={q}>
                 <span>
                   {i + 1}.{" "}
                   {i === 2 && family.familyType === "childless"
@@ -183,26 +204,28 @@ export function FamilyDetail({
                     : q}
                 </span>
                 <b>{data.indexAnswers.adult1[i] || "-"}</b>
-                <b>{data.indexAnswers.adult2[i] || "-"}</b>
+                {twoAdults && (
+                  <b>{additionalComplete ? data.indexAnswers.adult2[i] || "-" : "-"}</b>
+                )}
               </div>
             ))}
           </div>
         </section>
         <section className="detail-section">
           <h3>일주일 시간</h3>
-          <div className="detail-time">
+          <div className={twoAdults ? "detail-time" : "detail-time single"}>
             <span />
             <b>{family.adults.adult1}</b>
-            <b>{family.adults.adult2}</b>
+            {twoAdults && <b>{family.adults.adult2}</b>}
             <span>집안일·돌봄</span>
             <b>{data.times.adult1.housework || "-"}시간</b>
-            <b>{data.times.adult2.housework || "-"}시간</b>
+            {twoAdults && <b>{data.times.adult2.housework || "-"}시간</b>}
             <span>가족 챙김</span>
             <b>{data.times.adult1.mental || "-"}시간</b>
-            <b>{data.times.adult2.mental || "-"}시간</b>
+            {twoAdults && <b>{data.times.adult2.mental || "-"}시간</b>}
             <span>혼자 쉼</span>
             <b>{data.times.adult1.rest || "-"}시간</b>
-            <b>{data.times.adult2.rest || "-"}시간</b>
+            {twoAdults && <b>{data.times.adult2.rest || "-"}시간</b>}
           </div>
         </section>
         <section className="detail-section">

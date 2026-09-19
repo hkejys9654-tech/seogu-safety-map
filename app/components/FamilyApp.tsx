@@ -17,7 +17,8 @@ import { auth, db, FAMILY_COLLECTION } from "../firebase";
 import {
   FamilyPhoto,
   FamilyRecord,
-  hasSecondAdult,
+  hasAdditionalResponse,
+  hasCompleteIndex,
   PhaseKey,
 } from "../data";
 import {
@@ -28,7 +29,7 @@ import {
 import { Header, Progress } from "./family/Shared";
 import { CardSurvey, FamilyInfo } from "./family/SetupAndCards";
 import { IndexSurvey, Satisfaction, TimeSurvey } from "./family/Questions";
-import { PromiseSurvey, Result } from "./family/Finish";
+import { AdditionalResult, PromiseSurvey, Result } from "./family/Finish";
 import { FamilyPhotoCard } from "./family/FamilyPhotoCard";
 
 const phases: {
@@ -70,6 +71,9 @@ export default function FamilyApp() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [saved, setSaved] = useState("저장됨");
+  const [respondentRole, setRespondentRole] = useState<
+    "representative" | "additional"
+  >("representative");
 
   async function enter() {
     const no = Number(familyNo);
@@ -93,17 +97,30 @@ export default function FamilyApp() {
       if (!snapshot) throw new Error("not-found");
       const stored = snapshot.data() as FamilyRecord;
       const enteredName = normalizeAccessName(name);
-      const authorizedNames = (stored.authorizedNames || []).map(
-        normalizeAccessName,
-      );
+      const allowedNames = [
+        ...(stored.authorizedNames || []),
+        stored.applicantName || "",
+        stored.adults?.adult1 || "",
+        stored.adults?.adult2 || "",
+      ].filter(Boolean);
+      const authorizedNames = allowedNames.map(normalizeAccessName);
       if (!authorizedNames.includes(enteredName)) {
         throw new Error("name-mismatch");
+      }
+      const representativeName = normalizeAccessName(
+        stored.applicantName || allowedNames[0] || "",
+      );
+      const role =
+        enteredName === representativeName ? "representative" : "additional";
+      if (role === "additional" && !stored.adults?.adult2?.trim()) {
+        throw new Error("family-setup-required");
       }
       await updateDoc(snapshot.ref, {
         lastVisitorUid: active.uid,
         updatedAt: serverTimestamp(),
       });
       setUser(active);
+      setRespondentRole(role);
       setFamily({
         ...stored,
         _docId: snapshot.id,
@@ -139,6 +156,53 @@ export default function FamilyApp() {
       { merge: true },
     );
     setSaved(message);
+  }
+
+  async function saveRepresentativeIndex() {
+    if (!family || !phase) return;
+    const next = updateFamily((draft) => {
+      draft[phase].indexRespondents ||= { adult1: "", adult2: "" };
+      draft[phase].indexRespondents.adult1 =
+        draft.applicantName || applicantName.trim();
+    });
+    if (!next) return;
+    setBusy(true);
+    try {
+      await persist(next);
+      setStep(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setNotice(formatError(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveAdditionalIndex() {
+    if (!family || !phase || !user || !family._docId) return;
+    const responseName = applicantName.trim();
+    const next = updateFamily((draft) => {
+      draft[phase].indexRespondents ||= { adult1: "", adult2: "" };
+      draft[phase].indexRespondents.adult2 = responseName;
+    });
+    if (!next) return;
+    setBusy(true);
+    setSaved("저장 중…");
+    try {
+      await updateDoc(doc(db, FAMILY_COLLECTION, family._docId), {
+        [`${phase}.indexAnswers.adult2`]:
+          next[phase].indexAnswers.adult2,
+        [`${phase}.indexRespondents.adult2`]: responseName,
+        updatedAt: serverTimestamp(),
+      });
+      setSaved("저장됨");
+      setStep(5);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setNotice(formatError(error));
+    } finally {
+      setBusy(false);
+    }
   }
 
   function updateFamily(mutator: (draft: FamilyRecord) => void) {
@@ -235,20 +299,56 @@ export default function FamilyApp() {
   }
 
   if (!phase) {
+    const additional = respondentRole === "additional";
     return (
       <main className="site-shell">
         <Header family={family} saved={saved} />
-        <FamilyPhotoCard family={family} onChange={updateFamilyPhoto} />
+        {!additional && (
+          <FamilyPhotoCard family={family} onChange={updateFamilyPhoto} />
+        )}
         <section className="content-card phase-select">
-          <span className="section-kicker">진단 선택</span>
-          <h2>어떤 진단을 진행할까요?</h2>
-          <p>작성 중에도 자동 저장되어 다시 이어서 할 수 있어요.</p>
+          <span className="section-kicker">
+            {additional ? "선택 참여" : "진단 선택"}
+          </span>
+          <h2>
+            {additional
+              ? `${applicantName.trim()}님의 함께지수`
+              : "어떤 진단을 진행할까요?"}
+          </h2>
+          <p>
+            {additional
+              ? "다른 성인의 참여는 선택사항이며, 함께지수 10문항만 작성합니다."
+              : "작성 중에도 자동 저장되어 다시 이어서 할 수 있어요."}
+          </p>
           <div className="phase-grid">
             {phases.map((item) => (
               <button
                 key={item.key}
                 className="phase-card"
                 onClick={() => {
+                  if (additional) {
+                    if (
+                      item.key === "post" &&
+                      !hasAdditionalResponse(family, "pre")
+                    ) {
+                      setNotice("사전 함께지수부터 작성해주세요.");
+                      return;
+                    }
+                    setPhase(item.key);
+                    setStep(
+                      hasAdditionalResponse(family, item.key) ? 5 : 2,
+                    );
+                    setNotice("");
+                    return;
+                  }
+                  if (
+                    item.key === "post" &&
+                    (!hasCompleteIndex(family.pre.indexAnswers.adult1) ||
+                      family.pre.status !== "submitted")
+                  ) {
+                    setNotice("사전 진단을 먼저 제출해주세요.");
+                    return;
+                  }
                   const hasFamilyInfo = Boolean(family.adults.adult1.trim());
                   setPhase(item.key);
                   setStep(item.key === "post" && hasFamilyInfo ? 1 : 0);
@@ -260,9 +360,13 @@ export default function FamilyApp() {
                 <span>{item.period}</span>
                 <strong>{item.title}</strong>
                 <em>
-                  {family[item.key].status === "submitted"
-                    ? "제출 완료 · 다시 보기"
-                    : "시작하기"}
+                  {additional
+                    ? hasAdditionalResponse(family, item.key)
+                      ? "응답 완료 · 다시 보기"
+                      : "10문항 참여하기"
+                    : family[item.key].status === "submitted"
+                      ? "제출 완료 · 다시 보기"
+                      : "시작하기"}
                 </em>
               </button>
             ))}
@@ -273,17 +377,52 @@ export default function FamilyApp() {
   }
 
   const current = family[phase];
-  const twoAdults = hasSecondAdult(family);
-  const finalStep = 6;
-  // 어른이 한 분인 가정은 성인 2 함께지수(3단계)를 건너뜁니다.
-  const goForward = (from: number) =>
-    saveAndGo(!twoAdults && from + 1 === 3 ? 4 : from + 1);
-  const goBack = (from: number) =>
-    setStep(!twoAdults && from - 1 === 3 ? 2 : from - 1);
+  const finalStep = 5;
+
+  if (respondentRole === "additional") {
+    return (
+      <main className="site-shell app-shell">
+        <Header
+          family={family}
+          saved={saved}
+          onHome={() => setPhase(null)}
+        />
+        {notice && (
+          <p className="floating-notice" role="alert">
+            {notice}
+          </p>
+        )}
+        {step === 2 && (
+          <IndexSurvey
+            family={family}
+            phase={phase}
+            who="adult2"
+            data={current}
+            updateFamily={updateFamily}
+            onBack={() => setPhase(null)}
+            onNext={saveAdditionalIndex}
+            busy={busy}
+            setNotice={setNotice}
+            additional
+            displayName={applicantName.trim()}
+          />
+        )}
+        {step === finalStep && (
+          <AdditionalResult
+            phase={phase}
+            respondentName={applicantName.trim()}
+            onHome={() => setPhase(null)}
+            onEdit={() => setStep(2)}
+          />
+        )}
+      </main>
+    );
+  }
+
   return (
     <main className="site-shell app-shell">
       <Header family={family} saved={saved} onHome={() => setPhase(null)} />
-      <Progress step={step} phase={phase} twoAdults={twoAdults} />
+      <Progress step={step} phase={phase} />
       {notice && (
         <p className="floating-notice" role="alert">
           {notice}
@@ -326,16 +465,15 @@ export default function FamilyApp() {
           data={current}
           updateFamily={updateFamily}
           onBack={() => setStep(1)}
-          onNext={() => goForward(2)}
+          onNext={saveRepresentativeIndex}
           busy={busy}
           setNotice={setNotice}
         />
       )}
       {step === 3 && (
-        <IndexSurvey
+        <TimeSurvey
           family={family}
           phase={phase}
-          who="adult2"
           data={current}
           updateFamily={updateFamily}
           onBack={() => setStep(2)}
@@ -344,34 +482,22 @@ export default function FamilyApp() {
           setNotice={setNotice}
         />
       )}
-      {step === 4 && (
-        <TimeSurvey
+      {phase === "pre" && step === 4 && (
+        <PromiseSurvey
           family={family}
-          phase={phase}
-          data={current}
           updateFamily={updateFamily}
-          onBack={() => goBack(4)}
+          onBack={() => setStep(3)}
           onNext={() => saveAndGo(5)}
           busy={busy}
           setNotice={setNotice}
         />
       )}
-      {phase === "pre" && step === 5 && (
-        <PromiseSurvey
-          family={family}
-          updateFamily={updateFamily}
-          onBack={() => setStep(4)}
-          onNext={() => saveAndGo(6)}
-          busy={busy}
-          setNotice={setNotice}
-        />
-      )}
-      {phase === "post" && step === 5 && (
+      {phase === "post" && step === 4 && (
         <Satisfaction
           data={current}
           updateFamily={updateFamily}
-          onBack={() => setStep(4)}
-          onNext={() => saveAndGo(6)}
+          onBack={() => setStep(3)}
+          onNext={() => saveAndGo(5)}
           busy={busy}
           setNotice={setNotice}
         />

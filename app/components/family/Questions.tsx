@@ -21,6 +21,8 @@ export function IndexSurvey({
   onNext,
   busy,
   setNotice,
+  additional = false,
+  displayName,
 }: {
   family: FamilyRecord;
   phase: PhaseKey;
@@ -31,15 +33,24 @@ export function IndexSurvey({
   onNext: () => void;
   busy: boolean;
   setNotice: (s: string) => void;
+  additional?: boolean;
+  displayName?: string;
 }) {
-  const name = family.adults[who] || (who === "adult1" ? "성인 1" : "성인 2");
+  const name =
+    displayName ||
+    family.adults[who] ||
+    (who === "adult1" ? "성인 1" : "성인 2");
   const answers = data.indexAnswers[who];
   const complete = answers.every(Boolean);
   return (
     <section className="content-card">
       <span className="section-kicker">3. 우리집 함께지수</span>
       <h2>{name}님의 생각</h2>
-      <p className="lead">서로 상의하지 말고 각자의 생각대로 답해주세요.</p>
+      <p className="lead">
+        {additional
+          ? "서로 상의하지 말고 본인이 느낀 그대로 답해주세요."
+          : "대표 응답자가 느낀 우리 가족의 모습에 답해주세요."}
+      </p>
       <div className="question-list">
         {indexQuestions.map((question, i) => (
           <article className="question" key={question}>
@@ -75,11 +86,7 @@ export function IndexSurvey({
         ))}
       </div>
       <BottomActions
-        primary={
-          who === "adult1" && hasSecondAdult(family)
-            ? `${family.adults.adult2}님 응답으로`
-            : "시간 기록으로"
-        }
+        primary={additional ? "응답 저장" : "시간 기록으로"}
         onPrimary={() => {
           if (!complete) {
             setNotice("10문항을 모두 답해주세요.");

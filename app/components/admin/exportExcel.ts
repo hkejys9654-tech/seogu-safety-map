@@ -2,7 +2,9 @@ import {
   cardsFor,
   childlessQuestion,
   FamilyRecord,
+  hasAdditionalResponse,
   hasSecondAdult,
+  hasTwoPersonReport,
   indexQuestions,
   PhaseKey,
 } from "../../data";
@@ -18,6 +20,15 @@ export async function exportExcel(families: FamilyRecord[]) {
     바꾸고싶은점: f.changeWish || "",
     사전상태: f.pre.status === "submitted" ? "제출완료" : "작성중",
     사후상태: f.post.status === "submitted" ? "제출완료" : "작성중",
+    추가응답:
+      !hasSecondAdult(f)
+        ? "성인 1인 가정"
+        : hasTwoPersonReport(f)
+          ? "사전·사후 참여"
+          : hasAdditionalResponse(f, "pre") || hasAdditionalResponse(f, "post")
+            ? "일부 참여"
+            : "선택 미참여",
+    리포트유형: hasTwoPersonReport(f) ? "2인 응답" : "1인 응답",
     가족사진: f.familyPhoto ? "등록" : "미등록",
     홍보활용동의: f.familyPhoto?.publicityConsent ? "동의" : "미동의",
     활동인증횟수: f.completionCount,
@@ -40,15 +51,19 @@ export async function exportExcel(families: FamilyRecord[]) {
   const indexRows: Record<string, string | number>[] = [];
   families.forEach((f) =>
     (["pre", "post"] as PhaseKey[]).forEach((p) =>
-      (hasSecondAdult(f)
-        ? (["adult1", "adult2"] as const)
-        : (["adult1"] as const)
-      ).forEach((who) =>
+      ([
+        "adult1",
+        ...(hasAdditionalResponse(f, p) ? (["adult2"] as const) : []),
+      ] as const).forEach((who) =>
         indexQuestions.forEach((q, i) =>
           indexRows.push({
             가정번호: f.familyNo,
             조사: p === "pre" ? "사전" : "사후",
-            응답자: f.adults[who],
+            응답자:
+              who === "adult1"
+                ? f.applicantName || f.adults.adult1
+                : f[p].indexRespondents?.adult2 || f.adults.adult2,
+            응답유형: who === "adult1" ? "대표 응답" : "추가 응답",
             문항번호: i + 1,
             문항:
               i === 2 && f.familyType === "childless" ? childlessQuestion : q,

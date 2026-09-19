@@ -66,6 +66,13 @@ export function indexScore(answers: (IndexChoice | null)[]) {
   );
 }
 
+export function hasCompleteIndex(answers?: (IndexChoice | null)[]) {
+  return Boolean(
+    answers?.length === 10 &&
+      answers.every((answer) => answer === "O" || answer === "△" || answer === "X"),
+  );
+}
+
 export function indexType(score: number) {
   if (score >= 85) return "이미 함께하는 가정";
   if (score >= 60) return "함께 가는 중인 가정";
@@ -81,6 +88,7 @@ export function blankPhase() {
       adult1: Array<IndexChoice | null>(10).fill(null),
       adult2: Array<IndexChoice | null>(10).fill(null),
     },
+    indexRespondents: { adult1: "", adult2: "" },
     times: {
       adult1: { housework: "", mental: "", rest: "" },
       adult2: { housework: "", mental: "", rest: "" },
@@ -91,6 +99,33 @@ export function blankPhase() {
 }
 
 export type PhaseData = ReturnType<typeof blankPhase>;
+
+export function hasAdditionalResponse(
+  family: FamilyRecord,
+  phase: PhaseKey,
+) {
+  const data = family[phase];
+  return Boolean(
+    hasSecondAdult(family) &&
+      data.indexRespondents?.adult2?.trim() &&
+      hasCompleteIndex(data.indexAnswers.adult2),
+  );
+}
+
+export function hasTwoPersonReport(family: FamilyRecord) {
+  if (!hasAdditionalResponse(family, "pre") || !hasAdditionalResponse(family, "post")) {
+    return false;
+  }
+  const preName = family.pre.indexRespondents?.adult2
+    ?.normalize("NFC")
+    .replace(/\s+/g, "")
+    .toLocaleLowerCase("ko-KR");
+  const postName = family.post.indexRespondents?.adult2
+    ?.normalize("NFC")
+    .replace(/\s+/g, "")
+    .toLocaleLowerCase("ko-KR");
+  return Boolean(preName && preName === postName);
+}
 
 export type FamilyPhoto = {
   storagePath: string;

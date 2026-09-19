@@ -17,7 +17,15 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { auth, db, FAMILY_COLLECTION } from "../firebase";
-import { blankFamily, familyDocumentId, FamilyRecord, PhaseKey } from "../data";
+import {
+  blankFamily,
+  familyDocumentId,
+  FamilyRecord,
+  hasAdditionalResponse,
+  hasSecondAdult,
+  hasTwoPersonReport,
+  PhaseKey,
+} from "../data";
 import { exportExcel } from "./admin/exportExcel";
 import { FamilyDetail } from "./admin/FamilyDetail";
 import { FamilyEdits } from "./admin/FamilyEditForm";
@@ -303,6 +311,7 @@ export default function AdminApp() {
               <span>신청자</span>
               <span>사전</span>
               <span>사후</span>
+              <span>추가응답</span>
               <span>사진</span>
               <span>인증</span>
               <span>최근 저장</span>
@@ -329,6 +338,16 @@ export default function AdminApp() {
                 <span>{f.applicantName || "미입력"}</span>
                 <Status value={f.pre.status} />
                 <Status value={f.post.status} />
+                <span className="additional-status">
+                  {!hasSecondAdult(f)
+                    ? "1인 가정"
+                    : hasTwoPersonReport(f)
+                      ? "사전·사후"
+                      : hasAdditionalResponse(f, "pre") ||
+                          hasAdditionalResponse(f, "post")
+                        ? "일부 참여"
+                        : "선택 미참여"}
+                </span>
                 <span
                   className={`photo-status ${f.familyPhoto ? "registered" : ""}`}
                 >
