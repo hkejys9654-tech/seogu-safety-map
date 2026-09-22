@@ -104,7 +104,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // 함께가정 데모: 가정 번호와 신청자 이름으로 간단 접속
+    // 함께가정 운영: 가정 번호와 신청자 이름으로 참여자 접속
     match /hamkkeFamilies/{familyId} {
       allow create, delete: if isAdmin();
       allow read: if signedIn();

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import {
+  GoogleAuthProvider,
   onAuthStateChanged,
-  signInAnonymously,
+  signInWithPopup,
   signOut,
   User,
 } from "firebase/auth";
@@ -14,7 +15,6 @@ import {
   onSnapshot,
   serverTimestamp,
   updateDoc,
-  writeBatch,
 } from "firebase/firestore";
 import { auth, db, FAMILY_COLLECTION } from "../firebase";
 import {
@@ -29,7 +29,7 @@ import {
 import { exportExcel } from "./admin/exportExcel";
 import { FamilyDetail } from "./admin/FamilyDetail";
 import { FamilyEdits } from "./admin/FamilyEditForm";
-import { randomPin, Status, ts } from "./admin/helpers";
+import { Status, ts } from "./admin/helpers";
 
 export default function AdminApp() {
   const [user, setUser] = useState<User | null>(null);
@@ -38,22 +38,22 @@ export default function AdminApp() {
   const [selected, setSelected] = useState<FamilyRecord | null>(null);
   const [phase, setPhase] = useState<PhaseKey>("pre");
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
 
   useEffect(
     () =>
       onAuthStateChanged(auth, async (current) => {
         setUser(current);
-        if (!current) {
+        if (!current || current.isAnonymous) {
           setAuthorized(false);
           return;
         }
-        if (current.isAnonymous) {
-          setAuthorized(true);
-          return;
+        try {
+          const admin = await getDoc(doc(db, "admins", current.uid));
+          setAuthorized(admin.exists() && admin.data().active !== false);
+        } catch {
+          setAuthorized(false);
+          setError("관리자 권한을 확인하지 못했습니다. 다시 로그인해주세요.");
         }
-        const admin = await getDoc(doc(db, "admins", current.uid));
-        setAuthorized(admin.exists());
       }),
     [],
   );
@@ -87,35 +87,16 @@ export default function AdminApp() {
     setError("");
     try {
       if (auth.currentUser) await signOut(auth);
-      await signInAnonymously(auth);
-    } catch {
-      setError("관리자 화면을 열지 못했습니다. 다시 눌러주세요.");
-    }
-  }
-
-  async function createFamilies() {
-    setBusy(true);
-    setError("");
-    try {
-      const batch = writeBatch(db),
-        used = new Set(families.map((f) => f.accessPin));
-      let created = 0;
-      for (let no = 1; no <= 30; no++) {
-        if (families.some((f) => f.familyNo === no)) continue;
-        const data = blankFamily(no, randomPin(used));
-        const documentId = await familyDocumentId(no, data.accessPin);
-        batch.set(doc(db, FAMILY_COLLECTION, documentId), {
-          ...data,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        created++;
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const credential = await signInWithPopup(auth, provider);
+      const admin = await getDoc(doc(db, "admins", credential.user.uid));
+      if (!admin.exists() || admin.data().active === false) {
+        await signOut(auth);
+        setError("등록된 관리자 계정이 아닙니다.");
       }
-      if (created) await batch.commit();
     } catch {
-      setError("가정을 만들지 못했습니다.");
-    } finally {
-      setBusy(false);
+      setError("로그인 창이 닫혔거나 로그인하지 못했습니다.");
     }
   }
 
@@ -215,10 +196,10 @@ export default function AdminApp() {
           <img src="/assets/seo-gu-symbol.png" alt="서구" />
           <span>함께가정</span>
           <h1>관리자 화면</h1>
-          <p>데모 관리자 화면에서 가정별 응답을 확인할 수 있어요.</p>
+          <p>등록된 관리자 구글 계정으로 로그인해 주세요.</p>
           {error && <p className="error-message">{error}</p>}
           <button className="primary-button" onClick={login}>
-            데모 관리자 들어가기
+            Google로 관리자 로그인
           </button>
         </section>
       </main>
@@ -232,7 +213,7 @@ export default function AdminApp() {
           <img src="/assets/seo-gu-symbol.png" alt="" />
           <span>
             <b>함께가정 관리자</b>
-            <small>{user.email || "데모 관리자"}</small>
+            <small>{user.email || "관리자"}</small>
           </span>
         </div>
         <nav>
@@ -245,20 +226,11 @@ export default function AdminApp() {
       <div className="admin-content">
         <div className="admin-title">
           <div>
-            <span className="section-kicker">가족별 관리</span>
-            <h1>참여 현황</h1>
+            <span className="section-kicker">함께가정 운영 관리</span>
+            <h1>참여자 현황</h1>
             <p>가정을 누르면 카드 선택과 진단 내용을 자세히 볼 수 있어요.</p>
           </div>
           <div className="admin-actions">
-            {families.length < 30 && (
-              <button
-                className="primary-button"
-                onClick={createFamilies}
-                disabled={busy}
-              >
-                {busy ? "만드는 중…" : "30가정 만들기"}
-              </button>
-            )}
             <button
               className="secondary-button"
               onClick={() => exportExcel(families)}
@@ -274,21 +246,21 @@ export default function AdminApp() {
             <span>등록 가정</span>
             <strong>
               {families.length}
-              <small>/30</small>
+              <small>가정</small>
             </strong>
           </article>
           <article>
             <span>사전 제출</span>
             <strong>
               {submittedPre}
-              <small>/30</small>
+              <small>/{families.length}</small>
             </strong>
           </article>
           <article>
             <span>사후 제출</span>
             <strong>
               {submittedPost}
-              <small>/30</small>
+              <small>/{families.length}</small>
             </strong>
           </article>
           <article>
