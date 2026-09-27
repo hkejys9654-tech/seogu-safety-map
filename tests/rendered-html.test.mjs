@@ -71,8 +71,10 @@ test("배포 결과와 두 화면이 만들어진다", async () => {
   assert.doesNotMatch(finish, /familyPhoto/);
   assert.doesNotMatch(participant, /6자리 접속번호/);
   assert.match(family, /item\.key === "post" && hasFamilyInfo/);
-  assert.match(admin, /가족별 관리/);
-  assert.match(admin, /데모 관리자 들어가기/);
+  assert.match(admin, /함께가정 운영 관리/);
+  assert.match(admin, /Google로 관리자 로그인/);
+  assert.match(finish, /응답 수정하기/);
+  assert.match(finish, /수정 내용 다시 제출/);
   assert.match(manager, /제출자 삭제/);
   assert.match(manager, /수정 저장/);
   assert.match(manager, /함께카드 응답/);

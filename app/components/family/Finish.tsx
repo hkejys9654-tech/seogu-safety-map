@@ -119,6 +119,9 @@ export function Result({
   busy,
   setBusy,
   setNotice,
+  editingSubmitted,
+  onEdit,
+  onSubmitted,
 }: {
   family: FamilyRecord;
   phase: PhaseKey;
@@ -130,6 +133,9 @@ export function Result({
   busy: boolean;
   setBusy: (b: boolean) => void;
   setNotice: (s: string) => void;
+  editingSubmitted: boolean;
+  onEdit: () => void;
+  onSubmitted: () => void;
 }) {
   const twoAdults = hasSecondAdult(family);
   const representativeName =
@@ -163,7 +169,10 @@ export function Result({
       const next = updateFamily((d) => {
         d[phase].status = "submitted";
       });
-      if (next) await persist(next, "제출됨");
+      if (next) {
+        await persist(next, editingSubmitted ? "수정 제출됨" : "제출됨");
+        onSubmitted();
+      }
     } catch (error) {
       setNotice(formatError(error));
     } finally {
@@ -289,17 +298,24 @@ export function Result({
           {twoAdults && <b>{data.times.adult2.rest}시간</b>}
         </div>
       </section>
-      {data.status === "submitted" ? (
+      {data.status === "submitted" && !editingSubmitted ? (
         <div className="submitted-box">
           <b>제출이 완료되었습니다</b>
           <p>응답은 관리자에게 안전하게 전달됐어요.</p>
-          <button className="secondary-button" onClick={onHome}>
-            처음 화면으로
-          </button>
+          <div className="bottom-actions">
+            <button className="secondary-button" onClick={onHome}>
+              진단 선택으로
+            </button>
+            <button className="primary-button" onClick={onEdit}>
+              응답 수정하기
+            </button>
+          </div>
         </div>
       ) : (
         <BottomActions
-          primary="관리자에게 제출"
+          primary={
+            editingSubmitted ? "수정 내용 다시 제출" : "관리자에게 제출"
+          }
           onPrimary={submit}
           secondary="이전"
           onSecondary={onBack}

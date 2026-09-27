@@ -71,6 +71,7 @@ export default function FamilyApp() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [saved, setSaved] = useState("저장됨");
+  const [editingSubmitted, setEditingSubmitted] = useState(false);
   const [respondentRole, setRespondentRole] = useState<
     "representative" | "additional"
   >("representative");
@@ -351,7 +352,14 @@ export default function FamilyApp() {
                   }
                   const hasFamilyInfo = Boolean(family.adults.adult1.trim());
                   setPhase(item.key);
-                  setStep(item.key === "post" && hasFamilyInfo ? 1 : 0);
+                  setEditingSubmitted(false);
+                  setStep(
+                    family[item.key].status === "submitted"
+                      ? 5
+                      : item.key === "post" && hasFamilyInfo
+                        ? 1
+                        : 0,
+                  );
                   setCardIndex(0);
                   setNotice("");
                 }}
@@ -421,7 +429,14 @@ export default function FamilyApp() {
 
   return (
     <main className="site-shell app-shell">
-      <Header family={family} saved={saved} onHome={() => setPhase(null)} />
+      <Header
+        family={family}
+        saved={saved}
+        onHome={() => {
+          setEditingSubmitted(false);
+          setPhase(null);
+        }}
+      />
       <Progress step={step} phase={phase} />
       {notice && (
         <p className="floating-notice" role="alert">
@@ -514,6 +529,16 @@ export default function FamilyApp() {
           busy={busy}
           setBusy={setBusy}
           setNotice={setNotice}
+          editingSubmitted={editingSubmitted}
+          onEdit={() => {
+            setEditingSubmitted(true);
+            setCardIndex(0);
+            setStep(
+              phase === "post" && family.adults.adult1.trim() ? 1 : 0,
+            );
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          onSubmitted={() => setEditingSubmitted(false)}
         />
       )}
     </main>
