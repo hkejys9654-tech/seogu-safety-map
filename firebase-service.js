@@ -21,9 +21,8 @@
     if (!modulesPromise) {
       modulesPromise = Promise.all([
         import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app.js`),
-        import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`),
-        import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-auth.js`)
-      ]).then(([appModule, firestoreModule, authModule]) => ({ appModule, firestoreModule, authModule }));
+        import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`)
+      ]).then(([appModule, firestoreModule]) => ({ appModule, firestoreModule }));
     }
     return modulesPromise;
   }
@@ -31,16 +30,14 @@
   async function getContext() {
     if (!isConfigured()) return null;
     if (!contextPromise) {
-      contextPromise = loadModules().then(({ appModule, firestoreModule, authModule }) => {
+      contextPromise = loadModules().then(({ appModule, firestoreModule }) => {
         const app = appModule.getApps().length
           ? appModule.getApp()
           : appModule.initializeApp(window.SAFETY_MAP_FIREBASE_CONFIG);
         return {
           app,
           db: firestoreModule.getFirestore(app),
-          auth: authModule.getAuth(app),
-          firestore: firestoreModule,
-          authModule
+          firestore: firestoreModule
         };
       });
     }
@@ -205,36 +202,6 @@
     return clean;
   }
 
-  async function onAuthChanged(callback) {
-    const context = await getContext();
-    if (!context) {
-      callback({ demo: true, uid: "demo-admin", email: "시범 관리자" });
-      return () => {};
-    }
-    return context.authModule.onAuthStateChanged(context.auth, callback);
-  }
-
-  async function signInAdmin() {
-    const context = await getContext();
-    if (!context) return { user: { demo: true, uid: "demo-admin", email: "시범 관리자" } };
-    const provider = new context.authModule.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
-    return context.authModule.signInWithPopup(context.auth, provider);
-  }
-
-  async function signOutAdmin() {
-    const context = await getContext();
-    if (context) await context.authModule.signOut(context.auth);
-  }
-
-  async function checkAdmin(user) {
-    if (!user) return false;
-    if (user.demo) return true;
-    const context = await getContext();
-    const snapshot = await context.firestore.getDoc(context.firestore.doc(context.db, "admins", user.uid));
-    return snapshot.exists() && snapshot.data().active !== false;
-  }
-
   function normalizeReport(id, data) {
     return {
       id,
@@ -325,10 +292,6 @@
     updateReport,
     setReportDeleted,
     listenMapFeatures,
-    saveMapFeature,
-    onAuthChanged,
-    signInAdmin,
-    signOutAdmin,
-    checkAdmin
+    saveMapFeature
   };
 })();

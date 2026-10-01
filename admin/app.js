@@ -45,6 +45,7 @@
     vending: "비상생리대 자판기"
   };
   const FEATURE_SYMBOLS = { return: "□", alley: "○", parcel: "☆", vending: "△" };
+  const ADMIN_LABEL = "관리자";
   const DONG_COLORS = [
     "#1f8a70", "#2f78a8", "#7b68b3", "#cf6b55", "#d3973f", "#4f8f5b",
     "#348b91", "#8b6d52", "#a85f87", "#5476b8", "#6d8b3d", "#b76a42",
@@ -60,7 +61,6 @@
     reports: [],
     dong: "all",
     status: "all",
-    user: null,
     unsubscribeReports: null,
     unsubscribeFeatures: null,
     featureOverrides: [],
@@ -71,7 +71,6 @@
     relocatingReport: false
   };
 
-  const authGate = document.getElementById("auth-gate");
   const adminApp = document.getElementById("admin-app");
   const dongSelect = document.getElementById("admin-dong");
   const statusSelect = document.getElementById("admin-status");
@@ -86,7 +85,7 @@
 
   populateDongSelect();
   bindEvents();
-  startAuthentication();
+  startAdminApp();
 
   function populateDongSelect() {
     const editDong = document.getElementById("edit-report-dong");
@@ -97,8 +96,6 @@
   }
 
   function bindEvents() {
-    document.getElementById("sign-in").addEventListener("click", signIn);
-    document.getElementById("sign-out").addEventListener("click", () => SERVICE.signOutAdmin());
     document.getElementById("export-csv").addEventListener("click", exportCsv);
     document.getElementById("print-admin").addEventListener("click", () => window.print());
     dongSelect.addEventListener("change", () => {
@@ -132,79 +129,18 @@
     });
   }
 
-  async function startAuthentication() {
-    if (!SERVICE.isConfigured()) {
-      document.getElementById("auth-title").textContent = "시범 관리자 화면";
-      document.getElementById("auth-message").textContent = "Firebase 연결 전이라 이 브라우저의 시범 의견만 표시합니다.";
-      document.getElementById("sign-in").textContent = "시범 관리자 화면 열기";
-    }
-    await SERVICE.onAuthChanged(handleAuthState);
-  }
-
-  async function signIn() {
-    const button = document.getElementById("sign-in");
-    button.disabled = true;
-    button.textContent = "로그인 중…";
+  async function startAdminApp() {
     try {
-      const result = await SERVICE.signInAdmin();
-      if (result && result.user && result.user.demo) await handleAuthState(result.user);
-    } catch (error) {
-      showAuthMessage("로그인하지 못했습니다. 다시 시도해주세요.");
-    } finally {
-      button.disabled = false;
-      button.textContent = SERVICE.isConfigured() ? "Google 계정으로 로그인" : "시범 관리자 화면 열기";
-    }
-  }
-
-  async function handleAuthState(user) {
-    if (!user) {
-      state.user = null;
-      showAuthGate();
-      return;
-    }
-
-    showAuthMessage("관리자 권한을 확인하고 있습니다.");
-    try {
-      const allowed = await SERVICE.checkAdmin(user);
-      if (!allowed) {
-        showPermissionDenied(user);
-        return;
-      }
-      state.user = user;
       await showAdminApp();
     } catch (error) {
-      showAuthMessage("관리자 권한을 확인하지 못했습니다. Firestore 보안 설정을 확인해주세요.");
+      console.error(error);
+      const notice = document.getElementById("admin-connection-notice");
+      notice.innerHTML = "<strong>관리자 화면을 시작하지 못했습니다</strong><span>인터넷 연결과 Firestore 보안 규칙을 확인해주세요.</span>";
     }
-  }
-
-  function showAuthGate() {
-    authGate.hidden = false;
-    adminApp.hidden = true;
-    document.getElementById("sign-in").hidden = false;
-    document.getElementById("sign-out").hidden = true;
-    document.getElementById("admin-email").hidden = true;
-    document.getElementById("admin-setup-info").hidden = true;
-  }
-
-  function showPermissionDenied(user) {
-    authGate.hidden = false;
-    adminApp.hidden = true;
-    document.getElementById("auth-title").textContent = "관리자 등록이 필요합니다";
-    document.getElementById("auth-message").textContent = `${user.email || "현재 계정"}은 아직 관리자 명단에 없습니다.`;
-    document.getElementById("sign-in").hidden = true;
-    document.getElementById("sign-out").hidden = false;
-    const info = document.getElementById("admin-setup-info");
-    info.hidden = false;
-    info.innerHTML = `<strong>Firebase에서 추가할 관리자 문서</strong><br>컬렉션: admins<br>문서 ID: ${escapeHtml(user.uid)}<br>필드: active = true`;
   }
 
   async function showAdminApp() {
-    authGate.hidden = true;
     adminApp.hidden = false;
-    const email = document.getElementById("admin-email");
-    email.textContent = state.user.email || "시범 관리자";
-    email.hidden = false;
-    document.getElementById("sign-out").hidden = Boolean(state.user.demo);
 
     if (!map) createMap();
     setTimeout(() => map.invalidateSize(), 0);
@@ -665,7 +601,7 @@
     button.disabled = true;
     button.textContent = "저장 중…";
     try {
-      await SERVICE.saveMapFeature(feature, state.featureBefore, state.user.email || "");
+      await SERVICE.saveMapFeature(feature, state.featureBefore, ADMIN_LABEL);
       upsertFeatureOverride(feature);
       cancelLineEdit();
       showToast("안전시설을 저장했습니다.");
@@ -687,7 +623,7 @@
     if (!window.confirm(`'${feature.name}' 시설을 지도에서 삭제할까요?\n삭제 내용도 시민참여단 지도에 자동 반영됩니다.`)) return;
     const deleted = { ...cloneFeature(feature), active: false };
     try {
-      await SERVICE.saveMapFeature(deleted, state.featureBefore, state.user.email || "");
+      await SERVICE.saveMapFeature(deleted, state.featureBefore, ADMIN_LABEL);
       upsertFeatureOverride(deleted);
       cancelLineEdit();
       showToast("안전시설을 삭제했습니다.");
@@ -783,7 +719,7 @@
     if (!STATUS_LABELS[status]) return;
     select.disabled = true;
     try {
-      await SERVICE.updateReportStatus(id, status, state.user.email || "");
+      await SERVICE.updateReportStatus(id, status, ADMIN_LABEL);
       if (!SERVICE.isConfigured()) {
         const report = state.reports.find((item) => item.id === id);
         if (report) report.status = status;
@@ -887,9 +823,9 @@
     submit.disabled = true;
     submit.textContent = "저장 중…";
     try {
-      await SERVICE.updateReport(state.editingReport.id, changes, state.user.email || "");
+      await SERVICE.updateReport(state.editingReport.id, changes, ADMIN_LABEL);
       const report = state.reports.find((item) => item.id === state.editingReport.id);
-      if (report) Object.assign(report, changes, { reviewerEmail: state.user.email || "", updatedAt: new Date().toISOString() });
+      if (report) Object.assign(report, changes, { reviewerEmail: ADMIN_LABEL, updatedAt: new Date().toISOString() });
       closeReportEditor();
       renderAdmin();
       showToast("시민참여단 의견을 수정했습니다.");
@@ -909,10 +845,10 @@
       : "이 의견을 다시 복구할까요?";
     if (!window.confirm(question)) return;
     try {
-      await SERVICE.setReportDeleted(id, deleted, state.user.email || "");
+      await SERVICE.setReportDeleted(id, deleted, ADMIN_LABEL);
       report.deleted = deleted;
       report.deletedAt = deleted ? new Date().toISOString() : "";
-      report.deletedBy = deleted ? (state.user.email || "") : "";
+      report.deletedBy = deleted ? ADMIN_LABEL : "";
       renderAdmin();
       showToast(deleted ? "의견을 삭제했습니다. 필요하면 복구할 수 있습니다." : "의견을 복구했습니다.");
     } catch (_) {
@@ -954,10 +890,6 @@
 
   function csvCell(value) {
     return `"${String(value ?? "").replaceAll('"', '""')}"`;
-  }
-
-  function showAuthMessage(message) {
-    document.getElementById("auth-message").textContent = message;
   }
 
   function formatDate(value) {

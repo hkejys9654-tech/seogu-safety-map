@@ -2,16 +2,6 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isAdmin() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false;
-    }
-
     function validDong(dong) {
       return dong in [
         '양동', '양3동', '농성1동', '농성2동', '광천동', '유덕동',
@@ -46,10 +36,10 @@ service cloud.firestore {
         && request.resource.data.source == 'citizen-web'
         && request.resource.data.createdAt == request.time;
 
-      allow read: if isAdmin();
+      // 관리자 앱은 로그인 없이 운영되므로 등록 의견을 공개 조회합니다.
+      allow read: if true;
 
-      allow update: if isAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'dong', 'type', 'note', 'lat', 'lon', 'status',
           'reviewerEmail', 'updatedAt', 'deleted', 'deletedAt', 'deletedBy'
         ])
@@ -65,7 +55,7 @@ service cloud.firestore {
         && request.resource.data.lon >= 126.7
         && request.resource.data.lon <= 127.0
         && request.resource.data.status in ['received', 'reviewing', 'reflected', 'hold']
-        && request.resource.data.reviewerEmail == request.auth.token.email
+        && request.resource.data.reviewerEmail == '관리자'
         && request.resource.data.updatedAt == request.time
         && (!('deleted' in request.resource.data) || request.resource.data.deleted is bool);
 
@@ -73,14 +63,12 @@ service cloud.firestore {
     }
 
     match /admins/{userId} {
-      allow read: if signedIn() && request.auth.uid == userId;
-      allow write: if false;
+      allow read, write: if false;
     }
 
     match /mapFeatures/{featureId} {
       allow read: if true;
-      allow create, update: if isAdmin()
-        && request.resource.data.id == featureId
+      allow create, update: if request.resource.data.id == featureId
         && request.resource.data.type in ['return', 'alley', 'parcel', 'vending']
         && request.resource.data.geometry in ['line', 'point']
         && validDong(request.resource.data.dong)
@@ -96,15 +84,20 @@ service cloud.firestore {
           || (request.resource.data.geometry == 'line' && request.resource.data.points.size() >= 2))
         && request.resource.data.active is bool
         && request.resource.data.updatedAt == request.time
-        && request.resource.data.updatedBy == request.auth.token.email;
+        && request.resource.data.updatedBy == '관리자';
       allow delete: if false;
     }
 
     match /mapFeatureHistory/{historyId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin()
+      allow read: if false;
+      allow create: if request.resource.data.keys().hasOnly([
+          'featureId', 'previous', 'changedTo', 'editedAt', 'editedBy'
+        ])
+        && request.resource.data.featureId is string
+        && (request.resource.data.previous == null || request.resource.data.previous is map)
+        && request.resource.data.changedTo is map
         && request.resource.data.editedAt == request.time
-        && request.resource.data.editedBy == request.auth.token.email;
+        && request.resource.data.editedBy == '관리자';
       allow update, delete: if false;
     }
 

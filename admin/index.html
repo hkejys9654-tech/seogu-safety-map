@@ -20,8 +20,8 @@
   <script src="../map-data.js?v=20260721-5" defer></script>
   <script src="../landmarks-data.js?v=20260721-8" defer></script>
   <script src="../firebase-config.js?v=20260721-4" defer></script>
-  <script src="../firebase-service.js?v=20260721-4" defer></script>
-  <script src="app.js?v=20260918-1" defer></script>
+  <script src="../firebase-service.js?v=20261001-1" defer></script>
+  <script src="app.js?v=20261001-1" defer></script>
 </head>
 <body class="admin-body">
   <header class="app-header admin-header">
@@ -33,25 +33,12 @@
       </div>
     </div>
     <div class="admin-account">
-      <span id="admin-email" hidden></span>
-      <button type="button" id="sign-out" class="header-button" hidden>로그아웃</button>
       <span class="app-kind">관리자용</span>
     </div>
   </header>
 
   <main>
-    <section id="auth-gate" class="auth-gate" aria-labelledby="auth-title">
-      <div class="auth-card">
-        <span class="auth-symbol" aria-hidden="true">✓</span>
-        <p class="eyebrow">관리자 전용</p>
-        <h1 id="auth-title">관리자 로그인이 필요합니다</h1>
-        <p id="auth-message">지정된 관리자 Google 계정으로 로그인해주세요.</p>
-        <button type="button" id="sign-in" class="primary-button">Google 계정으로 로그인</button>
-        <div id="admin-setup-info" class="setup-info" hidden></div>
-      </div>
-    </section>
-
-    <section id="admin-app" class="view" aria-labelledby="admin-title" hidden>
+    <section id="admin-app" class="view" aria-labelledby="admin-title">
       <div class="view-heading admin-heading admin-hero">
         <div>
           <p class="eyebrow">운영 대시보드</p>
