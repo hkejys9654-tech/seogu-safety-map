@@ -56,7 +56,7 @@ service cloud.firestore {
         && request.resource.data.lon <= 127.0
         && request.resource.data.status in ['received', 'reviewing', 'reflected', 'hold']
         && request.resource.data.reviewerEmail == '관리자'
-        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedAt is timestamp
         && (!('deleted' in request.resource.data) || request.resource.data.deleted is bool);
 
       allow delete: if false;
@@ -83,7 +83,7 @@ service cloud.firestore {
         && ((request.resource.data.geometry == 'point' && request.resource.data.points.size() == 1)
           || (request.resource.data.geometry == 'line' && request.resource.data.points.size() >= 2))
         && request.resource.data.active is bool
-        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedAt is timestamp
         && request.resource.data.updatedBy == '관리자';
       allow delete: if false;
     }
@@ -96,7 +96,7 @@ service cloud.firestore {
         && request.resource.data.featureId is string
         && (request.resource.data.previous == null || request.resource.data.previous is map)
         && request.resource.data.changedTo is map
-        && request.resource.data.editedAt == request.time
+        && request.resource.data.editedAt is timestamp
         && request.resource.data.editedBy == '관리자';
       allow update, delete: if false;
     }

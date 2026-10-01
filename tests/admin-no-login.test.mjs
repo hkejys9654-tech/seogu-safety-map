@@ -16,5 +16,8 @@ assert.doesNotMatch(serviceScript, /firebase-auth\.js|GoogleAuthProvider|signInW
 assert.match(rules, /match \/reports\/\{reportId\}[\s\S]*?allow read: if true;/);
 assert.match(rules, /request\.resource\.data\.reviewerEmail == '관리자'/);
 assert.match(rules, /request\.resource\.data\.updatedBy == '관리자'/);
+assert.match(rules, /request\.resource\.data\.updatedAt is timestamp/);
+assert.match(rules, /request\.resource\.data\.editedAt is timestamp/);
+assert.doesNotMatch(rules, /request\.resource\.data\.(?:updatedAt|editedAt) == request\.time/);
 
 console.log("admin no-login checks passed");
