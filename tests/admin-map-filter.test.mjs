@@ -11,13 +11,17 @@ for (const filter of ["all", "return", "alley-line", "alley-point", "parcel", "v
   assert.match(html, new RegExp(`data-map-filter="${filter}"`));
 }
 
-assert.match(html, /data-map-filter="all"[^>]*aria-pressed="true"/);
-assert.match(script, /mapFilter:\s*"all"/);
+assert.equal((html.match(/aria-pressed="true"/g) || []).length, 7);
+assert.match(script, /mapFilters:\s*new Set\(MAP_FILTERS\)/);
+assert.match(script, /state\.mapFilters = allVisible \? new Set\(\) : new Set\(MAP_FILTERS\)/);
+assert.match(script, /state\.mapFilters\.delete\(requested\)/);
+assert.match(script, /state\.mapFilters\.add\(requested\)/);
 assert.match(script, /renderAdmin\(\{ preserveViewport: true \}\)/);
 assert.match(script, /getLineFeatures\(dong\)\.filter\(featureMatchesMapFilter\)/);
-assert.match(script, /\["all", "report"\]\.includes\(state\.mapFilter\)/);
-assert.match(script, /feature\.type === "alley" && feature\.geometry === "line"/);
-assert.match(script, /feature\.type === "alley" && feature\.geometry === "point"/);
+assert.match(script, /state\.mapFilters\.has\("report"\)/);
+assert.match(script, /`alley-\$\{feature\.geometry\}`/);
+assert.match(script, /aria-pressed", requested === "all" && someVisible \? "mixed"/);
 assert.match(styles, /\.admin-map-filters \.legend-filter\.is-active/);
+assert.match(styles, /\.admin-map-filters \.legend-filter\.is-partial/);
 
 console.log("Admin map legend filter checks passed");

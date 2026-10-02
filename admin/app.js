@@ -54,6 +54,7 @@
     vending: "비상생리대 자판기",
     report: "참여단 의견"
   };
+  const MAP_FILTERS = Object.freeze(["return", "alley-line", "alley-point", "parcel", "vending", "report"]);
   const ADMIN_LABEL = "관리자";
   const DONG_COLORS = [
     "#1f8a70", "#2f78a8", "#7b68b3", "#cf6b55", "#d3973f", "#4f8f5b",
@@ -70,7 +71,7 @@
     reports: [],
     dong: "all",
     status: "all",
-    mapFilter: "all",
+    mapFilters: new Set(MAP_FILTERS),
     unsubscribeReports: null,
     unsubscribeFeatures: null,
     featureOverrides: [],
@@ -122,7 +123,13 @@
         event.preventDefault();
         event.stopPropagation();
         const requested = button.dataset.mapFilter;
-        state.mapFilter = MAP_FILTER_LABELS[requested] ? requested : "all";
+        if (requested === "all") {
+          const allVisible = MAP_FILTERS.every((filter) => state.mapFilters.has(filter));
+          state.mapFilters = allVisible ? new Set() : new Set(MAP_FILTERS);
+        } else if (MAP_FILTER_LABELS[requested]) {
+          if (state.mapFilters.has(requested)) state.mapFilters.delete(requested);
+          else state.mapFilters.add(requested);
+        }
         renderAdmin({ preserveViewport: true });
       });
     });
@@ -231,7 +238,7 @@
     const boundaries = visibleDongs.map((dong) => drawDong(dong));
     visibleDongs.forEach((dong) => drawLandmarks(dong, state.dong === "all"));
 
-    if (["all", "report"].includes(state.mapFilter)) {
+    if (state.mapFilters.has("report")) {
       reports.forEach((report) => {
         const marker = createReportMarker(report).addTo(reportLayer);
         marker.on("click", () => highlightCard(report.id));
@@ -304,17 +311,21 @@
   }
 
   function featureMatchesMapFilter(feature) {
-    if (state.mapFilter === "all") return true;
-    if (state.mapFilter === "alley-line") return feature.type === "alley" && feature.geometry === "line";
-    if (state.mapFilter === "alley-point") return feature.type === "alley" && feature.geometry === "point";
-    return feature.type === state.mapFilter;
+    const filter = feature.type === "alley" ? `alley-${feature.geometry}` : feature.type;
+    return state.mapFilters.has(filter);
   }
 
   function updateMapFilterButtons() {
+    const activeCount = MAP_FILTERS.filter((filter) => state.mapFilters.has(filter)).length;
+    const allVisible = activeCount === MAP_FILTERS.length;
+    const someVisible = activeCount > 0 && !allVisible;
     document.querySelectorAll("[data-map-filter]").forEach((button) => {
-      const active = button.dataset.mapFilter === state.mapFilter;
+      const requested = button.dataset.mapFilter;
+      const active = requested === "all" ? allVisible : state.mapFilters.has(requested);
       button.classList.toggle("is-active", active);
-      button.setAttribute("aria-pressed", String(active));
+      button.classList.toggle("is-partial", requested === "all" && someVisible);
+      button.setAttribute("aria-pressed", requested === "all" && someVisible ? "mixed" : String(active));
+      if (requested === "all") button.title = allVisible ? "모두 숨기기" : "모두 표시하기";
     });
   }
 
@@ -486,7 +497,7 @@
     }
     const requestedType = document.getElementById("feature-type").value;
     const type = FEATURE_LABELS[requestedType] ? requestedType : "return";
-    state.mapFilter = type === "alley" ? "alley-line" : type;
+    state.mapFilters.add(type === "alley" ? "alley-line" : type);
     state.selectedFeature = {
       id: `custom__${state.dong}__${Date.now()}`,
       type,
