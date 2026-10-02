@@ -14,14 +14,14 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260721-1">
   <link rel="preconnect" href="https://dapi.kakao.com">
   <link rel="stylesheet" href="../styles.css?v=20260918-1">
-  <link rel="stylesheet" href="admin.css?v=20260721-8">
+  <link rel="stylesheet" href="admin.css?v=20261002-1">
   <script src="../runtime-config.js?v=20260918-1" defer></script>
   <script src="../kakao-map.js?v=20260918-1" defer></script>
   <script src="../map-data.js?v=20260721-5" defer></script>
   <script src="../landmarks-data.js?v=20260721-8" defer></script>
   <script src="../firebase-config.js?v=20260721-4" defer></script>
   <script src="../firebase-service.js?v=20261001-1" defer></script>
-  <script src="app.js?v=20261001-1" defer></script>
+  <script src="app.js?v=20261002-1" defer></script>
 </head>
 <body class="admin-body">
   <header class="app-header admin-header">
@@ -142,13 +142,14 @@
           </label>
           <div id="line-edit-instruction" class="map-instruction" hidden>지도에서 경로를 따라 점을 차례로 눌러주세요.</div>
           <button type="button" id="cancel-report-relocation" class="map-action-cancel" hidden>위치 변경 취소</button>
-          <div class="map-legend compact" aria-label="관리자 지도 범례">
-            <span class="legend-item return"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안심귀갓길</span></span>
-            <span class="legend-item alley"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안전골목(구간)</span></span>
-            <span class="legend-item alley-point"><i class="legend-alley-point-swatch" aria-hidden="true"></i><span>여성안전골목(지점)</span></span>
-            <span class="legend-item parcel"><i class="legend-point-swatch" aria-hidden="true">☆</i><span>안심택배보관함</span></span>
-            <span class="legend-item vending"><i class="legend-point-swatch" aria-hidden="true">△</i><span>생리대 자판기</span></span>
-            <span class="legend-item report"><i class="legend-point-swatch" aria-hidden="true">●</i><span>참여단 의견</span></span>
+          <div class="map-legend compact admin-map-filters" aria-label="관리자 지도 범례 및 표시 필터">
+            <button type="button" class="legend-item legend-filter all is-active" data-map-filter="all" aria-pressed="true"><i class="legend-all-swatch" aria-hidden="true">전체</i><span>전체 표시</span></button>
+            <button type="button" class="legend-item legend-filter return" data-map-filter="return" aria-pressed="false"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안심귀갓길</span></button>
+            <button type="button" class="legend-item legend-filter alley" data-map-filter="alley-line" aria-pressed="false"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안전골목(구간)</span></button>
+            <button type="button" class="legend-item legend-filter alley-point" data-map-filter="alley-point" aria-pressed="false"><i class="legend-alley-point-swatch" aria-hidden="true"></i><span>여성안전골목(지점)</span></button>
+            <button type="button" class="legend-item legend-filter parcel" data-map-filter="parcel" aria-pressed="false"><i class="legend-point-swatch" aria-hidden="true">☆</i><span>안심택배보관함</span></button>
+            <button type="button" class="legend-item legend-filter vending" data-map-filter="vending" aria-pressed="false"><i class="legend-point-swatch" aria-hidden="true">△</i><span>생리대 자판기</span></button>
+            <button type="button" class="legend-item legend-filter report" data-map-filter="report" aria-pressed="false"><i class="legend-point-swatch" aria-hidden="true">●</i><span>참여단 의견</span></button>
           </div>
         </div>
         <section class="admin-list-panel" aria-labelledby="admin-list-title">

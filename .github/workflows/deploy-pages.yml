@@ -35,6 +35,7 @@ jobs:
           node tests/kakao-map-adapter.test.mjs
           node tests/kakao-map-fallback.test.mjs
           node tests/admin-no-login.test.mjs
+          node tests/admin-map-filter.test.mjs
           node tests/firestore-auto-deploy.test.mjs
           node tests/local-http-smoke.test.mjs
 

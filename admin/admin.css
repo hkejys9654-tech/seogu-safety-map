@@ -205,6 +205,35 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
 }
 
+.admin-map-filters .legend-filter {
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease, background .16s ease;
+}
+
+.admin-map-filters .legend-filter:not(.is-active) { opacity: .78; }
+.admin-map-filters .legend-filter:hover { transform: translateY(-1px); opacity: 1; border-color: currentColor; }
+.admin-map-filters .legend-filter:focus-visible { outline: 3px solid rgba(40, 78, 104, .28); outline-offset: 2px; }
+.admin-map-filters .legend-filter.is-active {
+  border-color: #17364a;
+  color: #fff;
+  background: #17364a;
+  box-shadow: 0 5px 13px rgba(23, 54, 74, .27);
+  opacity: 1;
+}
+
+.legend-all-swatch {
+  min-width: 30px;
+  padding: 3px 5px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font-size: 9px;
+  font-style: normal;
+  line-height: 1;
+  text-align: center;
+}
+
 @media (max-width: 680px) {
   .admin-account #admin-email { display: none; }
   .auth-card { padding: 28px 20px; }
@@ -216,6 +245,7 @@
   .report-location-editor { align-items: stretch; flex-direction: column; }
   .line-editor-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .line-editor-actions #save-line { grid-column: 1 / -1; }
+  .admin-map-filters .legend-filter { min-height: 34px; }
 }
 
 /* 2026-07 commercial admin UI refresh */

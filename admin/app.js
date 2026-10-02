@@ -45,6 +45,15 @@
     vending: "비상생리대 자판기"
   };
   const FEATURE_SYMBOLS = { return: "□", alley: "○", parcel: "☆", vending: "△" };
+  const MAP_FILTER_LABELS = {
+    all: "전체",
+    return: "여성안심귀갓길",
+    "alley-line": "여성안전골목(구간)",
+    "alley-point": "여성안전골목(지점)",
+    parcel: "안심택배보관함",
+    vending: "비상생리대 자판기",
+    report: "참여단 의견"
+  };
   const ADMIN_LABEL = "관리자";
   const DONG_COLORS = [
     "#1f8a70", "#2f78a8", "#7b68b3", "#cf6b55", "#d3973f", "#4f8f5b",
@@ -61,6 +70,7 @@
     reports: [],
     dong: "all",
     status: "all",
+    mapFilter: "all",
     unsubscribeReports: null,
     unsubscribeFeatures: null,
     featureOverrides: [],
@@ -106,6 +116,15 @@
     statusSelect.addEventListener("change", () => {
       state.status = statusSelect.value;
       renderAdmin();
+    });
+    document.querySelectorAll("[data-map-filter]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const requested = button.dataset.mapFilter;
+        state.mapFilter = MAP_FILTER_LABELS[requested] ? requested : "all";
+        renderAdmin({ preserveViewport: true });
+      });
     });
     document.getElementById("start-add-line").addEventListener("click", startAddLine);
     document.getElementById("admin-landmark-toggle").addEventListener("change", (event) => {
@@ -201,7 +220,7 @@
     });
   }
 
-  function renderAdmin() {
+  function renderAdmin({ preserveViewport = false } = {}) {
     if (!map) return;
     const reports = filteredReports();
     officialLayer.clearLayers();
@@ -212,17 +231,21 @@
     const boundaries = visibleDongs.map((dong) => drawDong(dong));
     visibleDongs.forEach((dong) => drawLandmarks(dong, state.dong === "all"));
 
-    reports.forEach((report) => {
-      const marker = createReportMarker(report).addTo(reportLayer);
-      marker.on("click", () => highlightCard(report.id));
-    });
+    if (["all", "report"].includes(state.mapFilter)) {
+      reports.forEach((report) => {
+        const marker = createReportMarker(report).addTo(reportLayer);
+        marker.on("click", () => highlightCard(report.id));
+      });
+    }
 
-    if (!state.editMode && state.dong === "all") {
+    if (!preserveViewport && !state.editMode && state.dong === "all") {
       const bounds = KMap.latLngBounds(DATA.dongs.flatMap((dong) => toLatLngs(dong.boundary)));
       map.fitBounds(bounds, { padding: [20, 20] });
-    } else if (!state.editMode && boundaries[0]) {
+    } else if (!preserveViewport && !state.editMode && boundaries[0]) {
       map.fitBounds(boundaries[0].getBounds(), { padding: [22, 22] });
     }
+
+    updateMapFilterButtons();
 
     const activeReports = state.reports.filter((item) => !item.deleted);
     document.getElementById("stat-total").textContent = String(activeReports.length);
@@ -276,8 +299,23 @@
       renderAdmin();
     });
 
-    getLineFeatures(dong).forEach(drawEditableFeature);
+    getLineFeatures(dong).filter(featureMatchesMapFilter).forEach(drawEditableFeature);
     return boundary;
+  }
+
+  function featureMatchesMapFilter(feature) {
+    if (state.mapFilter === "all") return true;
+    if (state.mapFilter === "alley-line") return feature.type === "alley" && feature.geometry === "line";
+    if (state.mapFilter === "alley-point") return feature.type === "alley" && feature.geometry === "point";
+    return feature.type === state.mapFilter;
+  }
+
+  function updateMapFilterButtons() {
+    document.querySelectorAll("[data-map-filter]").forEach((button) => {
+      const active = button.dataset.mapFilter === state.mapFilter;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
   }
 
   function drawLandmarks(dong, compact) {
@@ -448,6 +486,7 @@
     }
     const requestedType = document.getElementById("feature-type").value;
     const type = FEATURE_LABELS[requestedType] ? requestedType : "return";
+    state.mapFilter = type === "alley" ? "alley-line" : type;
     state.selectedFeature = {
       id: `custom__${state.dong}__${Date.now()}`,
       type,
@@ -462,6 +501,7 @@
     state.featureBefore = null;
     state.editMode = "drawing";
     openLineEditor(true);
+    renderAdmin({ preserveViewport: true });
     renderEditLayer();
   }
 
