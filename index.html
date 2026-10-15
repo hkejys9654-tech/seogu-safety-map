@@ -13,17 +13,21 @@
   <link rel="apple-touch-icon" href="assets/app-icon-192.png?v=20260721-1">
   <link rel="manifest" href="manifest.webmanifest?v=20260721-1">
   <link rel="preconnect" href="https://dapi.kakao.com">
-  <link rel="stylesheet" href="styles.css?v=20260918-1">
+  <link rel="stylesheet" href="styles.css?v=20261015-1">
+  <link rel="stylesheet" href="hamkke/hamkke.css?v=20261015-1">
   <script src="runtime-config.js?v=20260918-1" defer></script>
   <script src="kakao-map.js?v=20260918-1" defer></script>
   <script src="map-data.js?v=20260721-5" defer></script>
   <script src="landmarks-data.js?v=20260721-8" defer></script>
   <script src="firebase-config.js?v=20260721-4" defer></script>
-  <script src="firebase-service.js?v=20261001-1" defer></script>
-  <script src="app.js?v=20260918-1" defer></script>
+  <script src="firebase-service.js?v=20261015-1" defer></script>
+  <script src="hamkke/hamkke-core.js?v=20261015-1" defer></script>
+  <script src="hamkke/hamkke-form.js?v=20261015-1" defer></script>
+  <script src="hamkke/hamkke-citizen.js?v=20261015-1" defer></script>
+  <script src="app.js?v=20261015-1" defer></script>
 </head>
-<body>
-  <header class="app-header">
+<body class="citizen-app">
+  <header class="app-header citizen-header">
     <div class="brand">
       <img class="brand-icon" src="assets/app-icon-192.png?v=20260721-1" alt="">
       <div>
@@ -34,65 +38,69 @@
     <span class="app-kind">시민참여단용</span>
   </header>
 
-  <main>
-    <section id="citizen-view" class="view" aria-labelledby="citizen-title">
-      <div class="citizen-hero">
-        <div class="hero-copy">
-          <p class="eyebrow">마을 안전지도</p>
-          <h1 id="citizen-title"><span id="selected-dong-name">양동</span> 안전정보</h1>
-          <p>동을 선택하면 안전시설과 주요장소를 한눈에 확인할 수 있습니다.</p>
-        </div>
-        <label class="select-label dong-picker" for="citizen-dong">
-          <span>행정동 선택</span>
-          <select id="citizen-dong"></select>
-        </label>
-      </div>
-
-      <div id="connection-notice" class="notice connection-notice" role="status">
-        <strong>자료 저장소 확인 중</strong>
-        <span>잠시만 기다려주세요.</span>
-      </div>
-
-      <div class="map-shell">
+  <main class="citizen-main">
+    <section id="citizen-view" class="tab-panel map-panel" data-tab-panel="map" aria-label="마을 안전지도">
+      <div class="map-stage">
         <div id="citizen-map" class="map" aria-label="시민참여단 안전지도"></div>
-        <label class="map-landmark-toggle">
-          <input type="checkbox" id="citizen-landmark-toggle" checked>
-          <span>주요장소 표시</span>
-        </label>
+
+        <div class="map-topbar">
+          <label class="dong-chip" for="citizen-dong">
+            <span class="dong-chip-label">행정동</span>
+            <select id="citizen-dong" aria-label="행정동 선택"></select>
+          </label>
+          <label class="map-landmark-toggle">
+            <input type="checkbox" id="citizen-landmark-toggle" checked>
+            <span>주요장소</span>
+          </label>
+        </div>
+
         <button type="button" id="locate-me" class="map-location-button" aria-pressed="false">
           <span class="location-button-dot" aria-hidden="true"></span>
           <span class="location-button-label">내 위치</span>
         </button>
+
+        <div id="connection-notice" class="map-notice" role="status" hidden></div>
         <div id="map-instruction" class="map-instruction" hidden>지도에서 취약한 위치를 한 번 눌러주세요.</div>
-        <div class="map-legend" aria-label="기존 안전시설 범례">
-          <span class="legend-item return"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안심귀갓길</span></span>
-          <span class="legend-item alley"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안전골목(구간)</span></span>
-          <span class="legend-item alley-point"><i class="legend-alley-point-swatch" aria-hidden="true"></i><span>여성안전골목(지점)</span></span>
-          <span class="legend-item parcel"><i class="legend-point-swatch" aria-hidden="true">☆</i><span>안심택배보관함</span></span>
-          <span class="legend-item vending"><i class="legend-point-swatch" aria-hidden="true">△</i><span>생리대 자판기</span></span>
-          <span class="legend-item report"><i class="legend-point-swatch" aria-hidden="true">●</i><span>참여단 의견</span></span>
+
+        <div class="map-bottom">
+          <div class="legend-wrap">
+            <div id="map-legend" class="map-legend" aria-label="기존 안전시설 범례" hidden>
+              <span class="legend-item return"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안심귀갓길</span></span>
+              <span class="legend-item alley"><i class="legend-line-swatch" aria-hidden="true"></i><span>여성안전골목(구간)</span></span>
+              <span class="legend-item alley-point"><i class="legend-alley-point-swatch" aria-hidden="true"></i><span>여성안전골목(지점)</span></span>
+              <span class="legend-item parcel"><i class="legend-point-swatch" aria-hidden="true">☆</i><span>안심택배보관함</span></span>
+              <span class="legend-item vending"><i class="legend-point-swatch" aria-hidden="true">△</i><span>생리대 자판기</span></span>
+              <span class="legend-item report"><i class="legend-point-swatch" aria-hidden="true">●</i><span>참여단 의견</span></span>
+            </div>
+            <button type="button" id="legend-toggle" class="legend-toggle" aria-expanded="false" aria-controls="map-legend">
+              <span aria-hidden="true">≡</span> 범례
+            </button>
+          </div>
+          <div class="map-actions">
+            <button type="button" id="my-reports-button" class="map-secondary-fab">
+              내 의견 <span id="my-report-count" class="fab-count">0</span>
+            </button>
+            <button type="button" id="start-report" class="primary-button map-fab">＋ 의견 남기기</button>
+          </div>
         </div>
       </div>
-
-      <div class="action-bar">
-        <div>
-          <strong id="citizen-dong-title">양동 지도</strong>
-          <span>현장에서 확인한 위치를 지도에 간단히 기록할 수 있습니다.</span>
-        </div>
-        <button type="button" id="start-report" class="primary-button">＋ 지도에 의견 남기기</button>
-      </div>
-
-      <section class="my-reports" aria-labelledby="my-reports-title">
-        <div class="section-title-row">
-          <h2 id="my-reports-title">이 기기에 등록한 의견</h2>
-          <span id="my-report-count" class="count-badge">0건</span>
-        </div>
-        <div id="my-report-list" class="report-list"></div>
-      </section>
     </section>
+
+    <section id="hamkke-view" class="tab-panel hamkke-panel" data-tab-panel="hamkke" aria-label="함께가게" hidden></section>
   </main>
 
-  <dialog id="report-dialog" class="report-dialog">
+  <nav class="bottom-tabs" role="tablist" aria-label="화면 선택">
+    <button type="button" class="bottom-tab is-active" role="tab" data-tab="map" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg>
+      <span>안전지도</span>
+    </button>
+    <button type="button" class="bottom-tab" role="tab" data-tab="hamkke" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16l-1.5-5h-13L4 10Z"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg>
+      <span>함께가게</span>
+    </button>
+  </nav>
+
+  <dialog id="report-dialog" class="report-dialog sheet-dialog">
     <form id="report-form" method="dialog">
       <div class="dialog-heading">
         <div>
@@ -105,21 +113,21 @@
       <p id="selected-location" class="selected-location">위치를 선택했습니다.</p>
 
       <fieldset>
-        <legend>취약 유형을 선택해주세요</legend>
-        <div class="type-grid">
-          <label><input type="radio" name="type" value="dark" required><span>어두워요</span></label>
-          <label><input type="radio" name="type" value="cctv"><span>CCTV 부족</span></label>
-          <label><input type="radio" name="type" value="emergencyBell"><span>비상벨 부족</span></label>
-          <label><input type="radio" name="type" value="visibility"><span>시야가 가려져요</span></label>
-          <label><input type="radio" name="type" value="walking"><span>보행하기 위험해요</span></label>
-          <label><input type="radio" name="type" value="anxiety"><span>혼자 걷기 불안해요</span></label>
-          <label class="type-full"><input type="radio" name="type" value="other"><span>기타</span></label>
+        <legend>취약 유형을 하나 골라주세요</legend>
+        <div class="type-grid icon-type-grid">
+          <label><input type="radio" name="type" value="dark" required><span><b aria-hidden="true">🌙</b>어두워요</span></label>
+          <label><input type="radio" name="type" value="cctv"><span><b aria-hidden="true">📹</b>CCTV 부족</span></label>
+          <label><input type="radio" name="type" value="emergencyBell"><span><b aria-hidden="true">🔔</b>비상벨 부족</span></label>
+          <label><input type="radio" name="type" value="visibility"><span><b aria-hidden="true">🌳</b>시야가 가려져요</span></label>
+          <label><input type="radio" name="type" value="walking"><span><b aria-hidden="true">🚧</b>보행하기 위험해요</span></label>
+          <label><input type="radio" name="type" value="anxiety"><span><b aria-hidden="true">🚶</b>혼자 걷기 불안해요</span></label>
+          <label class="type-full"><input type="radio" name="type" value="other"><span><b aria-hidden="true">✏️</b>기타</span></label>
         </div>
       </fieldset>
 
       <label class="text-label" for="report-note">
-        <span>간단한 의견</span>
-        <textarea id="report-note" maxlength="120" rows="4" placeholder="예: 골목이 어둡고 가로등 간격이 멀어요." required></textarea>
+        <span>간단한 의견 <em class="optional-mark">(선택)</em></span>
+        <textarea id="report-note" maxlength="120" rows="3" placeholder="예: 골목이 어둡고 가로등 간격이 멀어요."></textarea>
         <small><span id="note-count">0</span>/120자</small>
       </label>
 
@@ -128,6 +136,19 @@
         <button type="submit" class="primary-button">의견 등록</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="my-reports-dialog" class="report-dialog sheet-dialog">
+    <div class="sheet-body">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow" id="my-reports-dong">양동</p>
+          <h2 id="my-reports-title">이 기기에 등록한 의견</h2>
+        </div>
+        <button type="button" id="close-my-reports" class="icon-button" aria-label="닫기">×</button>
+      </div>
+      <div id="my-report-list" class="report-list"></div>
+    </div>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>

@@ -1,11 +1,16 @@
 (async function () {
   "use strict";
 
+  function showMapError(message) {
+    const stage = document.querySelector("#citizen-view .map-stage");
+    if (stage) stage.innerHTML = `<p class='map-load-error'>${message}</p>`;
+  }
+
   try {
     await window.SafetyMapKakaoReady;
   } catch (error) {
     console.error(error);
-    document.body.innerHTML = "<p class='map-load-error'>카카오 지도를 불러오지 못했습니다. 지도 키와 허용 도메인 설정을 확인해주세요.</p>";
+    showMapError("카카오 지도를 불러오지 못했습니다. 지도 키와 허용 도메인 설정을 확인해주세요.");
     return;
   }
 
@@ -46,7 +51,7 @@
   ];
 
   if (!DATA || !Array.isArray(DATA.dongs) || typeof KMap === "undefined" || !SERVICE) {
-    document.body.innerHTML = "<p style='padding:24px'>지도를 불러오지 못했습니다. 인터넷 연결과 파일 구성을 확인해주세요.</p>";
+    showMapError("지도를 불러오지 못했습니다. 인터넷 연결과 파일 구성을 확인해주세요.");
     return;
   }
 
@@ -68,7 +73,12 @@
   const note = document.getElementById("report-note");
   const locateButton = document.getElementById("locate-me");
   const submitButton = reportForm.querySelector('button[type="submit"]');
+  const startButton = document.getElementById("start-report");
+  const legend = document.getElementById("map-legend");
+  const legendToggle = document.getElementById("legend-toggle");
+  const myReportsDialog = document.getElementById("my-reports-dialog");
   const map = createMap("citizen-map");
+  let lastBounds = null;
   const officialLayer = KMap.layerGroup().addTo(map);
   const landmarkLayer = KMap.layerGroup().addTo(map);
   const receiptLayer = KMap.layerGroup().addTo(map);
@@ -102,7 +112,27 @@
       cancelPlacement();
       renderDong();
     });
-    document.getElementById("start-report").addEventListener("click", startPlacement);
+    startButton.addEventListener("click", () => {
+      if (state.placing) cancelPlacement();
+      else startPlacement();
+    });
+    legendToggle.addEventListener("click", () => setLegendOpen(legend.hidden));
+    document.getElementById("my-reports-button").addEventListener("click", () => {
+      setLegendOpen(false);
+      myReportsDialog.showModal();
+    });
+    document.getElementById("close-my-reports").addEventListener("click", () => myReportsDialog.close());
+    [reportDialog, myReportsDialog].forEach((dialog) => dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) {
+        if (dialog === reportDialog) closeReportDialog();
+        else dialog.close();
+      }
+    }));
+    document.addEventListener("safetymap:tabchange", (event) => {
+      if (event.detail !== "map") return;
+      map.invalidateSize();
+      if (lastBounds) map.fitBounds(lastBounds, { padding: [24, 72] });
+    });
     locateButton.addEventListener("click", locateUser);
     document.getElementById("citizen-landmark-toggle").addEventListener("change", (event) => {
       if (event.target.checked) landmarkLayer.addTo(map);
@@ -112,6 +142,7 @@
     document.getElementById("close-dialog").addEventListener("click", closeReportDialog);
     document.getElementById("cancel-report").addEventListener("click", closeReportDialog);
     reportForm.addEventListener("submit", submitReport);
+    reportDialog.addEventListener("cancel", () => cancelPlacement());
     window.addEventListener("pagehide", stopLocationWatch);
     note.addEventListener("input", () => {
       document.getElementById("note-count").textContent = String(note.value.length);
@@ -209,15 +240,23 @@
     locateButton.querySelector(".location-button-label").textContent = "내 위치";
   }
 
+  function setLegendOpen(open) {
+    legend.hidden = !open;
+    legendToggle.setAttribute("aria-expanded", String(open));
+    legendToggle.classList.toggle("is-open", open);
+  }
+
+  // 저장소에 정상 연결되면 안내를 띄우지 않고, 시범 실행일 때만 짧게 알립니다.
   function renderConnectionNotice() {
     const notice = document.getElementById("connection-notice");
     if (SERVICE.isConfigured()) {
-      notice.classList.add("is-connected");
-      notice.innerHTML = "<strong>공동 자료 저장소 연결</strong><span>등록한 의견은 관리자 화면에 바로 전달됩니다.</span>";
-    } else {
-      notice.classList.add("is-demo");
-      notice.innerHTML = "<strong>시범 실행 중</strong><span>Firebase 설정 전이라 이 기기에만 저장됩니다.</span>";
+      notice.hidden = true;
+      return;
     }
+    notice.classList.add("is-demo");
+    notice.innerHTML = "<strong>시범 실행 중</strong><span>이 기기에만 저장됩니다.</span>";
+    notice.hidden = false;
+    setTimeout(() => { notice.hidden = true; }, 5000);
   }
 
   function getDong(name) {
@@ -250,7 +289,8 @@
       fillOpacity: .16,
       lineJoin: "round"
     }).addTo(officialLayer);
-    map.fitBounds(line.getBounds(), { padding: [22, 22] });
+    lastBounds = line.getBounds();
+    map.fitBounds(lastBounds, { padding: [24, 72] });
   }
 
   function drawOfficialData(dong) {
@@ -423,17 +463,16 @@
     drawLandmarks(dong);
     drawOfficialData(dong);
     state.receipts.filter((report) => report.dong === dong.name).forEach((report) => createReceiptMarker(report).addTo(receiptLayer));
-    document.getElementById("citizen-dong-title").textContent = `${dong.name} 지도`;
-    document.getElementById("selected-dong-name").textContent = dong.name;
+    document.getElementById("my-reports-dong").textContent = dong.name;
     renderReceipts();
   }
 
   function startPlacement() {
     state.placing = true;
+    setLegendOpen(false);
     mapInstruction.hidden = false;
-    const button = document.getElementById("start-report");
-    button.textContent = "지도에서 위치를 눌러주세요";
-    button.disabled = true;
+    startButton.textContent = "위치 선택 취소";
+    startButton.classList.add("is-cancel");
     map.getContainer().style.cursor = "crosshair";
   }
 
@@ -441,9 +480,8 @@
     state.placing = false;
     state.pendingLatLng = null;
     mapInstruction.hidden = true;
-    const button = document.getElementById("start-report");
-    button.textContent = "＋ 지도에 의견 남기기";
-    button.disabled = false;
+    startButton.textContent = "＋ 의견 남기기";
+    startButton.classList.remove("is-cancel");
     map.getContainer().style.cursor = "";
     if (pendingMarker) {
       pendingMarker.remove();
@@ -478,8 +516,9 @@
     if (!state.pendingLatLng) return;
     const formData = new FormData(reportForm);
     const type = String(formData.get("type") || "");
-    const reportNote = note.value.trim();
-    if (!type || !reportNote) return;
+    if (!type) return;
+    // 의견 글은 선택 사항입니다. 비워 두면 취약 유형 이름을 의견으로 저장합니다.
+    const reportNote = note.value.trim() || TYPE_LABELS[type] || "기타";
 
     const report = {
       dong: state.dong,
@@ -515,7 +554,7 @@
   function renderReceipts() {
     const reports = state.receipts.filter((report) => report.dong === state.dong);
     const container = document.getElementById("my-report-list");
-    document.getElementById("my-report-count").textContent = `${reports.length}건`;
+    document.getElementById("my-report-count").textContent = String(reports.length);
     if (!reports.length) {
       container.innerHTML = '<div class="empty-state">아직 등록한 의견이 없습니다. 지도에서 취약한 위치를 표시해보세요.</div>';
       return;
@@ -526,7 +565,7 @@
           <span class="type-badge">${escapeHtml(TYPE_LABELS[report.type] || "기타")}</span>
           <span class="status-badge">${escapeHtml(STATUS_LABELS[report.status] || "접수")}</span>
         </div>
-        <p>${escapeHtml(report.note)}</p>
+        ${report.note && report.note !== TYPE_LABELS[report.type] ? `<p>${escapeHtml(report.note)}</p>` : ""}
         <div class="report-meta"><span>${formatDate(report.createdAt)}</span><span>${Number(report.lat).toFixed(5)}, ${Number(report.lon).toFixed(5)}</span></div>
       </article>`).join("");
   }

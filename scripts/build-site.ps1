@@ -62,7 +62,7 @@ foreach ($relativePath in $staticFiles) {
   }
 }
 
-foreach ($directory in @("admin", "assets")) {
+foreach ($directory in @("admin", "assets", "hamkke")) {
   Copy-Item -LiteralPath (Join-Path $root $directory) -Destination (Join-Path $output $directory) -Recurse
 }
 
