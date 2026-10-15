@@ -295,3 +295,23 @@
 .hamkke-admin .hk-admin-filters .select-label { width: 100%; min-width: 0; }
 .hamkke-admin .hk-admin-filters select { width: 100%; }
 .hamkke-admin .hk-admin-help { max-width: 720px; }
+
+/* 아이폰 사파리: 날짜·시간 칸이 넘치지 않게 */
+.hk-grid-2 > *, .hk-field { min-width: 0; }
+.hk-form input[type="text"],
+.hk-form input[type="date"],
+.hk-form input[type="time"],
+.hk-form textarea { display: block; max-width: 100%; min-width: 0; }
+.hk-form input[type="date"],
+.hk-form input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+  line-height: 24px;
+}
+.hk-form input::-webkit-date-and-time-value { text-align: left; margin: 0; }
+.hk-form input::-webkit-datetime-edit { padding: 0; }
+.icon-button { color: var(--ink); }
+@media (max-width: 480px) {
+  .hk-grid-2 { grid-template-columns: 1fr; gap: 0; }
+}
