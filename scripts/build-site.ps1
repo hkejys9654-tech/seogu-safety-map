@@ -53,7 +53,8 @@ $staticFiles = @(
   "firebase-service.js",
   "firebase.json",
   "firestore.rules",
-  "manifest.webmanifest"
+  "manifest.webmanifest",
+  "update-check.js"
 )
 foreach ($relativePath in $staticFiles) {
   $source = Join-Path $root $relativePath
@@ -65,6 +66,19 @@ foreach ($relativePath in $staticFiles) {
 foreach ($directory in @("admin", "assets", "hamkke")) {
   Copy-Item -LiteralPath (Join-Path $root $directory) -Destination (Join-Path $output $directory) -Recurse
 }
+
+# 배포 번호를 화면에 새겨 두고 version.json과 비교해 새 버전을 자동 반영합니다.
+$build = if ($env:GITHUB_SHA) { $env:GITHUB_SHA } else { (Get-Date).ToString("yyyyMMddHHmmss") }
+$utf8 = [Text.UTF8Encoding]::new($false)
+foreach ($page in @("index.html", "admin/index.html", "admin/hamkke.html")) {
+  $pagePath = Join-Path $output $page
+  if (Test-Path -LiteralPath $pagePath) {
+    $pageText = [IO.File]::ReadAllText($pagePath, $utf8)
+    [IO.File]::WriteAllText($pagePath, $pageText.Replace("__BUILD__", $build), $utf8)
+  }
+}
+$versionJson = "{""build"":""$build""}"
+[IO.File]::WriteAllText((Join-Path $output "version.json"), $versionJson, $utf8)
 
 $jsonKey = ConvertTo-Json ([string]$kakaoKey) -Compress
 $runtimeConfig = "window.SAFETY_MAP_RUNTIME_CONFIG = Object.freeze({`n  kakaoJavaScriptKey: $jsonKey`n});`n"

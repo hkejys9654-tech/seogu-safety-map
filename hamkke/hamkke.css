@@ -175,7 +175,7 @@
 .hk-card { margin: 0 0 12px; padding: 14px; border: 1px solid #e0e8e5; border-radius: 16px; background: #fff; }
 .hk-card legend { float: left; width: 100%; margin: 0 0 10px; padding: 0; color: var(--green-dark); font-size: 16px; font-weight: 900; }
 .hk-card legend + * { clear: both; }
-.hk-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hk-grid-2 { display: grid; grid-template-columns: 1fr; gap: 0; }
 .hk-field { display: grid; gap: 5px; margin-bottom: 10px; }
 .hk-label { color: #33443f; font-size: 13px; font-weight: 850; }
 .hk-label em { color: var(--muted); font-size: 11px; font-style: normal; font-weight: 700; }
@@ -314,4 +314,9 @@
 .icon-button { color: var(--ink); }
 @media (max-width: 480px) {
   .hk-grid-2 { grid-template-columns: 1fr; gap: 0; }
+}
+@media (max-width: 560px) {
+  .hamkke-admin .admin-header { flex-wrap: wrap; }
+  .hamkke-admin .admin-nav { width: 100%; }
+  .hamkke-admin .admin-nav-link { flex: 1 1 0; justify-content: center; }
 }

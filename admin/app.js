@@ -149,6 +149,10 @@
     document.getElementById("relocate-report").addEventListener("click", startReportRelocation);
     document.getElementById("cancel-report-relocation").addEventListener("click", cancelReportRelocation);
     reportForm.addEventListener("submit", saveReportEdit);
+    // 폰 화면에서 지도 탭으로 돌아오면 지도 크기를 다시 맞춥니다.
+    document.addEventListener("safetymap:tabchange", (event) => {
+      if (event.detail === "map" && map) map.invalidateSize();
+    });
     reportDialog.addEventListener("cancel", (event) => {
       event.preventDefault();
       closeReportEditor();
@@ -161,6 +165,7 @@
     } catch (error) {
       console.error(error);
       const notice = document.getElementById("admin-connection-notice");
+      notice.hidden = false;
       notice.innerHTML = "<strong>관리자 화면을 시작하지 못했습니다</strong><span>인터넷 연결과 Firestore 보안 규칙을 확인해주세요.</span>";
     }
   }
@@ -193,14 +198,16 @@
       state.unsubscribeReports = await SERVICE.listenReports((reports) => {
         state.reports = reports;
         notice.classList.add("is-connected");
-        notice.innerHTML = SERVICE.isConfigured()
-          ? "<strong>공동 자료 저장소 연결</strong><span>새 의견과 처리상태가 실시간으로 반영됩니다.</span>"
-          : "<strong>시범 실행 중</strong><span>Firebase 설정 전이라 이 브라우저의 시범 의견만 표시합니다.</span>";
+        // 정상 연결이면 안내를 숨기고, 시범 실행일 때만 보여줍니다.
+        notice.hidden = SERVICE.isConfigured();
+        notice.innerHTML = "<strong>시범 실행 중</strong><span>Firebase 설정 전이라 이 브라우저의 시범 의견만 표시합니다.</span>";
         renderAdmin();
       }, () => {
+        notice.hidden = false;
         notice.innerHTML = "<strong>자료를 불러오지 못했습니다</strong><span>관리자 권한과 인터넷 연결을 확인해주세요.</span>";
       });
     } catch (error) {
+      notice.hidden = false;
       notice.innerHTML = "<strong>자료를 불러오지 못했습니다</strong><span>관리자 권한과 Firestore 설정을 확인해주세요.</span>";
     }
   }
@@ -511,6 +518,7 @@
     };
     state.featureBefore = null;
     state.editMode = "drawing";
+    document.dispatchEvent(new CustomEvent("admin:show-map"));
     openLineEditor(true);
     renderAdmin({ preserveViewport: true });
     renderEditLayer();
@@ -749,7 +757,9 @@
       card.addEventListener("click", (event) => {
         if (event.target.matches("select, option, button")) return;
         const report = state.reports.find((item) => item.id === card.dataset.id);
-        if (report) map.setView([report.lat, report.lon], 17);
+        if (!report) return;
+        document.dispatchEvent(new CustomEvent("admin:show-map"));
+        map.setView([report.lat, report.lon], 17);
       });
     });
     container.querySelectorAll(".status-select").forEach((select) => {
@@ -813,6 +823,7 @@
   function startReportRelocation() {
     if (!state.editingReport) return;
     reportDialog.close();
+    document.dispatchEvent(new CustomEvent("admin:show-map"));
     state.relocatingReport = true;
     document.getElementById("line-edit-instruction").textContent = "의견의 새 위치를 지도에서 한 번 눌러주세요.";
     document.getElementById("line-edit-instruction").hidden = false;

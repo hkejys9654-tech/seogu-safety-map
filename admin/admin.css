@@ -381,3 +381,133 @@
 @media print {
   .line-editor { display: none !important; }
 }
+
+/* ── 2026-10 관리자 화면: 지도 중심 배치 ── */
+.admin-nav { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(255,255,255,.1); }
+.admin-nav-link {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 11px;
+  color: rgba(255,255,255,.82);
+  font-size: 14px;
+  font-weight: 850;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.admin-nav-link:hover { color: #fff; background: rgba(255,255,255,.1); }
+.admin-nav-link.is-active { color: #17364a; background: #fff; }
+.admin-header-actions { display: flex; gap: 6px; }
+.admin-header .header-button { min-height: 38px; font: inherit; font-size: 13px; font-weight: 850; white-space: nowrap; }
+
+.admin-console {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.admin-console .admin-header { position: relative; flex: 0 0 auto; min-height: 0; padding: 10px 18px; gap: 14px; }
+.admin-console .brand-icon { width: 40px; height: 40px; border-radius: 12px; }
+.admin-console .brand strong { font-size: 17px; }
+.admin-console .admin-main { flex: 1 1 auto; width: 100%; max-width: none; min-height: 0; margin: 0; padding: 12px; }
+.admin-console #admin-app { height: 100%; }
+.admin-workspace { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 12px; }
+.admin-map-col { position: relative; min-width: 0; min-height: 0; }
+.admin-console .admin-map-shell { position: absolute; inset: 0; min-height: 0; border-width: 4px; border-radius: 22px; }
+
+.admin-side {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 2px 12px 0;
+}
+.admin-side .notice { margin: 0; }
+.admin-side-card { margin: 0; padding: 14px; border-radius: 16px; }
+.admin-side .admin-control-panel { display: block; }
+.admin-side .admin-filters .select-label select { min-height: 46px; }
+.admin-side .line-editor-heading h2 { margin: 0 0 10px; font-size: 17px; }
+.admin-side .line-create-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+.admin-side .line-create-controls .select-label { min-width: 0; }
+.admin-side .line-create-controls select { min-height: 46px; }
+.admin-side .line-create-controls .primary-button { min-height: 46px; padding: 0 14px; white-space: nowrap; }
+.admin-side .line-editor-guide { margin: 8px 0 0; font-size: 12px; }
+
+.admin-stats-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.admin-stats-row article { padding: 10px 12px; border-radius: 13px; box-shadow: none; }
+.admin-stats-row span { font-size: 11px; }
+.admin-stats-row strong { margin-top: 2px; font-size: 22px; }
+
+.admin-side .admin-list-panel { min-height: 0; max-height: none; overflow: visible; padding: 14px; border-radius: 16px; box-shadow: none; }
+.admin-side .admin-report-list { height: auto; overflow: visible; padding-right: 0; }
+.admin-side .section-title-row h2 { font-size: 18px; }
+
+/* 지도 위 범례·필터와 편집 카드 */
+.admin-legend-wrap { position: absolute; z-index: 1000; left: 12px; bottom: 12px; }
+.admin-console .admin-map-filters {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: min(560px, calc(100vw - 48px));
+  display: flex;
+  flex-wrap: wrap;
+}
+.admin-console .admin-map-filters[hidden] { display: none !important; }
+.admin-console .map-landmark-toggle { top: 12px; right: 12px; }
+
+.admin-edit-card {
+  position: absolute;
+  z-index: 1002;
+  right: 12px;
+  bottom: 12px;
+  width: min(440px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #cddae1;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(24, 54, 74, .22);
+}
+.admin-edit-card .feature-fields { grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+.admin-edit-card .line-editor-actions { justify-content: flex-start; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.admin-edit-card .line-editor-actions button { min-height: 42px; padding: 0 12px; font-size: 13px; }
+.admin-edit-card .line-editor-actions .primary-button { margin-left: auto; }
+
+.admin-bottom-tabs { display: none; }
+.admin-bottom-tabs .bottom-tab { text-decoration: none; color: #7b8a86; }
+.admin-bottom-tabs .bottom-tab.is-active { color: var(--green); }
+
+@media (max-width: 900px) {
+  .admin-console .admin-header { padding: 8px 12px; padding-top: calc(8px + env(safe-area-inset-top)); }
+  .admin-console .admin-nav { display: none; }
+  .admin-console .brand span:last-child { display: none; }
+  .admin-console .brand strong { font-size: 15px; }
+  .admin-console .admin-header .header-button { min-height: 34px; padding: 0 10px; font-size: 12px; }
+  .admin-console .admin-main { padding: 0; }
+  .admin-workspace { position: relative; display: block; }
+  .admin-map-col, .admin-side { position: absolute; inset: 0; }
+  .admin-side { padding: 12px 12px 20px; background: var(--paper); }
+  .admin-console[data-admin-tab="map"] .admin-side { display: none; }
+  .admin-console[data-admin-tab="list"] .admin-map-col { visibility: hidden; }
+  .admin-console .admin-map-shell { border: 0; border-radius: 0; box-shadow: none; }
+  .admin-edit-card { left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 55%; }
+  .admin-edit-card .line-editor-actions .primary-button { width: 100%; margin-left: 0; }
+  .admin-bottom-tabs { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .admin-console .toast { bottom: calc(84px + env(safe-area-inset-bottom)); width: max-content; max-width: calc(100% - 32px); text-align: center; }
+}
+
+@media print {
+  .admin-console { height: auto; overflow: visible; display: block; }
+  .admin-side, .admin-bottom-tabs, .legend-toggle, .admin-header-actions, .admin-nav, .map-landmark-toggle { display: none !important; }
+  .admin-workspace { display: block; height: auto; }
+  .admin-map-col { position: static; height: 180mm; visibility: visible !important; }
+  .admin-console .admin-map-shell { position: relative; height: 180mm; inset: auto; }
+}
+.admin-side > * { flex-shrink: 0; }
