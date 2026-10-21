@@ -7,7 +7,7 @@
   const esc = window.HamkkeForm.esc;
   const CODE_KEY = "seogu-safety-map-hamkke-admin-code-v1";
   const TEMPLATE_URL = "../hamkke/result-template.hwpx?v=20261015-1";
-  const ROSTER_HEADERS = ["분과", "번호", "캠페인 차수", "액자 상태", "분과장", "상호명", "대표자", "연락처", "주소", "행정동", "업종", "비고"];
+  const ROSTER_HEADERS = ["분과", "번호", "캠페인 차수", "액자", "분과장", "상호명", "대표자", "연락처", "주소", "행정동", "업종", "비고"];
 
   const root = document.getElementById("hk-admin");
   const state = {
@@ -234,7 +234,7 @@
       return `
         <tr>
           <td>${esc(item.division.replace("분과", ""))}</td>
-          <td>${esc(H.CAMPAIGN_LABELS[item.campaign || ""] || "-")}<br><small class="hk-muted">${esc(item.frame || "")}</small></td>
+          <td>${esc(H.CAMPAIGN_LABELS[item.campaign || ""] || "-")}<br><small class="hk-muted">${H.frameOf(item.frame) ? `액자 ${esc(H.frameOf(item.frame))}` : ""}</small></td>
           <td><strong>${esc(item.name)}</strong><br><small class="hk-muted">${esc(item.address)}</small>${item.note ? `<br><small class="hk-note-text">${esc(item.note)}</small>` : ""}</td>
           <td>${esc(item.owner)}<br><small class="hk-muted">${esc(item.phone || "연락처 없음")}</small></td>
           <td><span class="hk-badge is-${progress}">${H.PROGRESS_LABELS[progress]}</span></td>
@@ -326,7 +326,7 @@
         분과: store.division,
         번호: store.no,
         캠페인차수: H.CAMPAIGN_LABELS[store.campaign || ""] || "",
-        액자상태: store.frame || "",
+        액자: H.frameOf(store.frame),
         비고: store.note || "",
         상호명: store.name,
         대표자: store.owner,
@@ -372,7 +372,7 @@
 
   function downloadRoster() {
     const rows = H.sortStores(state.stores)
-      .map((s) => [s.division, s.no, H.CAMPAIGN_LABELS[s.campaign || ""] || "", s.frame || "", s.leader, s.name, s.owner, s.phone, s.address, s.dong, s.category, s.note || ""]);
+      .map((s) => [s.division, s.no, H.CAMPAIGN_LABELS[s.campaign || ""] || "", H.frameOf(s.frame), s.leader, s.name, s.owner, s.phone, s.address, s.dong, s.category, s.note || ""]);
     const sheet = window.XLSX.utils.aoa_to_sheet([ROSTER_HEADERS, ...rows]);
     sheet["!cols"] = [12, 6, 12, 12, 8, 34, 8, 15, 34, 9, 12, 40].map((wch) => ({ wch }));
     const book = window.XLSX.utils.book_new();
@@ -398,9 +398,7 @@
         if (!name) return;
         if (!H.DIVISIONS.includes(division)) { skipped.push(`${index + 2}행(${name})`); return; }
         const campaignText = String(row["캠페인 차수"] || "");
-        const frameText = String(row["액자 상태"] || "").trim();
-        const frame = H.FRAME_STATES.includes(frameText) ? frameText
-          : String(row["구분"] || "").includes("배부완료") ? "배부완료" : "";
+        const frame = H.frameOf(row["액자"] || row["액자 상태"] || (String(row["구분"] || "").includes("배부완료") ? "수령" : ""));
         // 같은 상호명이 이미 있으면 그 번호를 그대로 써서 입력된 결과가 이어지게 합니다.
         const existing = state.stores.find((item) => H.nameKey(item.name) === H.nameKey(name));
         stores.push({
@@ -410,7 +408,7 @@
           campaign: campaignText.includes("1차") ? "1차" : campaignText.includes("2차") ? "2차 예정" : "",
           frame,
           note: String(row["비고"] || "").replace(/\s+/g, " ").trim(),
-          round: frame && frame !== "액자 보관 중" ? "done" : "visit",
+          round: frame === "수령" ? "done" : "visit",
           leader: String(row["분과장"] || "").trim(),
           name,
           owner: String(row["대표자"] || "").trim(),

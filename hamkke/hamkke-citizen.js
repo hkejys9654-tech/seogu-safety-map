@@ -230,7 +230,8 @@
     const visit = (result && result.visit) || {};
     const visited = progress !== "none" && visit.date ? `방문 ${H.formatKoreanDate(visit.date)}` : "";
     const campaign = H.CAMPAIGN_LABELS[item.campaign || ""] || "";
-    const frameClass = { "배부완료": "is-delivered", "1차 행사 수령": "is-event", "액자 보관 중": "is-kept" }[item.frame] || "";
+    const frame = H.frameOf(item.frame);
+    const frameClass = frame === "수령" ? "is-delivered" : "is-kept";
     return `
       <article class="hk-store">
         <div class="hk-store-top">
@@ -238,12 +239,12 @@
             <strong>${esc(item.name)}</strong>
             <span class="hk-tags">
               ${campaign ? `<em class="hk-tag ${item.campaign === "1차" ? "is-campaign" : "is-next"}">${esc(campaign)}</em>` : ""}
-              ${item.frame ? `<em class="hk-tag hk-frame ${frameClass}">${esc(item.frame)}</em>` : ""}
             </span>
           </div>
           <span class="hk-badge is-${progress}">${H.PROGRESS_LABELS[progress]}</span>
         </div>
         <dl class="hk-info">
+          ${frame ? `<div><dt>액자</dt><dd><em class="hk-tag hk-frame ${frameClass}">${esc(frame)}</em></dd></div>` : ""}
           <div><dt>주소</dt><dd>${esc(item.address || "-")}</dd></div>
           <div><dt>대표자</dt><dd>${esc(item.owner || "-")}</dd></div>
           <div><dt>연락처</dt><dd>${tel ? `<a class="hk-tel" href="${tel}">${esc(item.phone)}</a>` : '<span class="hk-muted">확인 필요</span>'}</dd></div>

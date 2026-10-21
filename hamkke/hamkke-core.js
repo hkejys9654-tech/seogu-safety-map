@@ -141,7 +141,14 @@
 
   // 캠페인 차수·액자 상태 (2026. 10. 21. 배부현황 대조 기준)
   const CAMPAIGN_LABELS = { "1차": "캠페인 1차", "2차 예정": "2차 명단 예정", "": "" };
-  const FRAME_STATES = ["배부완료", "1차 행사 수령", "액자 보관 중"];
+  const FRAME_STATES = ["수령", "미수령"];
+  // 예전 표기(배부완료·1차 행사 수령·액자 보관 중)도 수령/미수령으로 바꿔 읽습니다.
+  function frameOf(value) {
+    const text = String(value || "").trim();
+    if (!text) return "";
+    if (text === "미수령" || text.includes("보관") || text.includes("미배부")) return "미수령";
+    return "수령";
+  }
   const CAMPAIGN_ORDER = { "1차": 0, "2차 예정": 1, "": 2 };
 
   function nameKey(name) {
@@ -221,6 +228,7 @@
     PROGRESS_LABELS,
     CAMPAIGN_LABELS,
     FRAME_STATES,
+    frameOf,
     nameKey,
     indexResults,
     sortStores,

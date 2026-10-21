@@ -401,7 +401,7 @@
       dong: String(store.dong || ""),
       category: String(store.category || ""),
       campaign: ["1차", "2차 예정"].includes(store.campaign) ? store.campaign : "",
-      frame: ["배부완료", "1차 행사 수령", "액자 보관 중"].includes(store.frame) ? store.frame : "",
+      frame: ["수령", "미수령"].includes(store.frame) ? store.frame : "",
       note: String(store.note || "").slice(0, 200),
       active: store.active !== false
     }));

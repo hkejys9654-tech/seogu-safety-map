@@ -255,7 +255,7 @@
       state.code = params.code || "";
       state.onSave = params.onSave;
       const store = state.store;
-      q('[data-hk="division"]').textContent = [store.division, H.CAMPAIGN_LABELS[store.campaign || ""], store.frame, H.PROGRESS_LABELS[H.progressOf(state.result)]]
+      q('[data-hk="division"]').textContent = [store.division, H.CAMPAIGN_LABELS[store.campaign || ""], H.frameOf(store.frame) ? `액자 ${H.frameOf(store.frame)}` : "", H.PROGRESS_LABELS[H.progressOf(state.result)]]
         .filter(Boolean).join(" · ");
       q('[data-hk="title"]').textContent = store.name;
       q('[data-hk="address"]').textContent = [store.address, store.dong].filter(Boolean).join(" · ");
