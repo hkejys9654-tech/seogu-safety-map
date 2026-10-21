@@ -7,15 +7,15 @@
   const esc = window.HamkkeForm.esc;
   const CODE_KEY = "seogu-safety-map-hamkke-admin-code-v1";
   const TEMPLATE_URL = "../hamkke/result-template.hwpx?v=20261015-1";
-  const ROSTER_HEADERS = ["분과", "번호", "구분", "분과장", "상호명", "대표자", "연락처", "주소", "행정동", "업종"];
+  const ROSTER_HEADERS = ["분과", "번호", "캠페인 차수", "액자 상태", "분과장", "상호명", "대표자", "연락처", "주소", "행정동", "업종", "비고"];
 
   const root = document.getElementById("hk-admin");
   const state = {
     code: "",
     stores: [],
-    results: new Map(),
+    resultOf: () => undefined,
     stop: null,
-    filter: { division: "all", scope: "visit", progress: "all" },
+    filter: { division: "all", campaignOnly: true, progress: "all" },
     form: window.HamkkeForm.create({ toast: showToast, prefillToday: false })
   };
 
@@ -102,7 +102,7 @@
       state.stores = stores.filter((item) => item.active !== false);
       renderBody();
     }, (results) => {
-      state.results = new Map(results.map((item) => [item.storeId || item.id, item]));
+      state.resultOf = H.indexResults(results);
       renderBody();
     }, (error) => {
       console.error(error);
@@ -137,11 +137,10 @@
               ${H.DIVISIONS.map((d) => `<option value="${esc(d)}">${esc(d)}</option>`).join("")}
             </select>
           </label>
-          <label class="select-label"><span>범위</span>
-            <select data-filter="scope">
-              <option value="visit">방문 대상만</option>
-              <option value="all">배부완료 포함</option>
-            </select>
+          <label class="hk-toggle hk-admin-toggle">
+            <input type="checkbox" data-hk="campaign-only" checked>
+            <span class="hk-toggle-track" aria-hidden="true"></span>
+            <span>캠페인 1차만 보기</span>
           </label>
           <label class="select-label"><span>진행 상태</span>
             <select data-filter="progress">
@@ -162,7 +161,7 @@
       <div class="hk-table-wrap">
         <table class="hk-table">
           <thead><tr>
-            <th>분과</th><th>번호</th><th>상호명</th><th>대표자·연락처</th><th>상태</th><th>방문일</th><th>전화 확인</th><th>작업</th>
+            <th>분과</th><th>캠페인·액자</th><th>상호명</th><th>대표자·연락처</th><th>상태</th><th>방문일</th><th>전화 확인</th><th>작업</th>
           </tr></thead>
           <tbody data-hk="rows"><tr><td colspan="8" class="hk-empty-cell">불러오는 중…</td></tr></tbody>
         </table>
@@ -174,6 +173,12 @@
         state.filter[select.dataset.filter] = select.value;
         renderBody();
       });
+    });
+    const campaignToggle = root.querySelector('[data-hk="campaign-only"]');
+    campaignToggle.checked = f.campaignOnly;
+    campaignToggle.addEventListener("change", () => {
+      state.filter.campaignOnly = campaignToggle.checked;
+      renderBody();
     });
     root.querySelector('[data-hk="upload"]').addEventListener("change", async (event) => {
       await importRoster(event.target.files[0], state.code);
@@ -187,29 +192,24 @@
 
   function filteredStores() {
     const f = state.filter;
-    const order = (division) => {
-      const index = H.DIVISIONS.indexOf(division);
-      return index < 0 ? 99 : index;
-    };
-    return state.stores
-      .filter((item) => f.scope === "all" || item.round === "visit")
+    return H.sortStores(state.stores)
+      .filter((item) => !f.campaignOnly || item.campaign === "1차")
       .filter((item) => f.division === "all" || item.division === f.division)
-      .filter((item) => f.progress === "all" || H.progressOf(state.results.get(item.id)) === f.progress)
-      .sort((a, b) => order(a.division) - order(b.division)
-        || (a.round === b.round ? 0 : a.round === "visit" ? -1 : 1)
-        || (Number(a.no) || 0) - (Number(b.no) || 0));
+      .filter((item) => f.progress === "all" || H.progressOf(state.resultOf(item)) === f.progress);
   }
 
   function renderBody() {
     const rows = root.querySelector('[data-hk="rows"]');
     if (!rows) return;
-    const visitStores = state.stores.filter((item) => item.round === "visit");
+    const firstRound = state.stores.filter((item) => item.campaign === "1차");
+    const nextRound = state.stores.filter((item) => item.campaign === "2차 예정");
     const summary = root.querySelector('[data-hk="summary"]');
-    summary.textContent = `명단 ${state.stores.length}곳 (방문 대상 ${visitStores.length}곳 · 배부완료 ${state.stores.length - visitStores.length}곳)`;
+    summary.textContent = `명단 ${state.stores.length}곳 · 캠페인 1차 ${firstRound.length}곳 · 2차 명단 예정 ${nextRound.length}곳`;
+    const statBase = state.filter.campaignOnly ? firstRound : state.stores;
 
     root.querySelector('[data-hk="stats"]').innerHTML = H.DIVISIONS.map((division) => {
-      const list = visitStores.filter((item) => item.division === division);
-      const progress = list.map((item) => H.progressOf(state.results.get(item.id)));
+      const list = statBase.filter((item) => item.division === division);
+      const progress = list.map((item) => H.progressOf(state.resultOf(item)));
       const visited = progress.filter((p) => p !== "none").length;
       const phoned = progress.filter((p) => p === "phone").length;
       const leader = (list[0] || {}).leader || "";
@@ -227,15 +227,15 @@
       return;
     }
     rows.innerHTML = list.map((item) => {
-      const result = state.results.get(item.id) || {};
+      const result = state.resultOf(item) || {};
       const progress = H.progressOf(result);
       const visit = result.visit || {};
       const phone = result.phone || {};
       return `
         <tr>
           <td>${esc(item.division.replace("분과", ""))}</td>
-          <td>${esc(item.no)}${item.round === "done" ? '<br><small class="hk-muted">배부완료</small>' : ""}</td>
-          <td><strong>${esc(item.name)}</strong><br><small class="hk-muted">${esc(item.address)}</small></td>
+          <td>${esc(H.CAMPAIGN_LABELS[item.campaign || ""] || "-")}<br><small class="hk-muted">${esc(item.frame || "")}</small></td>
+          <td><strong>${esc(item.name)}</strong><br><small class="hk-muted">${esc(item.address)}</small>${item.note ? `<br><small class="hk-note-text">${esc(item.note)}</small>` : ""}</td>
           <td>${esc(item.owner)}<br><small class="hk-muted">${esc(item.phone || "연락처 없음")}</small></td>
           <td><span class="hk-badge is-${progress}">${H.PROGRESS_LABELS[progress]}</span></td>
           <td>${visit.date ? esc(H.formatKoreanDate(visit.date)) : "-"}</td>
@@ -256,7 +256,7 @@
     if (act === "edit" && store) {
       state.form.open({
         store,
-        result: state.results.get(store.id) || {},
+        result: state.resultOf(store) || {},
         code: state.code,
         onSave: (section, data, target) => SERVICE.saveHamkkeSection(state.code, target, section, data, "관리자")
       });
@@ -286,7 +286,7 @@
 
   // ── 한글 ──
   function recordsFor(stores) {
-    return stores.map((store) => ({ store, result: state.results.get(store.id) || null }));
+    return stores.map((store) => ({ store, result: state.resultOf(store) || null }));
   }
 
   async function downloadHwpx(stores, name) {
@@ -319,13 +319,15 @@
   function downloadStatus(stores) {
     if (!stores.length) { showToast("내려받을 점포가 없어요."); return; }
     const rows = stores.map((store) => {
-      const result = state.results.get(store.id) || {};
+      const result = state.resultOf(store) || {};
       const v = result.visit || {};
       const p = result.phone || {};
       return {
         분과: store.division,
         번호: store.no,
-        구분: store.round === "done" ? "배부완료" : "방문 대상",
+        캠페인차수: H.CAMPAIGN_LABELS[store.campaign || ""] || "",
+        액자상태: store.frame || "",
+        비고: store.note || "",
         상호명: store.name,
         대표자: store.owner,
         연락처: store.phone,
@@ -369,13 +371,10 @@
   }
 
   function downloadRoster() {
-    const rows = [...state.stores]
-      .sort((a, b) => H.DIVISIONS.indexOf(a.division) - H.DIVISIONS.indexOf(b.division)
-        || (a.round === b.round ? 0 : a.round === "visit" ? -1 : 1)
-        || (Number(a.no) || 0) - (Number(b.no) || 0))
-      .map((s) => [s.division, s.no, s.round === "done" ? "배부완료" : "방문 대상", s.leader, s.name, s.owner, s.phone, s.address, s.dong, s.category]);
+    const rows = H.sortStores(state.stores)
+      .map((s) => [s.division, s.no, H.CAMPAIGN_LABELS[s.campaign || ""] || "", s.frame || "", s.leader, s.name, s.owner, s.phone, s.address, s.dong, s.category, s.note || ""]);
     const sheet = window.XLSX.utils.aoa_to_sheet([ROSTER_HEADERS, ...rows]);
-    sheet["!cols"] = [12, 6, 10, 8, 34, 8, 15, 34, 9, 12].map((wch) => ({ wch }));
+    sheet["!cols"] = [12, 6, 12, 12, 8, 34, 8, 15, 34, 9, 12, 40].map((wch) => ({ wch }));
     const book = window.XLSX.utils.book_new();
     window.XLSX.utils.book_append_sheet(book, sheet, "함께가게 명단");
     window.XLSX.writeFile(book, `함께가게_명단_${todayStamp()}.xlsx`);
@@ -394,15 +393,24 @@
       const skipped = [];
       const stores = [];
       rows.forEach((row, index) => {
-        const name = String(row["상호명"] || "").trim();
+        const name = String(row["상호명"] || "").replace(/\s+/g, " ").trim();
         const division = String(row["분과"] || "").trim();
         if (!name) return;
         if (!H.DIVISIONS.includes(division)) { skipped.push(`${index + 2}행(${name})`); return; }
+        const campaignText = String(row["캠페인 차수"] || "");
+        const frameText = String(row["액자 상태"] || "").trim();
+        const frame = H.FRAME_STATES.includes(frameText) ? frameText
+          : String(row["구분"] || "").includes("배부완료") ? "배부완료" : "";
+        // 같은 상호명이 이미 있으면 그 번호를 그대로 써서 입력된 결과가 이어지게 합니다.
+        const existing = state.stores.find((item) => H.nameKey(item.name) === H.nameKey(name));
         stores.push({
-          id: H.storeIdFor(name),
+          id: existing ? existing.id : H.storeIdFor(name),
           division,
           no: Number(row["번호"]) || 0,
-          round: String(row["구분"] || "").includes("배부완료") ? "done" : "visit",
+          campaign: campaignText.includes("1차") ? "1차" : campaignText.includes("2차") ? "2차 예정" : "",
+          frame,
+          note: String(row["비고"] || "").replace(/\s+/g, " ").trim(),
+          round: frame && frame !== "액자 보관 중" ? "done" : "visit",
           leader: String(row["분과장"] || "").trim(),
           name,
           owner: String(row["대표자"] || "").trim(),
@@ -413,11 +421,17 @@
         });
       });
       if (!stores.length) { showToast("올릴 점포를 찾지 못했어요."); return 0; }
-      const visitCount = stores.filter((s) => s.round === "visit").length;
-      const message = `${stores.length}곳을 명단에 올릴까요?\n(방문 대상 ${visitCount}곳 · 배부완료 ${stores.length - visitCount}곳)`
+      const firstCount = stores.filter((s) => s.campaign === "1차").length;
+      const ids = new Set(stores.map((s) => s.id));
+      const removed = code === state.code ? state.stores.filter((item) => !ids.has(item.id)) : [];
+      const message = `${stores.length}곳으로 명단을 바꿀까요?\n(캠페인 1차 ${firstCount}곳)`
+        + (removed.length ? `\n\n명단에서 빠져 목록에서 숨겨지는 곳: ${removed.map((item) => item.name).join(", ")}` : "")
         + (skipped.length ? `\n\n분과 이름이 맞지 않아 빠지는 줄: ${skipped.join(", ")}` : "");
       if (!window.confirm(message)) return 0;
-      const count = await SERVICE.saveHamkkeStores(code, stores);
+      const count = await SERVICE.saveHamkkeStores(code, [
+        ...stores,
+        ...removed.map((item) => ({ ...item, active: false }))
+      ]) - removed.length;
       showToast(`명단 ${count}곳을 올렸어요.`);
       return count;
     } catch (error) {

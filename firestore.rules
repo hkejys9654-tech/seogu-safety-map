@@ -120,7 +120,7 @@ service cloud.firestore {
         allow create, update: if validCode(code)
           && request.resource.data.keys().hasOnly([
             'id', 'division', 'no', 'round', 'leader', 'name', 'owner', 'phone',
-            'address', 'dong', 'category', 'active', 'updatedAt'
+            'address', 'dong', 'category', 'campaign', 'frame', 'note', 'active', 'updatedAt'
           ])
           && request.resource.data.id == storeId
           && request.resource.data.division in ['돌봄분과', '양성평등분과', '안전분과', '일자리분과']
@@ -135,6 +135,9 @@ service cloud.firestore {
           && request.resource.data.address is string && request.resource.data.address.size() <= 150
           && request.resource.data.dong is string && request.resource.data.dong.size() <= 20
           && request.resource.data.category is string && request.resource.data.category.size() <= 40
+          && (!('campaign' in request.resource.data) || request.resource.data.campaign in ['1차', '2차 예정', ''])
+          && (!('frame' in request.resource.data) || request.resource.data.frame in ['배부완료', '1차 행사 수령', '액자 보관 중', ''])
+          && (!('note' in request.resource.data) || (request.resource.data.note is string && request.resource.data.note.size() <= 200))
           && request.resource.data.active is bool
           && request.resource.data.updatedAt is timestamp;
       }

@@ -139,6 +139,36 @@
     return `s${hash.toString(16).padStart(8, "0")}`;
   }
 
+  // 캠페인 차수·액자 상태 (2026. 10. 21. 배부현황 대조 기준)
+  const CAMPAIGN_LABELS = { "1차": "캠페인 1차", "2차 예정": "2차 명단 예정", "": "" };
+  const FRAME_STATES = ["배부완료", "1차 행사 수령", "액자 보관 중"];
+  const CAMPAIGN_ORDER = { "1차": 0, "2차 예정": 1, "": 2 };
+
+  function nameKey(name) {
+    return String(name || "").replace(/\s+/g, "");
+  }
+
+  // 결과는 점포 번호로 찾고, 없으면 상호명으로 찾아 명단이 바뀌어도 이어서 보이게 합니다.
+  function indexResults(results) {
+    const byId = new Map();
+    const byName = new Map();
+    results.forEach((item) => {
+      byId.set(item.storeId || item.id, item);
+      if (item.storeName) byName.set(nameKey(item.storeName), item);
+    });
+    return (store) => (store ? byId.get(store.id) || byName.get(nameKey(store.name)) : undefined);
+  }
+
+  function sortStores(stores) {
+    const division = (value) => {
+      const index = DIVISIONS.indexOf(value);
+      return index < 0 ? 99 : index;
+    };
+    return [...stores].sort((a, b) => division(a.division) - division(b.division)
+      || (CAMPAIGN_ORDER[a.campaign || ""] ?? 2) - (CAMPAIGN_ORDER[b.campaign || ""] ?? 2)
+      || (Number(a.no) || 0) - (Number(b.no) || 0));
+  }
+
   function progressOf(result) {
     const visit = result && result.visit;
     const phone = result && result.phone;
@@ -189,6 +219,11 @@
     FIELD_SCRIPT,
     PHONE_SCRIPT,
     PROGRESS_LABELS,
+    CAMPAIGN_LABELS,
+    FRAME_STATES,
+    nameKey,
+    indexResults,
+    sortStores,
     storeIdFor,
     progressOf,
     cleanSection,

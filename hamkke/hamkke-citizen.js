@@ -5,16 +5,16 @@
   const SERVICE = window.SafetyMapFirebase;
   const TAB_KEY = "seogu-safety-map-tab-v1";
   const CODE_KEY = "seogu-safety-map-hamkke-code-v1";
-  const FILTER_KEY = "seogu-safety-map-hamkke-filter-v1";
+  const FILTER_KEY = "seogu-safety-map-hamkke-filter-v2";
   const esc = window.HamkkeForm.esc;
 
   const panel = document.getElementById("hamkke-view");
   const state = {
     code: "",
     stores: [],
-    results: new Map(),
+    resultOf: () => undefined,
     stop: null,
-    filter: readJson(FILTER_KEY, { division: "all", progress: "all", scope: "visit", query: "" }),
+    filter: readJson(FILTER_KEY, { division: "all", progress: "all", campaignOnly: true, query: "" }),
     form: null
   };
 
@@ -108,7 +108,7 @@
       state.stores = stores.filter((item) => item.active !== false);
       renderList();
     }, (results) => {
-      state.results = new Map(results.map((item) => [item.storeId || item.id, item]));
+      state.resultOf = H.indexResults(results);
       renderList();
     }, (error) => {
       console.error(error);
@@ -143,10 +143,11 @@
               <option value="visit">방문 완료</option>
               <option value="phone">전화 완료</option>
             </select>
-            <select data-hk="scope" aria-label="점포 범위">
-              <option value="visit">방문 대상만</option>
-              <option value="all">배부완료 포함</option>
-            </select>
+            <label class="hk-toggle">
+              <input type="checkbox" data-hk="campaign-only" ${f.campaignOnly ? "checked" : ""}>
+              <span class="hk-toggle-track" aria-hidden="true"></span>
+              <span>캠페인 1차만 보기</span>
+            </label>
           </div>
           <input type="search" data-hk="query" placeholder="상호·대표자·주소 검색" value="${esc(f.query)}">
         </section>
@@ -155,11 +156,10 @@
           <button type="button" class="hk-link" data-hk-action="logout">접속코드 다시 입력</button></p>
       </div>`;
     panel.querySelector('[data-hk="progress"]').value = f.progress;
-    panel.querySelector('[data-hk="scope"]').value = f.scope;
 
     panel.addEventListener("click", onPanelClick);
     panel.querySelector('[data-hk="progress"]').addEventListener("change", (event) => updateFilter({ progress: event.target.value }));
-    panel.querySelector('[data-hk="scope"]').addEventListener("change", (event) => updateFilter({ scope: event.target.value }));
+    panel.querySelector('[data-hk="campaign-only"]').addEventListener("change", (event) => updateFilter({ campaignOnly: event.target.checked }));
     panel.querySelector('[data-hk="query"]').addEventListener("input", (event) => updateFilter({ query: event.target.value }));
   }
 
@@ -190,34 +190,25 @@
     renderList();
   }
 
-  function sortedStores() {
-    const order = (division) => {
-      const index = H.DIVISIONS.indexOf(division);
-      return index < 0 ? 99 : index;
-    };
-    return [...state.stores].sort((a, b) => order(a.division) - order(b.division)
-      || (a.round === b.round ? 0 : a.round === "visit" ? -1 : 1)
-      || (Number(a.no) || 0) - (Number(b.no) || 0));
-  }
 
   function renderList() {
     const list = panel.querySelector('[data-hk="list"]');
     if (!list) return;
     const f = state.filter;
     const query = f.query.trim().replace(/\s+/g, "");
-    const scoped = sortedStores().filter((item) => f.scope === "all" || item.round === "visit");
+    const scoped = H.sortStores(state.stores).filter((item) => !f.campaignOnly || item.campaign === "1차");
     const byDivision = scoped.filter((item) => f.division === "all" || item.division === f.division);
     const shown = byDivision.filter((item) => {
-      const progress = H.progressOf(state.results.get(item.id));
+      const progress = H.progressOf(state.resultOf(item));
       if (f.progress !== "all" && progress !== f.progress) return false;
       if (!query) return true;
       return [item.name, item.owner, item.address, item.dong].join("").replace(/\s+/g, "").includes(query);
     });
 
     const counts = { none: 0, visit: 0, phone: 0 };
-    byDivision.forEach((item) => { counts[H.progressOf(state.results.get(item.id))] += 1; });
+    byDivision.forEach((item) => { counts[H.progressOf(state.resultOf(item))] += 1; });
     panel.querySelector('[data-hk="stats"]').innerHTML = `
-      <span><b>${byDivision.length}</b>대상</span>
+      <span><b>${byDivision.length}</b>${f.campaignOnly ? "1차 대상" : "전체"}</span>
       <span><b>${counts.visit + counts.phone}</b>방문 완료</span>
       <span><b>${counts.phone}</b>전화 완료</span>`;
 
@@ -229,31 +220,40 @@
       list.innerHTML = '<p class="hk-empty">조건에 맞는 점포가 없어요.</p>';
       return;
     }
-    list.innerHTML = shown.map((item) => storeCard(item, state.results.get(item.id))).join("");
+    list.innerHTML = shown.map((item) => storeCard(item, state.resultOf(item))).join("");
   }
 
   function storeCard(item, result) {
     const progress = H.progressOf(result);
     const tel = H.telHref(item.phone);
-    const mapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(`광주 ${item.address || item.name}`)}`;
+    const mapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(`광주 서구 ${item.name}`)}`;
     const visit = (result && result.visit) || {};
     const visited = progress !== "none" && visit.date ? `방문 ${H.formatKoreanDate(visit.date)}` : "";
+    const campaign = H.CAMPAIGN_LABELS[item.campaign || ""] || "";
+    const frameClass = { "배부완료": "is-delivered", "1차 행사 수령": "is-event", "액자 보관 중": "is-kept" }[item.frame] || "";
     return `
-      <article class="hk-store ${item.round === "done" ? "is-done-round" : ""}">
+      <article class="hk-store">
         <div class="hk-store-top">
-          <span class="hk-no">${esc(item.no || "")}</span>
           <div class="hk-store-name">
             <strong>${esc(item.name)}</strong>
-            <span>${esc(item.owner ? `${item.owner} 대표` : "")}${item.dong ? ` · ${esc(item.dong)}` : ""}</span>
+            <span class="hk-tags">
+              ${campaign ? `<em class="hk-tag ${item.campaign === "1차" ? "is-campaign" : "is-next"}">${esc(campaign)}</em>` : ""}
+              ${item.frame ? `<em class="hk-tag hk-frame ${frameClass}">${esc(item.frame)}</em>` : ""}
+            </span>
           </div>
           <span class="hk-badge is-${progress}">${H.PROGRESS_LABELS[progress]}</span>
         </div>
-        <p class="hk-addr">${esc(item.address)}${item.round === "done" ? ' <em class="hk-round">배부완료</em>' : ""}</p>
+        <dl class="hk-info">
+          <div><dt>주소</dt><dd>${esc(item.address || "-")}</dd></div>
+          <div><dt>대표자</dt><dd>${esc(item.owner || "-")}</dd></div>
+          <div><dt>연락처</dt><dd>${tel ? `<a class="hk-tel" href="${tel}">${esc(item.phone)}</a>` : '<span class="hk-muted">확인 필요</span>'}</dd></div>
+          ${item.note ? `<div><dt>비고</dt><dd class="hk-note-text">${esc(item.note)}</dd></div>` : ""}
+        </dl>
         ${visited ? `<p class="hk-visited">${esc(visited)}</p>` : ""}
         <div class="hk-store-actions">
           ${tel
             ? `<a class="hk-action hk-call" href="${tel}">📞 전화</a>`
-            : '<span class="hk-action is-disabled">연락처 확인 필요</span>'}
+            : '<span class="hk-action is-disabled">번호 없음</span>'}
           <a class="hk-action" href="${mapUrl}" target="_blank" rel="noopener">📍 지도</a>
           <button type="button" class="hk-action hk-primary" data-open-store="${esc(item.id)}">${progress === "none" ? "결과 입력" : "결과 보기·수정"}</button>
         </div>
@@ -265,7 +265,7 @@
     if (!item) return;
     state.form.open({
       store: item,
-      result: state.results.get(id) || {},
+      result: state.resultOf(item) || {},
       code: state.code,
       onSave: (section, data, target) => SERVICE.saveHamkkeSection(state.code, target, section, data, "시민참여단")
     });

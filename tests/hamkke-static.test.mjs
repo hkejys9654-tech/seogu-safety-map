@@ -35,3 +35,11 @@ const template = await stat(new URL("../hamkke/result-template.hwpx", import.met
 assert.ok(template.size > 10000);
 
 console.log("hamkke static checks passed");
+
+// 2026-10-21: 캠페인 1차 토글과 상호명 기준 결과 연결
+const core = await read("hamkke/hamkke-core.js");
+assert.match(citizen, /data-hk="campaign-only"/);
+assert.match(citizen, /campaignOnly: true/);
+assert.match(core, /function indexResults/);
+assert.match(rules, /'campaign', 'frame', 'note'/);
+console.log("hamkke campaign checks passed");

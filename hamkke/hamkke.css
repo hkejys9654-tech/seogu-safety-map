@@ -320,3 +320,44 @@
   .hamkke-admin .admin-nav { width: 100%; }
   .hamkke-admin .admin-nav-link { flex: 1 1 0; justify-content: center; }
 }
+
+/* 2026-10-21 54곳 명단: 캠페인 차수·액자 상태·비고 */
+.hk-filter-line { align-items: center; }
+.hk-toggle {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid #d3deda;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.hk-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.hk-toggle-track { position: relative; flex: 0 0 38px; width: 38px; height: 22px; border-radius: 999px; background: #cfd8d5; transition: background .15s; }
+.hk-toggle-track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .15s; }
+.hk-toggle input:checked + .hk-toggle-track { background: var(--green); }
+.hk-toggle input:checked + .hk-toggle-track::after { transform: translateX(16px); }
+.hk-toggle input:focus-visible + .hk-toggle-track { outline: 3px solid rgba(21,113,94,.25); outline-offset: 2px; }
+
+.hk-tags { display: flex !important; flex-wrap: wrap; gap: 5px; margin-top: 6px !important; }
+.hk-tag { padding: 3px 8px; border-radius: 999px; font-size: 11px; font-style: normal; font-weight: 850; white-space: nowrap; }
+.hk-tag.is-campaign { color: #fff; background: var(--green); }
+.hk-tag.is-next { color: #5b4a12; background: #f6ebc8; }
+.hk-frame.is-delivered { color: #1d5d86; background: #e3f0f9; }
+.hk-frame.is-event { color: #5b3f86; background: #eee6f8; }
+.hk-frame.is-kept { color: #8a3b22; background: #fbe9e3; }
+
+.hk-info { display: grid; gap: 5px; margin: 10px 0 0; font-size: 13px; line-height: 1.45; }
+.hk-info > div { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 8px; }
+.hk-info dt { color: var(--muted); font-weight: 800; }
+.hk-info dd { margin: 0; color: #2c3b37; word-break: keep-all; overflow-wrap: anywhere; }
+.hk-tel { color: var(--green-dark); font-weight: 850; text-decoration: underline; text-underline-offset: 2px; }
+.hk-note-text { color: #6a4c12 !important; }
+.hk-muted { color: var(--muted); }
+.hk-admin-toggle { align-self: end; min-height: 46px; }
+.hk-filters .hk-filter-line { grid-template-columns: minmax(0, 1fr) auto; }
+.hk-toggle { white-space: nowrap; }
