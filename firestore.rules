@@ -162,6 +162,33 @@ service cloud.firestore {
       }
     }
 
+    // 2026 선진지 견학(합천) 시사점 기록지: 참여단은 제출만, 관리자 화면은 목록 조회만 합니다.
+    function sisaText(v) {
+      return v is string && v.size() <= 600;
+    }
+
+    match /sisaNotes/{noteId} {
+      allow create: if request.resource.data.keys().hasOnly([
+          'trip', 'name', 'bun', 'a1', 'b1', 'a2', 'b2', 'a3', 'b3', 'c1', 'createdAt'
+        ])
+        && request.resource.data.keys().hasAll(['trip', 'name', 'bun', 'createdAt'])
+        && request.resource.data.trip == 'hapcheon-2026'
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 20
+        && request.resource.data.bun in ['양성평등', '일자리', '돌봄', '안전', '']
+        && (!('a1' in request.resource.data) || sisaText(request.resource.data.a1))
+        && (!('b1' in request.resource.data) || sisaText(request.resource.data.b1))
+        && (!('a2' in request.resource.data) || sisaText(request.resource.data.a2))
+        && (!('b2' in request.resource.data) || sisaText(request.resource.data.b2))
+        && (!('a3' in request.resource.data) || sisaText(request.resource.data.a3))
+        && (!('b3' in request.resource.data) || sisaText(request.resource.data.b3))
+        && (!('c1' in request.resource.data) || sisaText(request.resource.data.c1))
+        && request.resource.data.createdAt == request.time;
+      allow read: if true;
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

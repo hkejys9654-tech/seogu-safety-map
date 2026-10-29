@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>합천 견학 시사점 기록지</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 레이아웃: 현수막 배너 → 탭 → 한 줄 카드형 기록지(모바일 우선, 최대 680px) */
+:root{
+  --bg:#fbfaf6; --surface:#ffffff; --ink:#1f2a33; --muted:#66727c; --line:#e5e1d6;
+  --teal:#1d6e93; --teal-soft:#e6f1f6; --orange:#d8772a; --orange-soft:#fbeedf; --leaf:#3e8a3c;
+  --display:"Gothic A1","Noto Sans KR",system-ui,sans-serif; --body:"Noto Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151a1e; --surface:#1d2429; --ink:#e9ecee; --muted:#9aa6ae; --line:#2e383f;
+  --teal:#6fb4d6; --teal-soft:#1f3341; --orange:#f0a160; --orange-soft:#3a2a1c; --leaf:#7cc07a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151a1e; --surface:#1d2429; --ink:#e9ecee; --muted:#9aa6ae; --line:#2e383f;
+  --teal:#6fb4d6; --teal-soft:#1f3341; --orange:#f0a160; --orange-soft:#3a2a1c; --leaf:#7cc07a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;margin:0}
+.wrap{max-width:680px;margin:0 auto;padding-block:16px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.banner{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line);background:#fff}
+h1{font-family:var(--display);font-weight:900;font-size:1.55rem;line-height:1.3;margin:18px 0 4px;text-wrap:balance}
+h1 em{font-style:normal;color:var(--orange)}
+.lead{color:var(--muted);margin:0 0 14px;font-size:.95rem}
+.tabs{display:flex;gap:6px;border-bottom:2px solid var(--line);margin:8px 0 18px}
+.tab{appearance:none;border:0;background:none;font:700 1rem var(--display);color:var(--muted);padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--teal);border-color:var(--teal)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.who{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-weight:700;font-size:.92rem;margin-bottom:4px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:84px;resize:vertical}
+.step{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+.step .time{font:800 .78rem var(--display);letter-spacing:.06em;color:#fff;background:var(--teal);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.step.pm .time{background:var(--orange)}
+.step h2{font:800 1.12rem var(--display);margin:0}
+.step small{display:block;color:var(--muted);font:500 .85rem var(--body)}
+.pair{display:grid;gap:10px}
+.pair label span{color:var(--orange)}
+.best{border:2px solid var(--orange);background:var(--orange-soft)}
+.best h2{font:800 1.12rem var(--display);margin:0 0 8px;color:var(--orange)}
+.btn{appearance:none;border:0;border-radius:12px;font:800 1.05rem var(--display);padding:14px 18px;cursor:pointer;width:100%;background:var(--teal);color:#fff}
+.btn.ghost{background:var(--teal-soft);color:var(--teal)}
+.btn.warn{background:transparent;color:var(--muted);border:1.5px solid var(--line);font-size:.92rem;padding:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 160px}
+.done{border:2px solid var(--leaf)}
+.done h2{font:800 1.1rem var(--display);color:var(--leaf);margin:0 0 6px}
+pre.out{white-space:pre-wrap;word-break:break-all;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:12px;font:.88rem/1.55 var(--body);max-height:260px;overflow:auto;margin:10px 0}
+.hint{color:var(--muted);font-size:.88rem;margin:6px 0 0}
+.phone{font-weight:700;color:var(--teal);user-select:all}
+.err{color:#c0392b;font-size:.88rem;min-height:1.2em;margin:6px 0 0}
+.stat{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat div{flex:1 1 100px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font:900 1.6rem var(--display);color:var(--teal);font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:.85rem}
+.q{margin-bottom:16px}
+.q h3{font:800 1rem var(--display);margin:0 0 8px;padding-left:10px;border-left:4px solid var(--teal)}
+.q.pm h3{border-color:var(--orange)} .q.best h3{border-color:var(--leaf)}
+.ans{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px;font-size:.95rem}
+.ans b{color:var(--teal);font-size:.85rem;margin-right:6px}
+.empty{color:var(--muted);text-align:center;padding:22px;border:1.5px dashed var(--line);border-radius:12px}
+footer{color:var(--muted);font-size:.82rem;text-align:center;margin-top:24px}
+@media (max-width:420px){.who{grid-template-columns:1fr}h1{font-size:1.35rem}}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .2s}}
+</style>
+<style>
+.status{font-size:.85rem;color:var(--muted);margin:0 0 10px}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--leaf);margin-right:6px;vertical-align:middle}
+.ans time{color:var(--muted);font-size:.78rem;margin-left:6px}
+.btn[disabled]{opacity:.6;cursor:wait}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="banner" src="banner.jpg" alt="2026 여성친화도시 시민참여단 선진지 견학 – 경남 합천군, 2026. 10. 30.(금)">
+
+  <h1>우리 구 적용 <em>시사점</em> 기록지</h1>
+  <p class="lead">오늘 합천에서 보고 들은 것 중 우리 서구에 가져오고 싶은 점을 적어 주세요. 짧게 한두 줄이면 충분합니다.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-write" aria-selected="true">기록지 작성</button>
+    <button class="tab" role="tab" id="tab-admin" aria-selected="false">관리자</button>
+  </div>
+
+  <section id="view-write">
+    <form id="f" novalidate>
+      <div class="card who">
+        <div><label for="name">성명</label><input id="name" autocomplete="name" maxlength="20" placeholder="예) 홍길동"></div>
+        <div><label for="bun">분과</label>
+          <select id="bun"><option value="">선택</option><option>양성평등</option><option>일자리</option><option>돌봄</option><option>안전</option></select></div>
+      </div>
+      <div class="card">
+        <div class="step"><span class="time">오전 ①</span><h2>여성활동거점공간 ‘잇-다’<small>운영방식 · 프로그램</small></h2></div>
+        <div class="pair">
+          <div><label for="a1">보고 들은 것 <span>(인상 깊은 점)</span></label><textarea id="a1" maxlength="600"></textarea></div>
+          <div><label for="b1">우리 구에 적용한다면?</label><textarea id="b1" maxlength="600"></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="step"><span class="time">오전 ②</span><h2>군민참여단 교류 간담회<small>정책 제안 · 부서 협의 · 반영</small></h2></div>
+        <div class="pair">
+          <div><label for="a2">보고 들은 것 <span>(인상 깊은 점)</span></label><textarea id="a2" maxlength="600"></textarea></div>
+          <div><label for="b2">우리 구에 적용한다면?</label><textarea id="b2" maxlength="600"></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="step pm"><span class="time">오후</span><h2>합천영상테마파크<small>동선 · 안내판 · 경사로 · 화장실 등</small></h2></div>
+        <div class="pair">
+          <div><label for="a3">보고 들은 것 <span>(인상 깊은 점)</span></label><textarea id="a3" maxlength="600"></textarea></div>
+          <div><label for="b3">우리 구에 적용한다면?</label><textarea id="b3" maxlength="600"></textarea></div>
+        </div>
+      </div>
+      <div class="card best">
+        <h2>우리 구에서 가장 먼저 해보고 싶은 것 1가지</h2>
+        <textarea id="c1" maxlength="600" style="min-height:64px"></textarea>
+      </div>
+      <button class="btn" type="submit" id="send">제출하기</button>
+      <p class="err" id="ferr"></p>
+    </form>
+
+    <div class="card done" id="done" hidden>
+      <h2>제출되었습니다 ✓</h2>
+      <p style="margin:0">소중한 의견 감사합니다. 담당자에게 바로 전달되었습니다.</p>
+      <div class="row" style="margin-top:12px"><button class="btn ghost" id="editAgain" type="button">수정해서 다시 제출</button></div>
+      <p class="hint">다시 제출하면 가장 마지막에 낸 내용으로 정리됩니다.</p>
+    </div>
+  </section>
+
+  <section id="view-admin" hidden>
+    <div class="card" id="lock">
+      <label for="pw">관리자 비밀번호</label>
+      <div class="row"><input id="pw" type="password" inputmode="numeric" placeholder="비밀번호 4자리"><button class="btn" id="unlock" type="button" style="flex:0 0 110px">확인</button></div>
+      <p class="err" id="pwerr"></p>
+    </div>
+    <div id="adm" hidden>
+      <p class="status" id="stat"><span class="live"></span>불러오는 중…</p>
+      <div class="stat">
+        <div><b id="sN">0</b><span>제출 인원</span></div>
+        <div><b id="sB">0</b><span>“가장 먼저” 제안</span></div>
+      </div>
+      <div class="row" style="margin-bottom:14px"><button class="btn ghost" id="tsvBtn" type="button">엑셀용 복사</button></div>
+      <pre class="out" id="tsvOut" hidden></pre>
+      <div id="list"></div>
+    </div>
+  </section>
+
+  <footer>전남광주통합특별시 서구 양성아동복지과 · 2026 여성친화도시 시민참여단 선진지 견학(경남 합천군)</footer>
+</div>
+
+<script src="../firebase-config.js"></script>
+<script type="module">
+const SDK = "12.16.0";
+const PW = "7645";
+const TRIP = "hapcheon-2026";
+const Q = [
+  {k:"a1", grp:"오전① ‘잇-다’ – 보고 들은 것", cls:""},
+  {k:"b1", grp:"오전① ‘잇-다’ – 우리 구에 적용한다면", cls:""},
+  {k:"a2", grp:"오전② 군민참여단 – 보고 들은 것", cls:""},
+  {k:"b2", grp:"오전② 군민참여단 – 우리 구에 적용한다면", cls:""},
+  {k:"a3", grp:"오후 영상테마파크 – 보고 들은 것", cls:"pm"},
+  {k:"b3", grp:"오후 영상테마파크 – 우리 구에 적용한다면", cls:"pm"},
+  {k:"c1", grp:"우리 구에서 가장 먼저 해보고 싶은 것", cls:"best"}
+];
+const $ = id => document.getElementById(id);
+const ls = (k,v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+const ss = (k,v) => { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch (e) { return null; } };
+
+let fs = null;
+async function ctx() {
+  if (fs) return fs;
+  const [appM, fsM] = await Promise.all([
+    import(`https://www.gstatic.com/firebasejs/${SDK}/firebase-app.js`),
+    import(`https://www.gstatic.com/firebasejs/${SDK}/firebase-firestore.js`)
+  ]);
+  const app = appM.getApps().length ? appM.getApp() : appM.initializeApp(window.SAFETY_MAP_FIREBASE_CONFIG);
+  fs = { m: fsM, db: fsM.getFirestore(app) };
+  return fs;
+}
+
+// tabs
+function show(v) {
+  const adm = v === "admin";
+  $("view-write").hidden = adm; $("view-admin").hidden = !adm;
+  $("tab-write").setAttribute("aria-selected", String(!adm));
+  $("tab-admin").setAttribute("aria-selected", String(adm));
+  if (adm && ss("sisa_ok") === "1") openAdmin();
+}
+$("tab-write").onclick = () => { history.replaceState(null, "", location.pathname); show("write"); };
+$("tab-admin").onclick = () => { location.hash = "admin"; show("admin"); };
+addEventListener("hashchange", () => show(location.hash === "#admin" ? "admin" : "write"));
+
+// draft
+const ids = ["name","bun","a1","b1","a2","b2","a3","b3","c1"];
+try { const d = JSON.parse(ls("sisa_draft") || "{}"); ids.forEach(i => { if (d[i]) $(i).value = d[i]; }); } catch (e) {}
+ids.forEach(i => $(i).addEventListener("input", () => { const o = {}; ids.forEach(j => o[j] = $(j).value); ls("sisa_draft", JSON.stringify(o)); }));
+
+// submit
+$("f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("name").value.trim();
+  if (!name) { $("ferr").textContent = "성명을 적어 주세요."; $("name").focus(); return; }
+  if (!Q.some(q => $(q.k).value.trim())) { $("ferr").textContent = "한 칸 이상 적어 주세요."; return; }
+  $("ferr").textContent = ""; $("send").disabled = true; $("send").textContent = "제출 중…";
+  try {
+    const { m, db } = await ctx();
+    const doc = { trip: TRIP, name, bun: $("bun").value, createdAt: m.serverTimestamp() };
+    Q.forEach(q => { doc[q.k] = $(q.k).value.trim().slice(0, 600); });
+    await m.addDoc(m.collection(db, "sisaNotes"), doc);
+    $("f").hidden = true; $("done").hidden = false; scrollTo(0, 0);
+  } catch (err) {
+    console.error(err);
+    $("ferr").textContent = "제출이 안 됐어요. 인터넷 연결을 확인하고 다시 눌러 주세요.";
+  } finally {
+    $("send").disabled = false; $("send").textContent = "제출하기";
+  }
+});
+$("editAgain").onclick = () => { $("done").hidden = true; $("f").hidden = false; };
+
+// admin
+$("unlock").onclick = () => {
+  if ($("pw").value === PW) { ss("sisa_ok", "1"); openAdmin(); }
+  else $("pwerr").textContent = "비밀번호가 맞지 않습니다.";
+};
+$("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("unlock").click(); });
+
+let rows = [], opened = false;
+async function openAdmin() {
+  $("lock").hidden = true; $("adm").hidden = false;
+  if (opened) return; opened = true;
+  try {
+    const { m, db } = await ctx();
+    const q = m.query(m.collection(db, "sisaNotes"), m.where("trip", "==", TRIP));
+    m.onSnapshot(q, snap => {
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      all.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+      const latest = new Map();
+      all.forEach(r => latest.set(r.name.replace(/\s/g, ""), r));
+      rows = [...latest.values()];
+      $("stat").innerHTML = '<span class="live"></span>실시간 반영 중 · 마지막 갱신 ' + new Date().toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit"});
+      render();
+    }, err => { console.error(err); $("stat").textContent = "불러오지 못했습니다. 잠시 후 새로고침해 주세요."; });
+  } catch (err) { console.error(err); $("stat").textContent = "불러오지 못했습니다. 잠시 후 새로고침해 주세요."; }
+}
+function render() {
+  const box = $("list"); box.textContent = "";
+  $("sN").textContent = rows.length; $("sB").textContent = rows.filter(r => r.c1).length;
+  if (!rows.length) { const e = document.createElement("div"); e.className = "empty"; e.textContent = "아직 제출된 기록지가 없습니다. 참여단이 제출하면 여기에 바로 질문별로 모입니다."; box.appendChild(e); return; }
+  Q.forEach(q => {
+    const items = rows.filter(r => r[q.k]); if (!items.length) return;
+    const w = document.createElement("div"); w.className = "q " + q.cls;
+    const h = document.createElement("h3"); h.textContent = q.grp + " (" + items.length + ")"; w.appendChild(h);
+    items.forEach(r => {
+      const a = document.createElement("div"); a.className = "ans";
+      const b = document.createElement("b"); b.textContent = r.name + (r.bun ? " · " + r.bun : ""); a.appendChild(b);
+      a.appendChild(document.createTextNode(r[q.k])); w.appendChild(a);
+    });
+    box.appendChild(w);
+  });
+}
+$("tsvBtn").onclick = () => {
+  const head = ["성명", "분과", "제출시각"].concat(Q.map(q => q.grp));
+  const t = [head.join("\t")].concat(rows.map(r => [r.name, r.bun, r.createdAt?.toDate?.().toLocaleString("ko-KR") || ""].concat(Q.map(q => (r[q.k] || "").replace(/[\t\n]+/g, " "))).join("\t"))).join("\n");
+  $("tsvOut").hidden = false; $("tsvOut").textContent = t;
+  navigator.clipboard?.writeText(t).then(() => { $("tsvBtn").textContent = "복사됨 ✓ 엑셀에 붙여넣기"; }, () => { $("tsvBtn").textContent = "아래 글을 전체 선택해 복사"; });
+};
+
+show(location.hash === "#admin" ? "admin" : "write");
+</script>
+</body>
+</html>
