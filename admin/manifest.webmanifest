@@ -1,7 +1,7 @@
 {
-  "name": "서구 마을안전지도 관리자",
-  "short_name": "안전지도 관리",
-  "description": "광주 서구 마을안전지도 관리자 웹앱",
+  "name": "서구 시민참여단 통합어플 관리자",
+  "short_name": "참여단 관리",
+  "description": "광주 서구 시민참여단 통합어플 관리자",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",

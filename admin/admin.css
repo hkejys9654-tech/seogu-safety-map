@@ -511,3 +511,7 @@
   .admin-console .admin-map-shell { position: relative; height: 180mm; inset: auto; }
 }
 .admin-side > * { flex-shrink: 0; }
+.admin-header .brand strong { word-break: keep-all; line-height: 1.25; }
+@media (max-width: 900px) {
+  .admin-console .brand strong { font-size: 14px; }
+}
