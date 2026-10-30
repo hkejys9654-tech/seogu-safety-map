@@ -434,7 +434,111 @@
     return clean.length;
   }
 
+  // ── 함께가게 현장 사진 ──
+  function localPhotos(code) {
+    const vault = readLocalHamkke(code) || { active: true, stores: {}, results: {} };
+    vault.photos = vault.photos || {};
+    return vault;
+  }
+
+  async function listenHamkkePhotos(code, storeId, onData, onError) {
+    const context = await getContext();
+    if (!context) {
+      const emit = () => {
+        const vault = localPhotos(code);
+        onData(Object.values(vault.photos).filter((item) => item.storeId === storeId)
+          .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt))));
+      };
+      emit();
+      window.addEventListener("hamkke-local-change", emit);
+      return () => window.removeEventListener("hamkke-local-change", emit);
+    }
+    const { db, firestore } = context;
+    const photoQuery = firestore.query(
+      firestore.collection(db, "hamkkeVault", code, "photos"),
+      firestore.where("storeId", "==", String(storeId))
+    );
+    return firestore.onSnapshot(photoQuery, (snapshot) => {
+      onData(snapshot.docs.map((item) => {
+        const data = item.data();
+        return { ...data, id: item.id, createdAt: timestampToIso(data.createdAt) };
+      }).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt))));
+    }, onError);
+  }
+
+  async function getHamkkePhotos(code, storeId) {
+    return new Promise((resolve, reject) => {
+      let stop = null;
+      listenHamkkePhotos(code, storeId, (photos) => {
+        resolve(photos);
+        setTimeout(() => { if (stop) stop(); }, 0);
+      }, reject).then((unsubscribe) => { stop = unsubscribe; }, reject);
+    });
+  }
+
+  async function addHamkkePhoto(code, store, photo, editor) {
+    const payload = {
+      storeId: String(store.id),
+      storeName: String(store.name || ""),
+      data: String(photo.data),
+      width: Math.round(Number(photo.width) || 0),
+      height: Math.round(Number(photo.height) || 0),
+      createdBy: String(editor || "시민참여단")
+    };
+    const context = await getContext();
+    if (!context) {
+      const vault = localPhotos(code);
+      const id = `p${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
+      vault.photos[id] = { ...payload, id, createdAt: new Date().toISOString() };
+      vault.results = vault.results || {};
+      const previous = vault.results[store.id] || { id: store.id, storeId: store.id, storeName: store.name };
+      vault.results[store.id] = { ...previous, photoCount: (Number(previous.photoCount) || 0) + 1 };
+      writeLocalHamkke(code, vault);
+      return id;
+    }
+    const { db, firestore } = context;
+    const batch = firestore.writeBatch(db);
+    const photoRef = firestore.doc(firestore.collection(db, "hamkkeVault", code, "photos"));
+    batch.set(photoRef, { ...payload, createdAt: firestore.serverTimestamp() });
+    batch.set(firestore.doc(db, "hamkkeVault", code, "results", String(store.id)), {
+      storeId: String(store.id),
+      storeName: String(store.name || ""),
+      photoCount: firestore.increment(1),
+      updatedBy: String(editor || "시민참여단"),
+      updatedAt: firestore.serverTimestamp()
+    }, { merge: true });
+    await batch.commit();
+    return photoRef.id;
+  }
+
+  async function deleteHamkkePhoto(code, store, photoId, editor) {
+    const context = await getContext();
+    if (!context) {
+      const vault = localPhotos(code);
+      delete vault.photos[photoId];
+      const previous = (vault.results || {})[store.id];
+      if (previous) previous.photoCount = Math.max(0, (Number(previous.photoCount) || 0) - 1);
+      writeLocalHamkke(code, vault);
+      return;
+    }
+    const { db, firestore } = context;
+    const batch = firestore.writeBatch(db);
+    batch.delete(firestore.doc(db, "hamkkeVault", code, "photos", String(photoId)));
+    batch.set(firestore.doc(db, "hamkkeVault", code, "results", String(store.id)), {
+      storeId: String(store.id),
+      storeName: String(store.name || ""),
+      photoCount: firestore.increment(-1),
+      updatedBy: String(editor || "시민참여단"),
+      updatedAt: firestore.serverTimestamp()
+    }, { merge: true });
+    await batch.commit();
+  }
+
   window.SafetyMapFirebase = {
+    listenHamkkePhotos,
+    getHamkkePhotos,
+    addHamkkePhoto,
+    deleteHamkkePhoto,
     hamkkeCheckCode,
     listenHamkke,
     saveHamkkeSection,

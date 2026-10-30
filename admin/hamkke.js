@@ -16,7 +16,7 @@
     resultOf: () => undefined,
     stop: null,
     filter: { division: "all", campaignOnly: true, progress: "all" },
-    form: window.HamkkeForm.create({ toast: showToast, prefillToday: false })
+    form: window.HamkkeForm.create({ toast: showToast, prefillToday: false, editor: "관리자" })
   };
 
   function showToast(message) {
@@ -124,6 +124,7 @@
           <button type="button" class="primary-button" data-act="hwpx-all">한글 내려받기 (한 파일)</button>
           <button type="button" class="secondary-button" data-act="hwpx-zip">점포별 한글 묶음</button>
           <button type="button" class="secondary-button" data-act="xlsx">엑셀 현황</button>
+          <button type="button" class="secondary-button" data-act="photos-zip">사진 묶음</button>
         </div>
       </div>
 
@@ -229,6 +230,7 @@
     rows.innerHTML = list.map((item) => {
       const result = state.resultOf(item) || {};
       const progress = H.progressOf(result);
+      const photoCount = Math.max(0, Number(result.photoCount) || 0);
       const visit = result.visit || {};
       const phone = result.phone || {};
       return `
@@ -243,6 +245,7 @@
           <td class="hk-row-actions">
             <button type="button" class="secondary-button" data-act="edit" data-id="${esc(item.id)}">보기·수정</button>
             <button type="button" class="secondary-button" data-act="hwpx-one" data-id="${esc(item.id)}">한글</button>
+            ${photoCount ? `<button type="button" class="secondary-button" data-act="photos" data-id="${esc(item.id)}">사진 ${photoCount}</button>` : ""}
           </td>
         </tr>`;
     }).join("");
@@ -262,6 +265,10 @@
       });
       return;
     }
+    if (act === "photos" && store) {
+      openPhotoViewer(store);
+      return;
+    }
     const busyLabel = button.textContent;
     button.disabled = true;
     button.textContent = "만드는 중…";
@@ -271,6 +278,7 @@
       if (act === "hwpx-zip") await downloadZip(filteredStores());
       if (act === "xlsx") downloadStatus(filteredStores());
       if (act === "roster-download") downloadRoster();
+      if (act === "photos-zip") await downloadPhotos(filteredStores());
     } catch (error) {
       console.error(error);
       showToast("파일을 만들지 못했어요. 잠시 후 다시 시도해주세요.");
@@ -309,6 +317,74 @@
     }
     download(await bundle.generateAsync({ type: "blob" }), `함께가게_결과_${filterLabel()}_${todayStamp()}.zip`);
     showToast(`${stores.length}곳 파일을 묶어서 내려받았어요.`);
+  }
+
+  // ── 사진 ──
+  let photoDialog = null;
+  function ensurePhotoDialog() {
+    if (photoDialog) return photoDialog;
+    photoDialog = document.createElement("dialog");
+    photoDialog.className = "report-dialog sheet-dialog hk-admin-photos";
+    photoDialog.innerHTML = `
+      <div class="sheet-body">
+        <div class="dialog-heading">
+          <div><p class="eyebrow">현장 사진</p><h2 data-hk="photoTitle">사진</h2></div>
+          <button type="button" class="icon-button" data-hk-action="close-photos" aria-label="닫기">×</button>
+        </div>
+        <div class="hk-roster-tools"><button type="button" class="secondary-button" data-hk-action="photos-one-zip">이 가게 사진 내려받기</button></div>
+        <div class="hk-admin-photo-grid" data-hk="photoList"><p class="hk-muted">불러오는 중…</p></div>
+      </div>`;
+    document.body.appendChild(photoDialog);
+    photoDialog.addEventListener("click", async (event) => {
+      if (event.target === photoDialog || event.target.closest('[data-hk-action="close-photos"]')) { photoDialog.close(); return; }
+      const image = event.target.closest("img[data-full]");
+      if (image) {
+        const blob = new Blob([window.HamkkePhotos.dataUrlToBytes(image.src)], { type: "image/jpeg" });
+        window.open(URL.createObjectURL(blob), "_blank", "noopener");
+      }
+      if (event.target.closest('[data-hk-action="photos-one-zip"]') && photoDialog.store) {
+        await downloadPhotos([photoDialog.store]);
+      }
+    });
+    return photoDialog;
+  }
+
+  async function openPhotoViewer(store) {
+    const dialog = ensurePhotoDialog();
+    dialog.store = store;
+    dialog.querySelector('[data-hk="photoTitle"]').textContent = `${store.name} 사진`;
+    const list = dialog.querySelector('[data-hk="photoList"]');
+    list.innerHTML = '<p class="hk-muted">불러오는 중…</p>';
+    dialog.showModal();
+    try {
+      const photos = await SERVICE.getHamkkePhotos(state.code, store.id);
+      list.innerHTML = photos.length ? photos.map((photo, index) => `
+        <figure>
+          <img src="${esc(photo.data)}" alt="${index + 1}번 사진" data-full>
+          <figcaption><span>${index + 1}번</span><span>${esc(photo.createdBy || "")} · ${photo.createdAt ? esc(new Date(photo.createdAt).toLocaleDateString("ko-KR")) : ""}</span></figcaption>
+        </figure>`).join("") : '<p class="hk-muted">올린 사진이 없어요.</p>';
+    } catch (error) {
+      console.error(error);
+      list.innerHTML = '<p class="hk-muted">사진을 불러오지 못했어요.</p>';
+    }
+  }
+
+  async function downloadPhotos(stores) {
+    const targets = stores.filter((store) => Number((state.resultOf(store) || {}).photoCount) > 0);
+    if (!targets.length) { showToast("내려받을 사진이 없어요."); return; }
+    const bundle = new window.JSZip();
+    let count = 0;
+    for (const store of targets) {
+      const photos = await SERVICE.getHamkkePhotos(state.code, store.id);
+      photos.forEach((photo, index) => {
+        bundle.file(`${HW.safeFileName(store.division)}/${HW.safeFileName(store.name)}_${index + 1}.jpg`, window.HamkkePhotos.dataUrlToBytes(photo.data));
+        count += 1;
+      });
+    }
+    if (!count) { showToast("내려받을 사진이 없어요."); return; }
+    const name = targets.length === 1 ? `함께가게_사진_${HW.safeFileName(targets[0].name)}.zip` : `함께가게_사진_${filterLabel()}_${todayStamp()}.zip`;
+    download(await bundle.generateAsync({ type: "blob" }), name);
+    showToast(`사진 ${count}장을 내려받았어요.`);
   }
 
   // ── 엑셀 ──
@@ -359,6 +435,7 @@
         실천사례애로사항: p.practiceDetail || "",
         후속조치: p.followUp === "재통화" && p.recallDate ? `재통화(${p.recallDate})` : (p.followUp || ""),
         작성자: p.writer || "",
+        사진: Math.max(0, Number(result.photoCount) || 0),
         최종수정: result.updatedAt ? new Date(result.updatedAt).toLocaleString("ko-KR") : ""
       };
     });

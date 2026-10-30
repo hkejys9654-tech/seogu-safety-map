@@ -43,3 +43,12 @@ assert.match(citizen, /campaignOnly: true/);
 assert.match(core, /function indexResults/);
 assert.match(rules, /'campaign', 'frame', 'note'/);
 console.log("hamkke campaign checks passed");
+
+// 2026-10-30: 결과 입력 맨 위 현장 사진
+const form = await read("hamkke/hamkke-form.js");
+assert.match(index, /hamkke\/hamkke-photos\.js/);
+assert.match(admin, /hamkke\/hamkke-photos\.js/);
+assert.ok(form.indexOf('class="hk-photos"') < form.indexOf('data-hk-panel="visit"'));
+assert.match(rules, /match \/photos\/\{photoId\}/);
+assert.match(rules, /'photoCount'/);
+console.log("hamkke photo checks passed");

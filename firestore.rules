@@ -147,7 +147,7 @@ service cloud.firestore {
         allow delete: if false;
         allow create, update: if validCode(code)
           && request.resource.data.keys().hasOnly([
-            'storeId', 'storeName', 'visit', 'phone', 'updatedBy', 'updatedAt'
+            'storeId', 'storeName', 'visit', 'phone', 'photoCount', 'updatedBy', 'updatedAt'
           ])
           && request.resource.data.storeId == storeId
           && request.resource.data.storeName is string
@@ -156,9 +156,32 @@ service cloud.firestore {
             || (request.resource.data.visit is map && request.resource.data.visit.keys().size() <= 30))
           && (!('phone' in request.resource.data)
             || (request.resource.data.phone is map && request.resource.data.phone.keys().size() <= 20))
+          && (!('photoCount' in request.resource.data) || request.resource.data.photoCount is int)
           && request.resource.data.updatedBy is string
           && request.resource.data.updatedBy.size() <= 40
           && request.resource.data.updatedAt is timestamp;
+      }
+
+      // 현장 사진: 점포별 최대 5장, 장당 1MB 미만으로 줄여서 올립니다.
+      match /photos/{photoId} {
+        allow read: if validCode(code);
+        allow update: if false;
+        allow delete: if validCode(code);
+        allow create: if validCode(code)
+          && request.resource.data.keys().hasOnly([
+            'storeId', 'storeName', 'data', 'width', 'height', 'createdBy', 'createdAt'
+          ])
+          && request.resource.data.storeId is string
+          && request.resource.data.storeId.size() <= 20
+          && request.resource.data.storeName is string
+          && request.resource.data.storeName.size() <= 80
+          && request.resource.data.data is string
+          && request.resource.data.data.size() < 1000000
+          && request.resource.data.width is int
+          && request.resource.data.height is int
+          && request.resource.data.createdBy is string
+          && request.resource.data.createdBy.size() <= 40
+          && request.resource.data.createdAt == request.time;
       }
     }
 

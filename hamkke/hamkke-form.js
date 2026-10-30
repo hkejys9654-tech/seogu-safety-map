@@ -59,6 +59,19 @@
         </div>
 
         <div class="hk-form-body">
+          <section class="hk-photos" aria-label="현장 사진">
+            <div class="hk-photos-head">
+              <strong>📷 현장 사진</strong>
+              <span data-hk="photoCount">0 / 5장</span>
+            </div>
+            <div class="hk-photo-grid" data-hk="photoGrid"></div>
+            <label class="hk-photo-add" data-hk="photoAdd">
+              <input type="file" accept="image/*" multiple data-hk="photoInput">
+              <span>＋ 사진 찍기 · 앨범에서 고르기</span>
+            </label>
+            <p class="hk-photo-help">고르면 바로 올라가요. 저장 버튼을 누르지 않아도 돼요.</p>
+          </section>
+
           <p class="hk-draft-note" data-hk="draft" hidden>작성 중이던 내용을 불러왔어요. 저장을 눌러야 전송됩니다.</p>
 
           <div class="hk-section" data-hk-panel="visit">
@@ -152,14 +165,24 @@
         <div class="hk-script" data-hk="script"></div>
       </div>`;
     document.body.appendChild(scriptDialog);
-    return { dialog, scriptDialog };
+
+    const viewer = document.createElement("dialog");
+    viewer.className = "hk-photo-viewer";
+    viewer.innerHTML = `
+      <img alt="현장 사진 크게 보기" data-hk="viewerImage">
+      <button type="button" class="hk-viewer-close" data-hk-action="close-viewer">닫기</button>`;
+    document.body.appendChild(viewer);
+    return { dialog, scriptDialog, viewer };
   }
 
   function create(options) {
     const settings = options || {};
-    const { dialog, scriptDialog } = buildDialog();
+    const { dialog, scriptDialog, viewer } = buildDialog();
     const form = dialog.querySelector("form");
-    const state = { store: null, result: null, code: "", section: "visit", onSave: null, dirty: false };
+    const state = { store: null, result: null, code: "", section: "visit", onSave: null, dirty: false, photos: [], uploading: 0, stopPhotos: null };
+    const SERVICE = global.SafetyMapFirebase;
+    const P = global.HamkkePhotos;
+    const editor = settings.editor || "시민참여단";
 
     const q = (selector) => dialog.querySelector(selector);
 
@@ -249,6 +272,84 @@
       ref.textContent = priority ? `방문 때 고른 우선 실천약속: ‘${priority}’` : "방문 기록에서 고른 우선 실천약속이 아직 없어요.";
     }
 
+    // ── 현장 사진 ──
+    function renderPhotos() {
+      const total = state.photos.length + state.uploading;
+      q('[data-hk="photoCount"]').textContent = `${state.photos.length} / ${P.MAX_PHOTOS}장`;
+      const items = state.photos.map((photo, index) => `
+        <figure class="hk-photo">
+          <button type="button" class="hk-photo-view" data-photo-view="${esc(photo.id)}" aria-label="${index + 1}번 사진 크게 보기">
+            <img src="${esc(photo.data)}" alt="">
+          </button>
+          <button type="button" class="hk-photo-remove" data-photo-remove="${esc(photo.id)}" aria-label="${index + 1}번 사진 지우기">✕</button>
+        </figure>`);
+      for (let i = 0; i < state.uploading; i += 1) {
+        items.push('<figure class="hk-photo is-uploading"><span>올리는 중…</span></figure>');
+      }
+      q('[data-hk="photoGrid"]').innerHTML = items.join("");
+      const full = total >= P.MAX_PHOTOS;
+      q('[data-hk="photoAdd"]').classList.toggle("is-disabled", full);
+      q('[data-hk="photoInput"]').disabled = full;
+      q('[data-hk="photoAdd"] span').textContent = full ? "사진은 5장까지 올릴 수 있어요" : "＋ 사진 찍기 · 앨범에서 고르기";
+    }
+
+    async function watchPhotos() {
+      if (state.stopPhotos) state.stopPhotos();
+      state.stopPhotos = null;
+      state.photos = [];
+      state.uploading = 0;
+      renderPhotos();
+      const storeId = state.store.id;
+      try {
+        const stop = await SERVICE.listenHamkkePhotos(state.code, storeId, (photos) => {
+          if (!state.store || state.store.id !== storeId) return;
+          state.photos = photos;
+          renderPhotos();
+        }, (error) => console.error(error));
+        if (state.store && state.store.id === storeId && dialog.open) state.stopPhotos = stop;
+        else stop();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function uploadPhotos(files) {
+      const room = P.MAX_PHOTOS - state.photos.length - state.uploading;
+      const picked = [...files].filter((file) => /^image\//.test(file.type) || /\.(jpe?g|png|heic|heif|webp)$/i.test(file.name));
+      if (!picked.length) return;
+      if (picked.length > room) settings.toast(`사진은 5장까지라 ${Math.max(room, 0)}장만 올릴게요.`);
+      const store = state.store;
+      const queue = picked.slice(0, Math.max(room, 0));
+      state.uploading += queue.length;
+      renderPhotos();
+      let done = 0;
+      for (const file of queue) {
+        try {
+          const photo = await P.shrink(file);
+          await SERVICE.addHamkkePhoto(state.code, store, photo, editor);
+          done += 1;
+        } catch (error) {
+          console.error(error);
+          settings.toast("사진을 올리지 못했어요. 인터넷 연결을 확인하고 다시 해주세요.");
+        } finally {
+          state.uploading -= 1;
+          if (state.store === store) renderPhotos();
+        }
+      }
+      if (done) settings.toast(`사진 ${done}장을 올렸어요.`);
+    }
+
+    async function removePhoto(photoId) {
+      if (!global.confirm("이 사진을 지울까요?")) return;
+      try {
+        await SERVICE.deleteHamkkePhoto(state.code, state.store, photoId, editor);
+        settings.toast("사진을 지웠어요.");
+      } catch (error) {
+        console.error(error);
+        settings.toast("사진을 지우지 못했어요. 잠시 후 다시 해주세요.");
+      }
+    }
+
     function open(params) {
       state.store = params.store;
       state.result = params.result || {};
@@ -284,6 +385,7 @@
       const startSection = params.section || (H.progressOf(state.result) === "none" ? "visit" : "phone");
       setSection(startSection);
       if (!dialog.open) dialog.showModal();
+      watchPhotos();
     }
 
     async function save(section) {
@@ -337,7 +439,27 @@
       const scriptButton = target.closest("[data-hk-script]");
       if (scriptButton) openScript(scriptButton.dataset.hkScript);
       if (target.closest('[data-hk-action="close"]')) dialog.close();
+      const removeButton = target.closest("[data-photo-remove]");
+      if (removeButton) removePhoto(removeButton.dataset.photoRemove);
+      const viewButton = target.closest("[data-photo-view]");
+      if (viewButton) {
+        const photo = state.photos.find((item) => item.id === viewButton.dataset.photoView);
+        if (photo) {
+          viewer.querySelector('[data-hk="viewerImage"]').src = photo.data;
+          viewer.showModal();
+        }
+      }
     });
+    q('[data-hk="photoInput"]').addEventListener("change", (event) => {
+      const files = event.target.files;
+      uploadPhotos(files || []);
+      event.target.value = "";
+    });
+    dialog.addEventListener("close", () => {
+      if (state.stopPhotos) state.stopPhotos();
+      state.stopPhotos = null;
+    });
+    viewer.addEventListener("click", () => viewer.close());
     form.addEventListener("submit", (event) => event.preventDefault());
     form.addEventListener("change", (event) => {
       const input = event.target;

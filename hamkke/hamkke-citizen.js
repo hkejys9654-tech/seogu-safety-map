@@ -58,7 +58,7 @@
   // ── 함께가게 ──
   function startHamkke() {
     panel.dataset.ready = "1";
-    state.form = window.HamkkeForm.create({ toast: showToast });
+    state.form = window.HamkkeForm.create({ toast: showToast, editor: "시민참여단" });
     let saved = "";
     try { saved = localStorage.getItem(CODE_KEY) || ""; } catch (_) { saved = ""; }
     if (saved) unlock(saved, true);
@@ -228,7 +228,9 @@
     const tel = H.telHref(item.phone);
     const mapUrl = `https://map.kakao.com/link/search/${encodeURIComponent(`광주 서구 ${item.name}`)}`;
     const visit = (result && result.visit) || {};
-    const visited = progress !== "none" && visit.date ? `방문 ${H.formatKoreanDate(visit.date)}` : "";
+    const photoCount = Math.max(0, Number(result && result.photoCount) || 0);
+    const visited = [progress !== "none" && visit.date ? `방문 ${H.formatKoreanDate(visit.date)}` : "", photoCount ? `📷 사진 ${photoCount}장` : ""]
+      .filter(Boolean).join(" · ");
     const campaign = H.CAMPAIGN_LABELS[item.campaign || ""] || "";
     const frame = H.frameOf(item.frame);
     const frameClass = frame === "수령" ? "is-delivered" : "is-kept";
