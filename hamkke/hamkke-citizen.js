@@ -276,5 +276,8 @@
 
   let initial = "map";
   try { initial = localStorage.getItem(TAB_KEY) === "hamkke" ? "hamkke" : "map"; } catch (_) { initial = "map"; }
+  // 주소에 ?tab=hamkke(또는 #hamkke)가 있으면 그 탭으로 바로 엽니다. (서구 아일랜드 링크용)
+  const askedTab = new URLSearchParams(location.search).get("tab") || location.hash.replace("#", "");
+  if (askedTab === "hamkke" || askedTab === "map") initial = askedTab;
   switchTab(initial);
 })();
