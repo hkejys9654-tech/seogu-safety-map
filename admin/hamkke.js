@@ -147,7 +147,8 @@
             <select data-filter="progress">
               <option value="all">모든 상태</option>
               <option value="none">방문 전</option>
-              <option value="visit">방문 완료</option>
+              <option value="visited">방문 완료</option>
+              <option value="pending">전화 남음</option>
               <option value="phone">전화 완료</option>
             </select>
           </label>
@@ -196,7 +197,7 @@
     return H.sortStores(state.stores)
       .filter((item) => !f.campaignOnly || item.campaign === "1차")
       .filter((item) => f.division === "all" || item.division === f.division)
-      .filter((item) => f.progress === "all" || H.progressOf(state.resultOf(item)) === f.progress);
+      .filter((item) => H.matchesProgress(state.resultOf(item), f.progress));
   }
 
   function renderBody() {
@@ -215,7 +216,7 @@
       const phoned = progress.filter((p) => p === "phone").length;
       const leader = (list[0] || {}).leader || "";
       return `
-        <article>
+        <article class="${state.filter.division === division ? "is-active" : ""}" data-stat-division="${esc(division)}" role="button" tabindex="0">
           <span>${esc(division)}${leader ? ` · ${esc(leader)}` : ""}</span>
           <strong>${visited}<small> / ${list.length}곳 방문</small></strong>
           <em>전화 완료 ${phoned}곳</em>
@@ -252,6 +253,15 @@
   }
 
   async function onClick(event) {
+    const card = event.target.closest("[data-stat-division]");
+    if (card) {
+      const division = state.filter.division === card.dataset.statDivision ? "all" : card.dataset.statDivision;
+      state.filter.division = division;
+      const select = root.querySelector('[data-filter="division"]');
+      if (select) select.value = division;
+      renderBody();
+      return;
+    }
     const button = event.target.closest("[data-act]");
     if (!button) return;
     const act = button.dataset.act;

@@ -186,6 +186,23 @@
 
   const PROGRESS_LABELS = { none: "방문 전", visit: "방문 완료", phone: "전화 완료" };
 
+  // 진행 상태로 거르기: '방문 완료'는 전화까지 끝난 곳도 포함하고, '전화 남음'은 방문만 한 곳입니다.
+  const PROGRESS_FILTERS = ["all", "none", "visited", "pending", "phone"];
+  function normalizeProgressFilter(value) {
+    if (value === "visit") return "visited";
+    return PROGRESS_FILTERS.includes(value) ? value : "all";
+  }
+  function matchesProgress(result, filter) {
+    const progress = progressOf(result);
+    switch (normalizeProgressFilter(filter)) {
+      case "none": return progress === "none";
+      case "visited": return progress !== "none";
+      case "pending": return progress === "visit";
+      case "phone": return progress === "phone";
+      default: return true;
+    }
+  }
+
   function cleanSection(section, keys) {
     const output = {};
     keys.forEach((key) => {
@@ -226,6 +243,8 @@
     FIELD_SCRIPT,
     PHONE_SCRIPT,
     PROGRESS_LABELS,
+    normalizeProgressFilter,
+    matchesProgress,
     CAMPAIGN_LABELS,
     FRAME_STATES,
     frameOf,

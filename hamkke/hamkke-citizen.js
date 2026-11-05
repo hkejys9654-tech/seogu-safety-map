@@ -140,7 +140,8 @@
             <select data-hk="progress" aria-label="진행 상태">
               <option value="all">모든 상태</option>
               <option value="none">방문 전</option>
-              <option value="visit">방문 완료</option>
+              <option value="visited">방문 완료</option>
+              <option value="pending">전화 남음</option>
               <option value="phone">전화 완료</option>
             </select>
             <label class="hk-toggle">
@@ -155,7 +156,8 @@
         <p class="hk-footer">결과는 저장하는 즉시 관리자에게 전달돼요.
           <button type="button" class="hk-link" data-hk-action="logout">접속코드 다시 입력</button></p>
       </div>`;
-    panel.querySelector('[data-hk="progress"]').value = f.progress;
+    state.filter.progress = H.normalizeProgressFilter(f.progress);
+    panel.querySelector('[data-hk="progress"]').value = state.filter.progress;
 
     panel.addEventListener("click", onPanelClick);
     panel.querySelector('[data-hk="progress"]').addEventListener("change", (event) => updateFilter({ progress: event.target.value }));
@@ -169,6 +171,15 @@
     if (chip) {
       panel.querySelectorAll("[data-division]").forEach((item) => item.classList.toggle("is-active", item === chip));
       updateFilter({ division: chip.dataset.division });
+      return;
+    }
+    const stat = target.closest("[data-stat-filter]");
+    if (stat) {
+      const progress = stat.dataset.statFilter;
+      panel.querySelector('[data-hk="progress"]').value = progress;
+      updateFilter({ progress });
+      const list = panel.querySelector('[data-hk="list"]');
+      if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     const script = target.closest("[data-script]");
@@ -199,8 +210,7 @@
     const scoped = H.sortStores(state.stores).filter((item) => !f.campaignOnly || item.campaign === "1차");
     const byDivision = scoped.filter((item) => f.division === "all" || item.division === f.division);
     const shown = byDivision.filter((item) => {
-      const progress = H.progressOf(state.resultOf(item));
-      if (f.progress !== "all" && progress !== f.progress) return false;
+      if (!H.matchesProgress(state.resultOf(item), f.progress)) return false;
       if (!query) return true;
       return [item.name, item.owner, item.address, item.dong].join("").replace(/\s+/g, "").includes(query);
     });
@@ -208,9 +218,9 @@
     const counts = { none: 0, visit: 0, phone: 0 };
     byDivision.forEach((item) => { counts[H.progressOf(state.resultOf(item))] += 1; });
     panel.querySelector('[data-hk="stats"]').innerHTML = `
-      <span><b>${byDivision.length}</b>${f.campaignOnly ? "1차 대상" : "전체"}</span>
-      <span><b>${counts.visit + counts.phone}</b>방문 완료</span>
-      <span><b>${counts.phone}</b>전화 완료</span>`;
+      <button type="button" data-stat-filter="all" class="${f.progress === "all" ? "is-active" : ""}"><b>${byDivision.length}</b>${f.campaignOnly ? "1차 대상" : "전체"}</button>
+      <button type="button" data-stat-filter="visited" class="${f.progress === "visited" ? "is-active" : ""}"><b>${counts.visit + counts.phone}</b>방문 완료</button>
+      <button type="button" data-stat-filter="phone" class="${f.progress === "phone" ? "is-active" : ""}"><b>${counts.phone}</b>전화 완료</button>`;
 
     if (!state.stores.length) {
       list.innerHTML = '<p class="hk-empty">아직 등록된 점포 명단이 없어요. 담당자에게 문의해주세요.</p>';
