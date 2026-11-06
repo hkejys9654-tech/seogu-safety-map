@@ -134,7 +134,7 @@
         <section class="hk-filters" aria-label="점포 찾기">
           <div class="hk-chip-row" data-hk="divisions">
             ${["all", ...H.DIVISIONS].map((division) => `
-              <button type="button" class="hk-chip ${f.division === division ? "is-active" : ""}" data-division="${esc(division)}">${division === "all" ? "전체" : esc(division.replace("분과", ""))}</button>`).join("")}
+              <button type="button" class="hk-chip ${division === "all" ? "" : H.divisionClass(division)} ${f.division === division ? "is-active" : ""}" data-division="${esc(division)}">${division === "all" ? "전체" : esc(division.replace("분과", ""))}</button>`).join("")}
           </div>
           <div class="hk-filter-line">
             <select data-hk="progress" aria-label="진행 상태">
@@ -245,11 +245,12 @@
     const frame = H.frameOf(item.frame);
     const frameClass = frame === "수령" ? "is-delivered" : "is-kept";
     return `
-      <article class="hk-store">
+      <article class="hk-store ${H.divisionClass(item.division)}">
         <div class="hk-store-top">
           <div class="hk-store-name">
             <strong>${esc(item.name)}</strong>
             <span class="hk-tags">
+              ${item.division ? `<em class="hk-tag hk-div-tag">${esc(item.division)}</em>` : ""}
               ${campaign ? `<em class="hk-tag ${item.campaign === "1차" ? "is-campaign" : "is-next"}">${esc(campaign)}</em>` : ""}
             </span>
           </div>

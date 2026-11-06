@@ -445,3 +445,68 @@
 .hk-script-more summary::-webkit-details-marker { display: none; }
 .hk-script-more summary h3::after { content: "펼치기 ▾"; margin-left: auto; color: var(--green-dark); font-size: 13px; font-weight: 800; }
 .hk-script-more[open] summary h3::after { content: "접기 ▴"; }
+
+/* 2026-11-06 분과별 파스텔 색 구분 */
+.hk-div-care  { --div-bg: #eef6fd; --div-line: #a9cff0; --div-ink: #2c6797; --div-pill: #d9ebfb; }
+.hk-div-equal { --div-bg: #fffaea; --div-line: #efd47f; --div-ink: #85650a; --div-pill: #fcefc4; }
+.hk-div-safe  { --div-bg: #ecf8f3; --div-line: #9dd9c2; --div-ink: #1f7457; --div-pill: #d4f0e3; }
+.hk-div-job   { --div-bg: #fdf0f4; --div-line: #f0b8ca; --div-ink: #9e4567; --div-pill: #fadde7; }
+
+.hk-store[class*="hk-div-"] {
+  border-color: var(--div-line);
+  border-left: 6px solid var(--div-line);
+  background: linear-gradient(180deg, var(--div-bg) 0, #fff 90px);
+}
+.hk-store .hk-div-tag { color: var(--div-ink); background: var(--div-pill); border: 1px solid var(--div-line); }
+.hk-store-name .hk-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+.hk-chip[class*="hk-div-"] { border-color: var(--div-line); color: var(--div-ink); background: var(--div-bg); }
+.hk-chip[class*="hk-div-"].is-active { border-color: var(--div-ink); color: var(--div-ink); background: var(--div-pill); box-shadow: inset 0 0 0 1px var(--div-ink); }
+
+.hk-admin-stats article[class*="hk-div-"] { border-color: var(--div-line); border-top: 5px solid var(--div-line); background: var(--div-bg); }
+.hk-admin-stats article[class*="hk-div-"] span,
+.hk-admin-stats article[class*="hk-div-"] em { color: var(--div-ink); }
+.hk-admin-stats article[class*="hk-div-"].is-active { border-color: var(--div-ink); box-shadow: inset 0 0 0 2px var(--div-ink); }
+
+.hk-div-pill { display: inline-block; padding: 3px 9px; border: 1px solid var(--div-line); border-radius: 999px; color: var(--div-ink); background: var(--div-pill); font-size: 12px; font-style: normal; font-weight: 850; white-space: nowrap; }
+.hk-table tr[class*="hk-div-"] td:first-child { box-shadow: inset 5px 0 0 var(--div-line); }
+.hk-table tr[class*="hk-div-"]:hover td { background: var(--div-bg); }
+.hk-m-only { display: none; }
+
+/* 관리자: 폰에서는 표 대신 카드 */
+@media (max-width: 700px) {
+  .hk-table-wrap { overflow: visible; border: 0; background: transparent; }
+  .hk-table { min-width: 0; }
+  .hk-table thead { display: none; }
+  .hk-table, .hk-table tbody { display: block; }
+  .hk-table tbody { display: grid; gap: 10px; }
+  .hk-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+  }
+  .hk-table tr[class*="hk-div-"] { border-color: var(--div-line); border-left: 6px solid var(--div-line); background: linear-gradient(180deg, var(--div-bg) 0, #fff 80px); }
+  .hk-table tr[class*="hk-div-"]:hover td { background: transparent; }
+  .hk-table td { display: block; padding: 0; border: 0; box-shadow: none !important; font-size: 13px; }
+  .hk-table td.hk-col-div { display: none; }
+  .hk-table td.hk-col-name { grid-column: 1; grid-row: 1; }
+  .hk-table td.hk-col-name strong { font-size: 16px; }
+  .hk-table td.hk-col-status { grid-column: 2; grid-row: 1; align-self: start; }
+  .hk-table td[data-label], .hk-table td.hk-row-actions { grid-column: 1 / -1; }
+  .hk-table td[data-label] { display: flex; gap: 10px; align-items: baseline; }
+  .hk-table td[data-label] br { display: none; }
+  .hk-table td[data-label] small { margin-left: 4px; }
+  .hk-table td[data-label]::before { content: attr(data-label); flex: 0 0 64px; color: var(--muted); font-size: 12px; font-weight: 800; }
+  .hk-table td.hk-row-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .hk-table td.hk-row-actions .secondary-button { flex: 1 1 0; min-height: 42px; }
+  .hk-table .hk-empty-cell { grid-column: 1 / -1; text-align: center; }
+  .hk-m-only { display: inline-block; margin-bottom: 6px; }
+  .hk-table td.hk-col-name .hk-m-only + strong { display: block; }
+  .hk-table td.hk-col-name br { display: none; }
+  .hk-table td.hk-col-name small { display: block; margin-top: 3px; }
+  .hk-table td.hk-col-name { padding-bottom: 4px; }
+}

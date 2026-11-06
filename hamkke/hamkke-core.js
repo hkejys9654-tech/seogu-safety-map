@@ -150,6 +150,9 @@
     return "none";
   }
 
+  const DIVISION_KEYS = { "돌봄분과": "care", "양성평등분과": "equal", "안전분과": "safe", "일자리분과": "job" };
+  function divisionClass(division) { return `hk-div-${DIVISION_KEYS[division] || "etc"}`; }
+
   const PROGRESS_LABELS = { none: "방문 전", visit: "방문 완료", phone: "전화 완료" };
 
   // 진행 상태로 거르기: '방문 완료'는 전화까지 끝난 곳도 포함하고, '전화 남음'은 방문만 한 곳입니다.
@@ -210,6 +213,7 @@
     PHONE_SCRIPT,
     PROGRESS_LABELS,
     normalizeProgressFilter,
+    divisionClass,
     matchesProgress,
     CAMPAIGN_LABELS,
     FRAME_STATES,

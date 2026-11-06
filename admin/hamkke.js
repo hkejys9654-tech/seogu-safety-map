@@ -216,7 +216,7 @@
       const phoned = progress.filter((p) => p === "phone").length;
       const leader = (list[0] || {}).leader || "";
       return `
-        <article class="${state.filter.division === division ? "is-active" : ""}" data-stat-division="${esc(division)}" role="button" tabindex="0">
+        <article class="${H.divisionClass(division)} ${state.filter.division === division ? "is-active" : ""}" data-stat-division="${esc(division)}" role="button" tabindex="0">
           <span>${esc(division)}${leader ? ` · ${esc(leader)}` : ""}</span>
           <strong>${visited}<small> / ${list.length}곳 방문</small></strong>
           <em>전화 완료 ${phoned}곳</em>
@@ -235,14 +235,14 @@
       const visit = result.visit || {};
       const phone = result.phone || {};
       return `
-        <tr>
-          <td>${esc(item.division.replace("분과", ""))}</td>
-          <td>${esc(H.CAMPAIGN_LABELS[item.campaign || ""] || "-")}<br><small class="hk-muted">${H.frameOf(item.frame) ? `액자 ${esc(H.frameOf(item.frame))}` : ""}</small></td>
-          <td><strong>${esc(item.name)}</strong><br><small class="hk-muted">${esc(item.address)}</small>${item.note ? `<br><small class="hk-note-text">${esc(item.note)}</small>` : ""}</td>
-          <td>${esc(item.owner)}<br><small class="hk-muted">${esc(item.phone || "연락처 없음")}</small></td>
-          <td><span class="hk-badge is-${progress}">${H.PROGRESS_LABELS[progress]}</span></td>
-          <td>${visit.date ? esc(H.formatKoreanDate(visit.date)) : "-"}</td>
-          <td>${phone.date ? `${esc(H.formatKoreanDate(phone.date))}<br><small class="hk-muted">${esc(phone.callResult || "")}</small>` : "-"}</td>
+        <tr class="${H.divisionClass(item.division)}">
+          <td class="hk-col-div"><em class="hk-div-pill">${esc(item.division.replace("분과", ""))}</em></td>
+          <td data-label="캠페인">${esc(H.CAMPAIGN_LABELS[item.campaign || ""] || "-")}<br><small class="hk-muted">${H.frameOf(item.frame) ? `액자 ${esc(H.frameOf(item.frame))}` : ""}</small></td>
+          <td class="hk-col-name"><em class="hk-div-pill hk-m-only">${esc(item.division)}</em><strong>${esc(item.name)}</strong><br><small class="hk-muted">${esc(item.address)}</small>${item.note ? `<br><small class="hk-note-text">${esc(item.note)}</small>` : ""}</td>
+          <td data-label="대표자">${esc(item.owner)}<br><small class="hk-muted">${esc(item.phone || "연락처 없음")}</small></td>
+          <td class="hk-col-status"><span class="hk-badge is-${progress}">${H.PROGRESS_LABELS[progress]}</span></td>
+          <td data-label="방문일">${visit.date ? esc(H.formatKoreanDate(visit.date)) : "-"}</td>
+          <td data-label="전화 확인">${phone.date ? `${esc(H.formatKoreanDate(phone.date))}<br><small class="hk-muted">${esc(phone.callResult || "")}</small>` : "-"}</td>
           <td class="hk-row-actions">
             <button type="button" class="secondary-button" data-act="edit" data-id="${esc(item.id)}">보기·수정</button>
             <button type="button" class="secondary-button" data-act="hwpx-one" data-id="${esc(item.id)}">한글</button>
