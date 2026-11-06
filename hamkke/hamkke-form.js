@@ -30,11 +30,21 @@
   }
 
   function scriptHtml(blocks) {
-    return blocks.map((block) => `
+    return blocks.map((block) => {
+      const body = block.lines.map((line) => `<p>${esc(line)}</p>`).join("");
+      if (block.collapsed) {
+        return `
+      <details class="hk-script-block hk-script-more">
+        <summary><h3><span>${esc(block.role)}</span>${esc(block.title)}</h3></summary>
+        ${body}
+      </details>`;
+      }
+      return `
       <section class="hk-script-block">
         <h3><span>${esc(block.role)}</span>${esc(block.title)}</h3>
-        ${block.lines.map((line) => `<p>${esc(line)}</p>`).join("")}
-      </section>`).join("");
+        ${body}
+      </section>`;
+    }).join("");
   }
 
   function buildDialog() {
