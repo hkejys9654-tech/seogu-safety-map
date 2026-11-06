@@ -2,6 +2,16 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false;
+    }
+
     function validDong(dong) {
       return dong in [
         '양동', '양3동', '농성1동', '농성2동', '광천동', '유덕동',
@@ -62,8 +72,10 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // 함께가정 관리자 화면: 로그인한 본인 관리자 문서만 확인할 수 있습니다.
     match /admins/{userId} {
-      allow read, write: if false;
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow write: if false;
     }
 
     match /mapFeatures/{featureId} {
@@ -210,6 +222,36 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
       allow read: if true;
       allow update, delete: if false;
+    }
+
+    // 함께가정(사전·사후 진단): 가정 번호와 신청자 이름으로 참여자 접속
+    match /hamkkeFamilies/{familyId} {
+      allow create, delete: if isAdmin();
+      allow read: if signedIn();
+      allow update: if isAdmin();
+      allow update: if signedIn()
+        && request.resource.data.familyNo == resource.data.familyNo
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'applicantName', 'lastVisitorUid', 'familyName', 'familyType', 'adults',
+          'children', 'changeWish', 'pre', 'post', 'completionCount', 'familyPhoto',
+          'updatedAt'
+        ]);
+    }
+
+    // 함께가정 가족사진: 가정별 1장, 휴대폰에서 줄여 1MB 미만으로 저장합니다.
+    match /hamkkePhotos/{familyId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && exists(/databases/$(database)/documents/hamkkeFamilies/$(familyId))
+        && request.resource.data.keys().hasOnly(['familyNo', 'dataUrl', 'width', 'height', 'updatedAt'])
+        && request.resource.data.familyNo == get(/databases/$(database)/documents/hamkkeFamilies/$(familyId)).data.familyNo
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() < 1000000
+        && request.resource.data.width is int
+        && request.resource.data.height is int
+        && request.resource.data.updatedAt is timestamp;
+      allow delete: if signedIn()
+        && exists(/databases/$(database)/documents/hamkkeFamilies/$(familyId));
     }
 
     match /{document=**} {
